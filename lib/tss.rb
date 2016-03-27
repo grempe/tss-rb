@@ -1,5 +1,2 @@
-require "tss/version"
-
-module Tss
-  # Your code goes here...
-end
+require 'tss/version'
+require 'tss/base'
