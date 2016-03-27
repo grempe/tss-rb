@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['glenn@rempe.us']
 
   spec.summary = <<-EOF
-    A Ruby implmentation of Threshold Secret Sharing as defined in IETF Internet-Draft draft-mcgrew-tss-03.txt
+    A Ruby implementation of Threshold Secret Sharing as defined in IETF Internet-Draft draft-mcgrew-tss-03.txt
   EOF
 
   spec.description = <<-EOF
