@@ -1,5 +1,7 @@
 # Tss
 
+[![Coverage Status](https://coveralls.io/repos/github/grempe/tss-rb/badge.svg?branch=master)](https://coveralls.io/github/grempe/tss-rb?branch=master)
+
 ## WARNING : PRE-ALPHA CODE
 
 This code is highly experimental and is not yet ready for use.
