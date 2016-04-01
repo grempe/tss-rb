@@ -1,0 +1,1417 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en"><head><title>Threshold Secret Sharing</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="description" content="Threshold Secret Sharing">
+<meta name="keywords" content="Cryptography">
+<meta name="generator" content="xml2rfc v1.35 (http://xml.resource.org/)">
+<meta name="viewport" content="width=600;" />
+<style type='text/css'><!--
+        body {
+                font-family: verdana, charcoal, helvetica, arial, sans-serif;
+                font-size: 85%;
+		max-width: 40em; 
+		color: #000; background-color: #FFF;
+                margin: 2em;
+        }
+        h1, h2, h3, h4, h5, h6 {
+                font-family: helvetica, monaco, "MS Sans Serif", arial, sans-serif;
+                font-weight: bold; font-style: normal;
+        }
+        h1 { color: #900; background-color: transparent; text-align: right; }
+        h3 { color: #333; background-color: transparent; }
+
+        td.RFCbug {
+                font-size: x-small; text-decoration: none;
+                width: 30px; height: 30px; padding-top: 2px;
+                text-align: justify; vertical-align: middle;
+                background-color: #000;
+        }
+        td.RFCbug span.RFC {
+                font-family: monaco, charcoal, geneva, "MS Sans Serif", helvetica, verdana, sans-serif;
+                font-weight: bold; color: #666;
+        }
+        td.RFCbug span.hotText {
+                font-family: charcoal, monaco, geneva, "MS Sans Serif", helvetica, verdana, sans-serif;
+                font-weight: normal; text-align: center; color: #FFF;
+        }
+
+        table.TOCbug { width: 30px; height: 15px; }
+        td.TOCbug {
+                text-align: center; width: 30px; height: 15px;
+                color: #FFF; background-color: #900;
+        }
+        td.TOCbug a {
+                font-family: monaco, charcoal, geneva, "MS Sans Serif", helvetica, sans-serif;
+                font-weight: bold; font-size: x-small; text-decoration: none;
+                color: #FFF; background-color: transparent;
+        }
+
+        td.header {
+                font-family: arial, helvetica, sans-serif; font-size: x-small;
+                vertical-align: top; width: 33%;
+                color: #FFF; background-color: #666;
+        }
+        td.author { font-weight: bold; font-size: x-small; margin-left: 4em; }
+        td.author-text { font-size: x-small; }
+
+        /* info code from SantaKlauss at http://www.madaboutstyle.com/tooltip2.html */
+        a.info {
+                /* This is the key. */
+                position: relative;
+                z-index: 24;
+                text-decoration: none;
+        }
+        a.info:hover {
+                z-index: 25;
+                color: #FFF; background-color: #900;
+        }
+        a.info span { display: none; }
+        a.info:hover span.info {
+                /* The span will display just on :hover state. */
+                display: block;
+                position: absolute;
+                font-size: smaller;
+                top: 2em; left: -5em; width: 15em;
+                padding: 2px; border: 1px solid #333;
+                color: #900; background-color: #EEE;
+                text-align: left;
+        }
+
+        a { font-weight: bold; }
+        a:link    { color: #900; background-color: transparent; }
+        a:visited { color: #633; background-color: transparent; }
+        a:active  { color: #633; background-color: transparent; }
+
+        p { margin-left: 2em; margin-right: 2em; }
+        p.copyright { font-size: x-small; }
+        p.toc { font-size: 85%;
+		max-width: 40em; 
+		font-weight: bold; margin-left: 3em; }
+        table.toc { margin: 0 0 0 3em; padding: 0; border: 0; vertical-align: text-top; }
+        td.toc { font-size: 85%;
+		max-width: 40em; 
+		font-weight: bold; vertical-align: text-top; }
+
+        ol.text { margin-left: 2em; margin-right: 2em; }
+        ul.text { margin-left: 2em; margin-right: 2em; }
+        li      { margin-left: 3em; }
+
+        /* RFC-2629 <spanx>s and <artwork>s. */
+        em     { font-style: italic; }
+        strong { font-weight: bold; }
+        dfn    { font-weight: bold; font-style: normal; }
+        cite   { font-weight: normal; font-style: normal; }
+        tt     { color: #036; }
+        tt, pre, pre dfn, pre em, pre cite, pre span {
+                font-family: "Courier New", Courier, monospace; font-size: small;
+        }
+        pre {
+                text-align: left; padding: 4px;
+                color: #000; background-color: #CCC;
+        }
+        pre dfn  { color: #900; }
+        pre em   { color: #66F; background-color: #FFC; font-weight: normal; }
+        pre .key { color: #33C; font-weight: bold; }
+        pre .id  { color: #900; }
+        pre .str { color: #000; background-color: #CFF; }
+        pre .val { color: #066; }
+        pre .rep { color: #909; }
+        pre .oth { color: #000; background-color: #FCF; }
+        pre .err { background-color: #FCC; }
+
+        /* RFC-2629 <texttable>s. */
+        table.all, table.full, table.headers, table.none {
+                font-size: 85%;
+		max-width: 40em; 
+		text-align: center; border-width: 2px;
+                vertical-align: top; border-collapse: collapse;
+        }
+        table.all, table.full { border-style: solid; border-color: black; }
+        table.headers, table.none { border-style: none; }
+        th {
+                font-weight: bold; border-color: black;
+                border-width: 2px 2px 3px 2px;
+        }
+        table.all th, table.full th { border-style: solid; }
+        table.headers th { border-style: none none solid none; }
+        table.none th { border-style: none; }
+        table.all td {
+                border-style: solid; border-color: #333;
+                border-width: 1px 2px;
+        }
+        table.full td, table.headers td, table.none td { border-style: none; }
+
+        hr { height: 1px; }
+        hr.insert {
+                width: 80%; border-style: none; border-width: 0;
+                color: #CCC; background-color: #CCC;
+        }
+--></style>
+</head>
+<body>
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<table summary="layout" width="66%" border="0" cellpadding="0" cellspacing="0"><tr><td><table summary="layout" width="100%" border="0" cellpadding="2" cellspacing="1">
+<tr><td class="header">Network Working Group</td><td class="header">D. McGrew</td></tr>
+<tr><td class="header">Internet-Draft</td><td class="header">Cisco Systems, Inc.</td></tr>
+<tr><td class="header">Intended status: Informational</td><td class="header">P. Patnala</td></tr>
+<tr><td class="header">Expires: September 4, 2010</td><td class="header">Consultant</td></tr>
+<tr><td class="header">&nbsp;</td><td class="header">A. Hoenes</td></tr>
+<tr><td class="header">&nbsp;</td><td class="header">TR-Sys</td></tr>
+<tr><td class="header">&nbsp;</td><td class="header">March 03, 2010</td></tr>
+</table></td></tr></table>
+<h1><br />Threshold Secret Sharing<br />draft-mcgrew-tss-03.txt</h1>
+
+<h3>Abstract</h3>
+
+<p>
+	Threshold Secret Sharing (TSS) provides a way to generate N
+	shares from a value, so that any M of those shares can be used
+	to reconstruct the original value, but any M-1 shares provide
+	no information about that value.  This method can provide
+	shared access control on key material and other secrets that
+	must be strongly protected.  	
+	
+</p>
+<p> This note defines a threshold secret sharing method based on
+	polynomial interpolation in GF(256) and a format for the
+	storage and transmission of shares.  It also provides usage
+	guidance, describes how to test an implementation, and
+	supplies test cases.  
+	
+</p>
+<h3>Status of this Memo</h3>
+<p>
+This Internet-Draft is submitted to IETF in full
+conformance with the provisions of BCP&nbsp;78 and BCP&nbsp;79.</p>
+<p>
+Internet-Drafts are working documents of the Internet Engineering
+Task Force (IETF), its areas, and its working groups.
+Note that other groups may also distribute working documents as
+Internet-Drafts.</p>
+<p>
+Internet-Drafts are draft documents valid for a maximum of six months
+and may be updated, replaced, or obsoleted by other documents at any time.
+It is inappropriate to use Internet-Drafts as reference material or to cite
+them other than as &ldquo;work in progress.&rdquo;</p>
+<p>
+The list of current Internet-Drafts can be accessed at
+<a href='http://www.ietf.org/ietf/1id-abstracts.txt'>http://www.ietf.org/ietf/1id-abstracts.txt</a>.</p>
+<p>
+The list of Internet-Draft Shadow Directories can be accessed at
+<a href='http://www.ietf.org/shadow.html'>http://www.ietf.org/shadow.html</a>.</p>
+<p>
+This Internet-Draft will expire on September 4, 2010.</p>
+
+<h3>Copyright Notice</h3>
+<p>
+Copyright (c) 2010 IETF Trust and the persons identified as the
+document authors.  All rights reserved.</p>
+<p>
+This document is subject to BCP 78 and the IETF Trust's Legal
+Provisions Relating to IETF Documents
+(http://trustee.ietf.org/license-info) in effect on the date of
+publication of this document.  Please review these documents
+carefully, as they describe your rights and restrictions with respect
+to this document. Code Components extracted from this document must
+include Simplified BSD License text as described in Section 4.e of
+the Trust Legal Provisions and are provided without warranty as
+described in the BSD License.</p>
+<a name="toc"></a><br /><hr />
+<h3>Table of Contents</h3>
+<p class="toc">
+<a href="#anchor1">1.</a>&nbsp;
+Introduction<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor2">1.1.</a>&nbsp;
+Conventions Used In This Document<br />
+<a href="#anchor3">2.</a>&nbsp;
+Operations<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor4">2.1.</a>&nbsp;
+Create Shares<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor5">2.2.</a>&nbsp;
+Reconstruct Secret<br />
+<a href="#anchor6">3.</a>&nbsp;
+Polynomial Interpolation over GF(256)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor7">3.1.</a>&nbsp;
+Field Representation<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor8">3.2.</a>&nbsp;
+Share Generation<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor9">3.3.</a>&nbsp;
+Secret Reconstruction<br />
+<a href="#anchor10">4.</a>&nbsp;
+Robust Threshold Secret Sharing<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor11">4.1.</a>&nbsp;
+RTSS Data Format<br />
+<a href="#anchor12">5.</a>&nbsp;
+Error Correction and Data Recovery<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor13">5.1.</a>&nbsp;
+Data Recovery<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor14">5.2.</a>&nbsp;
+Error Correction<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#anchor15">5.3.</a>&nbsp;
+A Repetition Code<br />
+<a href="#anchor16">6.</a>&nbsp;
+Format<br />
+<a href="#anchor17">7.</a>&nbsp;
+Design and Rationale<br />
+<a href="#testing">8.</a>&nbsp;
+Testing<br />
+<a href="#CASES">9.</a>&nbsp;
+Test Cases<br />
+<a href="#anchor18">10.</a>&nbsp;
+Security Considerations<br />
+<a href="#anchor19">11.</a>&nbsp;
+IANA Considerations<br />
+<a href="#anchor20">12.</a>&nbsp;
+Acknowledgements<br />
+<a href="#rfc.references1">13.</a>&nbsp;
+References<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rfc.references1">13.1.</a>&nbsp;
+Normative References<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#rfc.references2">13.2.</a>&nbsp;
+Informative References<br />
+<a href="#anchor23">Appendix&nbsp;A.</a>&nbsp;
+Mathematical Background<br />
+<a href="#rfc.authors">&#167;</a>&nbsp;
+Authors' Addresses<br />
+</p>
+<br clear="all" />
+
+<a name="anchor1"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.1"></a><h3>1.&nbsp;
+Introduction</h3>
+
+<p>
+ Threshold secret sharing (TSS) provides a way to generate N shares
+ from a value, so that any M of those shares can be used to
+ reconstruct the original value, but any M-1 shares provide no
+ information about that value.  This method does not rely on any
+ assumptions about the complexity of solving a particular
+ computational problem (such as factoring); it is
+ information-theoretically secure.  Each share is slightly longer than
+ the original secret.  
+
+</p>
+<p>
+In the context of secret sharing, the word "share" means a part of
+something, and "sharing" means the act of breaking up into parts.
+Readers may be confused if they think of "sharing" as meaning "giving
+to or possessing with others".
+
+</p>
+<p>
+TSS is especially useful whenever there is a need to ensure the
+availability of a secret, yet there is a simultaneous need to reduce
+the risk of compromise of the secret.  By dividing the secret into
+multiple shares, and distributing each share to a different trusted
+entity, TSS reduces that risk while providing for the availability of
+the secret.  At the time that the secret is divided into shares, the
+threshold defining a number of shares that are needed to reconstruct
+the secret is set. 
+
+</p>
+<p>
+TSS can be applied to any secret key, such as one used
+to encrypt data at rest, or to any private key, such as the signing
+key used by a certificate authority.   It can be used to create
+a "backup" copy of a key, to protect against the loss or corruption
+of an "active" copy of the key.  Alternatively, TSS can be applied
+to a key, and then the original key can be deleted, as a means
+of enforcing shared access control on that key.  
+
+</p>
+<a name="anchor2"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.1.1"></a><h3>1.1.&nbsp;
+Conventions Used In This Document</h3>
+
+<p>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+        "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+        document are to be interpreted as described in <a class='info' href='#RFC2119'>[RFC2119]<span> (</span><span class='info'>Bradner, S., &ldquo;Key words for use in RFCs to Indicate Requirement Levels,&rdquo; March&nbsp;1997.</span><span>)</span></a>.
+</p>
+<a name="anchor3"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.2"></a><h3>2.&nbsp;
+Operations</h3>
+
+<p>
+A threshold secret sharing system provides two operations: one that
+creates a set of shares given a secret, and one that reconstructs the
+secret, given a set of shares.  This section defines the inputs and
+outputs of these operations.   The following sections describe the
+details of TSS based on a polynomial interpolation in GF(256).
+
+</p>
+<a name="anchor4"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.2.1"></a><h3>2.1.&nbsp;
+Create Shares</h3>
+
+<p>
+  This operation takes an octet string S, whose length is L octets,
+  and a threshold parameter M, and generates a set of N shares, any M
+  of which can be used to reconstruct the secret.
+  
+</p>
+<p>
+  The secret S is treated as an unstructured sequence of octets.  It
+   is not expected to be null-terminated.  The number of octets in the
+   secret may be anywhere from zero up to 65,534 (that is, two less than 2^16).
+  
+</p>
+<p>
+  The threshold parameter M is the number of shares that will be needed to
+  reconstruct the secret.  This value may be any number between one
+  and 255, inclusive.
+ 
+</p>
+<p>
+  The number of shares N that will be generated MUST be 
+  between the threshold value M and 255, inclusive.  The upper limit
+  is particular to the TSS algorithm specified in this document.
+ 
+</p>
+<p>
+  If the operation can not be completed successfully, then an error
+  code should be returned.
+  
+</p>
+<a name="anchor5"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.2.2"></a><h3>2.2.&nbsp;
+Reconstruct Secret</h3>
+
+<p>
+ The reconstruct operation reconstructs the secret from a set of shares.
+
+</p>
+<p>
+ The number of shares N must be provided as a parameter.
+
+</p>
+<p>
+  The only other parameter is the list of shares themselves. 
+  The shares should be treated as unstructured octet strings.
+
+</p>
+<p>
+ If the operation could be completed successfully, then the secret
+ value will be returned.
+
+</p>
+<p>
+  If the operation can not be completed successfully, then an error
+  code should be returned.
+  
+</p>
+<a name="anchor6"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.3"></a><h3>3.&nbsp;
+Polynomial Interpolation over GF(256)</h3>
+
+<p>
+A finite field is a set of elements with associated addition,
+multiplication, subtraction, and division operations.  Each of those
+operations acts on elements in the field, and returns an element in
+the field.  This specification uses the field GF(256), and each
+element is represented as a single octet.  There are many possible
+ways to represent a finite field; below we define the field arithmetic
+operations as having inputs and outputs that are octets.  This fixes a
+particular representation, without explicitly defining it, and it
+avoids the issue of the bit-representation of octets.   In this
+representation, the zero field element is the zero octet, and
+the unity field element is 0x01 (hexadecimal).
+
+</p>
+<a name="anchor7"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.3.1"></a><h3>3.1.&nbsp;
+Field Representation</h3>
+
+<p>
+Each element of the field GF(256) is represented as an octet.  In the
+following, each octet is represented as a hexadecimal number with a
+leading "0x", as in ANSI/ISO C.  The representation of the finite
+field that we use is defined in terms of the addition, subtraction,
+multiplication, and division operations.  We define these operations
+as taking two octets as input and returning a single octet as output.
+In order to distinguish GF(256) arithmetic from integer arithmetic,
+we denote addition and multiplication in GF(256) as
+(+) and (*), respectively.   We also refer to the summation and 
+product operations in GF(256) as GF_SUM and GF_PRODUCT, respectively.
+
+</p>
+<p>
+The multiplication in GF(256) and its inverse operation (division) 
+are defined in terms of two tables, the EXP table
+(<a class='info' href='#exp'>Figure&nbsp;1<span> (</span><span class='info'>The EXP table.  The elements are to be read from top to bottom and left to right.  For example, EXP[0] is 0x01, EXP[8] is 0x1a, and so on. Note that the EXP[255] entry is present only as a placeholder, and is not actually used in any computation.</span><span>)</span></a>) and the LOG table (<a class='info' href='#log'>Figure&nbsp;2<span> (</span><span class='info'>The LOG table.   The elements are to be read from top to bottom and left to right.  For example, LOG[1] is 0, LOG[8] is 75, and so on.  Note that the LOG[0] entry is present only as a placeholder, and is not actually used in any computation.</span><span>)</span></a>), which
+define the exponential function and the logarithmic function,
+respectively.  The ith elements of these tables are denoted as EXP[i]
+and LOG[i].  LOG takes a non-zero field element as
+input, and returns an integer, and EXP takes an integer and returns a
+field element.
+
+</p>
+<p>
+The addition operation returns the bitwise exclusive-or of its
+operands.  The subtraction operation is identical, because the field
+has characteristic two.
+
+</p>
+<p>
+The multiplication operation takes two elements X and Y as input and
+proceeds as follows.  If either X or Y is equal to 0x00, then the
+operation returns 0x00.  Otherwise, the value EXP[ (LOG[X] + LOG[Y]) modulo
+255] is returned.
+
+</p>
+<p>
+The division operation takes a dividend X and a divisor Y as input and
+computes X divided by Y as follows.  If X is equal to 0x00, then the
+operation returns 0x00.  If Y is equal to 0x00, then the input is invalid, and
+an error condition occurs.   Otherwise, the value EXP[ (LOG[X] - LOG[Y]) modulo
+255] is returned.
+
+</p>
+<p>
+The operation of raising a field element X to a power i, where i is a
+positive integer, is denoted as X^i, and it consists of multiplying X
+by itself i times. 
+
+</p><br /><hr class="insert" />
+<a name="exp"></a>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+      0x01, 0x03, 0x05, 0x0f, 0x11, 0x33, 0x55, 0xff,
+      0x1a, 0x2e, 0x72, 0x96, 0xa1, 0xf8, 0x13, 0x35,
+      0x5f, 0xe1, 0x38, 0x48, 0xd8, 0x73, 0x95, 0xa4,
+      0xf7, 0x02, 0x06, 0x0a, 0x1e, 0x22, 0x66, 0xaa,
+      0xe5, 0x34, 0x5c, 0xe4, 0x37, 0x59, 0xeb, 0x26,
+      0x6a, 0xbe, 0xd9, 0x70, 0x90, 0xab, 0xe6, 0x31,
+      0x53, 0xf5, 0x04, 0x0c, 0x14, 0x3c, 0x44, 0xcc,
+      0x4f, 0xd1, 0x68, 0xb8, 0xd3, 0x6e, 0xb2, 0xcd,
+      0x4c, 0xd4, 0x67, 0xa9, 0xe0, 0x3b, 0x4d, 0xd7,
+      0x62, 0xa6, 0xf1, 0x08, 0x18, 0x28, 0x78, 0x88,
+      0x83, 0x9e, 0xb9, 0xd0, 0x6b, 0xbd, 0xdc, 0x7f,
+      0x81, 0x98, 0xb3, 0xce, 0x49, 0xdb, 0x76, 0x9a,
+      0xb5, 0xc4, 0x57, 0xf9, 0x10, 0x30, 0x50, 0xf0,
+      0x0b, 0x1d, 0x27, 0x69, 0xbb, 0xd6, 0x61, 0xa3,
+      0xfe, 0x19, 0x2b, 0x7d, 0x87, 0x92, 0xad, 0xec,
+      0x2f, 0x71, 0x93, 0xae, 0xe9, 0x20, 0x60, 0xa0,
+      0xfb, 0x16, 0x3a, 0x4e, 0xd2, 0x6d, 0xb7, 0xc2,
+      0x5d, 0xe7, 0x32, 0x56, 0xfa, 0x15, 0x3f, 0x41,
+      0xc3, 0x5e, 0xe2, 0x3d, 0x47, 0xc9, 0x40, 0xc0,
+      0x5b, 0xed, 0x2c, 0x74, 0x9c, 0xbf, 0xda, 0x75,
+      0x9f, 0xba, 0xd5, 0x64, 0xac, 0xef, 0x2a, 0x7e,
+      0x82, 0x9d, 0xbc, 0xdf, 0x7a, 0x8e, 0x89, 0x80,
+      0x9b, 0xb6, 0xc1, 0x58, 0xe8, 0x23, 0x65, 0xaf,
+      0xea, 0x25, 0x6f, 0xb1, 0xc8, 0x43, 0xc5, 0x54,
+      0xfc, 0x1f, 0x21, 0x63, 0xa5, 0xf4, 0x07, 0x09,
+      0x1b, 0x2d, 0x77, 0x99, 0xb0, 0xcb, 0x46, 0xca,
+      0x45, 0xcf, 0x4a, 0xde, 0x79, 0x8b, 0x86, 0x91,
+      0xa8, 0xe3, 0x3e, 0x42, 0xc6, 0x51, 0xf3, 0x0e,
+      0x12, 0x36, 0x5a, 0xee, 0x29, 0x7b, 0x8d, 0x8c,
+      0x8f, 0x8a, 0x85, 0x94, 0xa7, 0xf2, 0x0d, 0x17,
+      0x39, 0x4b, 0xdd, 0x7c, 0x84, 0x97, 0xa2, 0xfd,
+      0x1c, 0x24, 0x6c, 0xb4, 0xc7, 0x52, 0xf6, 0x00
+</pre></div><table border="0" cellpadding="0" cellspacing="2" align="center"><tr><td align="center"><font face="monaco, MS Sans Serif" size="1"><b>&nbsp;Figure&nbsp;1: The EXP table.  The elements are to be read from top to bottom and left to right.  For example, EXP[0] is 0x01, EXP[8] is 0x1a, and so on. Note that the EXP[255] entry is present only as a placeholder, and is not actually used in any computation.&nbsp;</b></font><br /></td></tr></table><hr class="insert" />
+<br /><hr class="insert" />
+<a name="log"></a>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+         0,    0,   25,    1,   50,    2,   26,  198,
+        75,  199,   27,  104,   51,  238,  223,    3,
+       100,    4,  224,   14,   52,  141,  129,  239,
+        76,  113,    8,  200,  248,  105,   28,  193,
+       125,  194,   29,  181,  249,  185,   39,  106,
+        77,  228,  166,  114,  154,  201,    9,  120,
+       101,   47,  138,    5,   33,   15,  225,   36,
+        18,  240,  130,   69,   53,  147,  218,  142,
+       150,  143,  219,  189,   54,  208,  206,  148,
+        19,   92,  210,  241,   64,   70,  131,   56,
+       102,  221,  253,   48,  191,    6,  139,   98,
+       179,   37,  226,  152,   34,  136,  145,   16,
+       126,  110,   72,  195,  163,  182,   30,   66,
+        58,  107,   40,   84,  250,  133,   61,  186,
+        43,  121,   10,   21,  155,  159,   94,  202,
+        78,  212,  172,  229,  243,  115,  167,   87,
+       175,   88,  168,   80,  244,  234,  214,  116,
+        79,  174,  233,  213,  231,  230,  173,  232,
+        44,  215,  117,  122,  235,   22,   11,  245,
+        89,  203,   95,  176,  156,  169,   81,  160,
+       127,   12,  246,  111,   23,  196,   73,  236,
+       216,   67,   31,   45,  164,  118,  123,  183,
+       204,  187,   62,   90,  251,   96,  177,  134,
+        59,   82,  161,  108,  170,   85,   41,  157,
+       151,  178,  135,  144,   97,  190,  220,  252,
+       188,  149,  207,  205,   55,   63,   91,  209,
+        83,   57,  132,   60,   65,  162,  109,   71,
+        20,   42,  158,   93,   86,  242,  211,  171,
+        68,   17,  146,  217,   35,   32,   46,  137,
+       180,  124,  184,   38,  119,  153,  227,  165,
+       103,   74,  237,  222,  197,   49,  254,   24,
+        13,   99,  140,  128,  192,  247,  112,    7
+</pre></div><table border="0" cellpadding="0" cellspacing="2" align="center"><tr><td align="center"><font face="monaco, MS Sans Serif" size="1"><b>&nbsp;Figure&nbsp;2: The LOG table.  
+The elements are to be read from top to bottom and left to right.  For
+example, LOG[1] is 0, LOG[8] is 75, and so on.  Note that the LOG[0]
+entry is present only as a placeholder, and is not actually used in
+any computation.&nbsp;</b></font><br /></td></tr></table><hr class="insert" />
+
+<a name="anchor8"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.3.2"></a><h3>3.2.&nbsp;
+Share Generation</h3>
+
+<p>
+We first define how to share a single octet.  
+
+</p>
+<p>
+The function f takes as input a single octet X that is not equal to
+0x00, and an array A of M octets, and returns a single octet.  It is
+defined as
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+   f(X, A) =  GF_SUM A[i] (*) X^i
+              i=0,M-1
+</pre></div><p>
+
+Because the GF_SUM summation takes place over GF(256), each addition uses the
+exclusive-or operation, and not integer addition.  Note that the
+successive values of X^i used in the computation of the function f can
+be computed by multiplying a value by X once for each term in the
+summation.
+
+</p>
+<p>
+To create N shares from a secret, with a threshold of M, the following
+procedure, or any equivalent method, is used:
+</p>
+<blockquote class="text">
+<p> 
+    For each share, a distinct Share Index is generated.  Each Share Index is an octet
+    other than the all-zero octet.   All of the Share Indexes used during a share
+    generation process MUST be distinct.  
+  
+</p>
+<p>
+    Each share is initialized to the Share Index associated with that
+    share.
+  
+</p>
+<p>
+   For each octet of the secret, the following steps are performed.
+   An array A of M octets is created, in which the array element
+   A[0] contains the octet of the secret, and the array elements A[1],
+   ..., A[M-1] contain octets that are selected independently and
+   uniformly at random.  For each share, the value of f(X,A) is
+   computed, where X is the Share Index of the share, and the resulting
+   octet is appended to the share.
+  
+</p>
+</blockquote><p>
+After the procedure is done, each share contains one more octet
+than does the secret.  The share format can be illustrated as
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+     +---------+---------+---------+---------+---------+
+     |    X    | f(X,A)  | f(X,B)  | f(X,C)  |   ...   |
+     +---------+---------+---------+---------+---------+
+</pre></div><p>
+
+where X is the Share Index of the share, and A, B, and C are arrays of M
+octets; A[0] is equal to the first octet of the secret, B[0] is equal
+to the second octet of the secret, and so on.
+
+</p>
+<a name="anchor9"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.3.3"></a><h3>3.3.&nbsp;
+Secret Reconstruction</h3>
+
+<p>
+We define the function L_i (for i from 0 to M-1, inclusive) that takes
+as input an array U of M pairwise distinct octets, and is defined as
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+                             U[j]
+   L_i(U) = GF_PRODUCT   -------------
+            j=0,M-1, j!=i  U[j] (+) U[i]
+</pre></div><p>
+
+Here the product runs over all of the values of j from 0 to M-1,
+excluding the value i.  (This function is equal to ith Lagrange
+function, evaluated at zero.)  Note that the denominator in the above
+expression is never equal to zero because U[i] is not equal to U[j]
+whenever i is not equal to j.
+
+</p>
+<p>
+We denote the interpolation function as I.  This function takes as
+input two arrays U and V, each consisting of M
+octets, and returns a single octet; it is defined as 
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+   I(U, V) =  GF_SUM  L_i(U) (*) V[i].
+              i=0,M-1
+</pre></div><p>
+
+To reconstruct a secret from a set of shares, the following
+procedure, or any equivalent method, is used:
+</p>
+<blockquote class="text">
+<p>
+    If the number of shares provided as input to the secret
+    reconstruction operation is greater than the threshold M, then M
+    of those shares are selected for use in the operation.  The method
+    used to select the shares can be arbitrary.
+  
+</p>
+<p>
+    If the shares are not equal length, then the input
+    is inconsistent.  An error should be reported,
+    and processing must halt.
+    
+</p>
+<p>
+  The output string is initialized to the empty (zero-length)
+  octet string.
+  
+</p>
+<p> 
+    The octet array U is formed by setting U[i] equal to 
+    the first octet of the ith share.  (Note that the
+    ordering of the shares is arbitrary, but must 
+    be consistent throughout this algorithm.)
+  
+</p>
+<p>
+    The initial octet is stripped from each share. 
+  
+</p>
+<p>
+    If any two elements of the array U have the same value,
+    then an error condition has occurred; this fact should
+    be reported, then the procedure must halt.
+    
+</p>
+<p>
+   For each octet of the shares, the following steps are performed.
+   An array V of M octets is created, in which the array element
+   V[i] contains the octet from the ith share.
+   The value of I(U, V) is computed, then appended
+   to the output string.
+  
+</p>
+<p>
+   The output string is returned.
+    
+</p>
+</blockquote><p>
+After the procedure is done, the string that is returned contains one
+fewer octet than do the shares.
+
+</p>
+<a name="anchor10"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.4"></a><h3>4.&nbsp;
+Robust Threshold Secret Sharing</h3>
+
+<p>
+A robust TSS system, or RTSS, is one that provides security even when
+one or more of the shares that are provided to the reconstruction
+algorithm may be crafted by a malicious adversary.  In addition, an
+RTSS system will detect unintentional corruption of the shares.
+
+</p>
+<p>
+We provide robustness by adding a pre-processing step to the TSS share
+generation step, and a post-processing step to the TSS secret
+reconstruction step.  The pre-processing consists of taking the secret
+S, then appending a hash H(S) to it.  The post-processing step
+consists of verifying that the reconstructed secret has the form S ||
+H(S), where the symbol || denotes the concatenation operation.  The
+hash function must be collision-resistant; all RTSS implementations
+MUST support the SHA-256 hash algorithm <a class='info' href='#SHS'>[SHS]<span> (</span><span class='info'>, &ldquo;FIPS 180-3: Secure Hash Standard,,&rdquo; 2008.</span><span>)</span></a>.
+
+</p>
+<p>
+If the robust reconstruction operation fails, and the number of shares
+that are available is greater than the threshold, then the operation
+MAY be tried on a different set of shares.
+
+</p>
+<p>
+An RTSS system can perform an additional operation that verifies
+the validity of a set of shares.   This operation has
+the same inputs as the Reconstruct operation.  Its output
+consists of an indication whether or not the secret could
+be reconstructed, but the secret itself is not returned.
+This operation may be useful in a situation in where the availability
+of a secret must be verified, for example, as part of an audit.
+
+</p>
+<a name="anchor11"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.4.1"></a><h3>4.1.&nbsp;
+RTSS Data Format</h3>
+
+<p>
+We use a data format with the following fields, in order:
+</p>
+<blockquote class="text"><dl>
+<dt>Identifier.</dt>
+<dd>
+    This field contains 16 octets.  It identifies the secret with
+    which a share is associated.  All of the shares associated with a
+    particular secret MUST use the same value Identifier.  When a
+    secret is reconstructed, the Identifier fields of each of the
+    shares used as input MUST have the same value.   The value
+    of the Identifier should be chosen so that it is unique, but
+    the details on how it is chosen are out of scope of this document.
+  
+</dd>
+<dt>Hash Algorithm Identifier.</dt>
+<dd>
+    This field contains a single octet that indicates the hash
+    function used in the RTSS processing, if any.  A value of zero
+    indicates that no hash algorithm was used, no hash was
+    appended to the secret, and no RTSS check should be performed
+    after the reconstruction of the secret.  Other
+    values are defined in the table below.
+  
+</dd>
+<dt>Threshold.</dt>
+<dd>
+    This field contains a single octet that indicates the number of
+    shares required to reconstruct the secret.  This field MUST be
+    checked during the reconstruction process, and that process MUST
+    halt and return an error if the number of shares available is
+    fewer than the value indicated in this field.
+  
+</dd>
+<dt>Share Length.</dt>
+<dd>
+    This field is two octets long.  It contains the
+    number of octets in the Share Data field, represented
+    as an unsigned integer in network byte order.
+  
+</dd>
+<dt>Share Data.</dt>
+<dd>
+    This field has a length that is a variable number
+    of octets.  It contains the actual share data.
+  
+</dd>
+</dl></blockquote><p>
+This format is illustrated in <a class='info' href='#ShareFormat'>Figure&nbsp;3<span> (</span><span class='info'>Share Format. </span><span>)</span></a>.
+<br /><hr class="insert" />
+<a name="ShareFormat"></a>
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                                                               |
+     |                          Identifier                           |
+     |                                                               |
+     |                                                               |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     | Hash Alg. Id. |   Threshold   |         Share Length         |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     :                                                               :
+     :                          Share Data                           :
+     :                                                               :
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre></div><p>
+<table border="0" cellpadding="0" cellspacing="2" align="center"><tr><td align="center"><font face="monaco, MS Sans Serif" size="1"><b>&nbsp;Figure&nbsp;3: Share Format. &nbsp;</b></font><br /></td></tr></table><hr class="insert" />
+
+
+
+</p>
+<p>
+The correspondence between the Hash Algorithm Identifier field and
+the hash algorithm used in RTSS is defined by the table below.
+Each hash function outputs a fixed number of octets; the length
+of the output of each hash is indicated in the table.
+
+</p><table class="full" align="center" border="0" cellpadding="2" cellspacing="2">
+<col align="left"><col align="right"><col align="right">
+<tr><th align="left">Hash Algorithm</th><th align="right">Hash Algorithm Identifier</th><th align="right">Length (octets)</th></tr>
+<tr>
+<td align="left">NULL_HASH </td>
+<td align="right"> 0 </td>
+<td align="right"> 0 </td>
+</tr>
+<tr>
+<td align="left">SHA-1 <a class='info' href='#SHS'>[SHS]<span> (</span><span class='info'>, &ldquo;FIPS 180-3: Secure Hash Standard,,&rdquo; 2008.</span><span>)</span></a> </td>
+<td align="right">1  </td>
+<td align="right">20 </td>
+</tr>
+<tr>
+<td align="left">SHA-256 <a class='info' href='#SHS'>[SHS]<span> (</span><span class='info'>, &ldquo;FIPS 180-3: Secure Hash Standard,,&rdquo; 2008.</span><span>)</span></a> </td>
+<td align="right">2  </td>
+<td align="right">32 </td>
+</tr>
+<tr>
+<td align="left">RESERVED </td>
+<td align="right">3-127  </td>
+<td align="right"> not applicable </td>
+</tr>
+<tr>
+<td align="left">Vendor specific </td>
+<td align="right">128-255  </td>
+<td align="right"> not applicable </td>
+</tr>
+</table>
+<br clear="all" />
+
+<a name="anchor12"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.5"></a><h3>5.&nbsp;
+Error Correction and Data Recovery</h3>
+
+<p>
+TSS and RTSS are suitable for the protection of long-term key
+material.  In such applications, it is highly desirable to provide
+protection against the accidental corruption of the shares. 
+This section defines data formats that can be used 
+to protect shares.  These formats are optional extensions
+to the basic TSS and RTSS systems.
+
+</p>
+<a name="anchor13"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.5.1"></a><h3>5.1.&nbsp;
+Data Recovery</h3>
+
+<p>
+To protect against the corruption of the filesystem that is holding
+the shares, a "magic number" can be used as the initial part of the
+share data format <a class='info' href='#FILESIG'>[FILESIG]<span> (</span><span class='info'>Kessler, G., &ldquo;File Signatures Table,&rdquo; 2007.</span><span>)</span></a>.  A magic number is a
+constant data string that is chosen arbitrarily, but which is unlikely
+to appear in other contexts, and thus can be used to recognize a data
+format when it appears in an arbitrary data stream.  The use of a
+magic number in the data format for a share greatly simplifies the
+task of finding a share after a filesystem has been corrupted.
+
+</p>
+<p>
+The 8-octet magic number f628f91b52023d11 (hexadecimal) SHOULD be
+used.  The number was selected randomly from a uniform distribution.
+
+</p>
+<a name="anchor14"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.5.2"></a><h3>5.2.&nbsp;
+Error Correction</h3>
+
+<p>
+To protect against data corruption in the underlying media, an
+error-correcting code (ECC) can be used.  An ECC system consists of an
+encoding function, which maps the data to a codeword, and a decoding
+function, which maps a (possibly corrupted) codeword to the data.  The
+simplest such code is a repetition code, in which multiple copies of
+the data are stored.  In this specification, all ECCs must be
+systematic, that is, the data must appear as the initial bytes of the
+codeword.  This property allows an implementation of the ECC to avoid
+the implementation of the full decoding algorithm.
+
+</p>
+<p>
+We use a data format that incorporates the following fields, in order:
+</p>
+<blockquote class="text"><dl>
+<dt>Encoding Type.</dt>
+<dd>
+    This field is four octets long.  It contains an unsigned integer 
+    in network byte order that denotes the type of the encoding, i.e.
+    the algorithm that was used during the encoding process.
+  
+</dd>
+<dt>Data Length.</dt>
+<dd>
+    This field is four octets long.  It contains an unsigned integer
+    in network byte order that denotes the number of octets
+    in the Data field.
+    
+</dd>
+<dt>Redundancy Length.</dt>
+<dd>
+    This field is four octets long.  It contains an unsigned integer
+    in network byte order that denotes the number of octets
+    in the Redundancy field.
+    
+</dd>
+<dt>Data.</dt>
+<dd>
+    This field has a length that is a variable number of octets, which
+    is indicated by the Data Length field.  It
+    contains the data that is intended to be conveyed by the code.  If
+    no data corruption has occurred, then this field will contain the
+    data that was originally encoded.
+    
+</dd>
+<dt>Redundancy.</dt>
+<dd>
+    This field has a length that is a variable number of octets, which
+    is indicated by the Redundancy Length field.  It
+    contains information that can be used to check whether or not
+    there are any errors in the Data field, and to correct some
+    errors that may have occurred.
+    
+</dd>
+</dl></blockquote><p>
+This format is illustrated in <a class='info' href='#ECF'>Figure&nbsp;4<span> (</span><span class='info'>Error Correction Format. </span><span>)</span></a>.
+<br /><hr class="insert" />
+<a name="ECF"></a>
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+                 +--------------------------------+
+                 |         Encoding Type          |
+                 |           (4 octets)           |
+                 +--------------------------------+
+                 |          Data Length           |
+                 |           (4 octets)           |
+                 +--------------------------------+
+                 |       Redundancy Length        |
+                 |           (4 octets)           |
+                 +--------------------------------+
+                 |                                |
+                 ~             Data               ~
+                 |   (variable number of octets)  |
+                 |                                |
+                 +--------------------------------+
+                 |                                |
+                 ~          Redundancy            ~
+                 |   (variable number of octets)  |
+                 |                                |
+                 +--------------------------------+
+</pre></div><p>
+<table border="0" cellpadding="0" cellspacing="2" align="center"><tr><td align="center"><font face="monaco, MS Sans Serif" size="1"><b>&nbsp;Figure&nbsp;4: Error Correction Format. &nbsp;</b></font><br /></td></tr></table><hr class="insert" />
+
+
+</p>
+<p>
+If a code has a free parameter, the value of that parameter
+MUST be inferable from the values of the Data Length
+and Redundancy Length fields.
+
+</p>
+<a name="anchor15"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.5.3"></a><h3>5.3.&nbsp;
+A Repetition Code</h3>
+
+<p>
+This section defines a format for a repetition code, which is a
+particular error correcting code that is conceptually simple and easy
+to implement.   
+
+</p>
+<p>
+The value of the Encoding Type field is equal to 0000001 (hexadecimal).
+
+</p>
+<p>
+The Redundancy field contains R copies of the Data field, where R is 
+an even number.
+The Redundancy Length is equal to the Data Length times R.  The 
+value of R MAY be equal to zero, in which case no error
+detection or correction is possible (but implementation is 
+simple).  The value of R SHOULD be at least two.
+
+</p>
+<p>
+For example, if the data that is encoded is equal to 68656c6c6f (hexadecimal), 
+then the ECF data with R=2 would be 
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+   &lt;- ET -&gt;&lt;- DL -&gt;&lt;- RL -&gt;&lt;- Data -&gt;&lt;--- Redundancy ---&gt;
+   00000001000000050000000a68656c6c6f68656c6c6f68656c6c6f
+</pre></div><p>
+
+
+</p>
+<p>
+To check the Data field for errors, that field should be compared
+with each of its copies in the redundancy field.
+
+</p>
+<p>
+The Repetition Code can be decoded by using majority-logic decoding.
+Considering both the Data and Redundancy fields, there are R+1
+(possibly corrupted) copies of the original data, where R+1 is an odd
+number.  The decoding process independently considers each octet of
+the Data field, and the corresponding octets of the copies that appear in
+the Redundancy field.  That is, the ith octet of the Data, plus octets
+i, L+i, 2L+i, ... , RL+i, are analyzed independent from all other
+octets, where L is the value of the Data Length field.  The
+following algorithm is applied to these octets.  
+The binary representation of each octet is 
+considered.  For each bit in that representation, if more
+of the copies have a "1" in that position than have a "0"
+in that position, then that position is decoded to the value "1";
+otherwise, it is decoded to "0".  This process is repeated
+for all of the bit position.  After all of the bits in the
+octet have been decoded, the value of the ith octet
+in the output of the decoding algorithm is computed, using
+the same binary representation as before.
+
+</p>
+<p>
+For example, if the data that was encoded in the previous
+example was corrupted to the value
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+   &lt;- ET -&gt;&lt;- DL -&gt;&lt;- RL -&gt;&lt;- Data -&gt;&lt;--- Redundancy ---&gt;
+   00000001000000050000000a68656c6c2f68656c6cef68656c6c6f
+                                   **        **        **
+</pre></div><p>
+
+then decoding would proceed as follows.  The fifth octet of the Data
+field is equal to 2f, while the fifth and tenth octets of the
+Redundancy field are equal to ef and 6f, respectively.  Using a bit
+representation with the most significant bit on the left, the octets
+and the "majority" octet are as follows:
+</p>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+                              hex   binary
+    octet from Data           2f    00101111
+    octet from first copy     ef    11101111
+    octet from second copy    6f    01101111
+    ----------------------------------------
+    majority                  6f    01101111
+</pre></div><p>
+
+Thus the fifth octet in the output of the decoding algorithm
+will be 6f.
+
+</p>
+<a name="anchor16"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.6"></a><h3>6.&nbsp;
+Format</h3>
+
+<p>
+This section summarizes the order of processing for when secret
+sharing is performed using the facilities for robustness (RTSS), error
+correction (ECC), and data recovery (Magic Number), and clarifies the
+relationships between data formats.  This processing can be viewed as
+a layered model, as illustrated in <a class='info' href='#model'>Figure&nbsp;5<span> (</span><span class='info'>The combined processing model.</span><span>)</span></a>.  (Note that
+we have not adhered to a strictly layered model, for the sake of
+simplicity, since the format defined by RTSS is used after the shares
+are generated.)
+
+</p>
+<p>
+When RTSS is used, it is applied to the secret before the
+sharing operation (and is removed from the secret after
+the reconstruction operation).  The RTSS data format
+MUST be used.
+
+</p>
+<p>
+When ECC is used, it is applied to the RTSS data after the sharing
+operation, so that the ECC Data field contains the entire RTSS Data
+Format.
+
+</p>
+<p>
+When a Magic Number is used, it is added after the ECC
+formatting is done, and it is prepended to the Error
+Correction Format.
+
+</p><br /><hr class="insert" />
+<a name="model"></a>
+<div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+                Secret                       Secret
+                   |                            ^
+                   v                            |
+          +------------------+         +------------------+
+          |   Append Hash    |         |   Verify Hash    |
+          +------------------+         +------------------+
+                   |                            |
+          +------------------+         +------------------+
+          | Generate Shares  |         |Reconstruct Secret|
+          +------------------+         +------------------+
+                   |                            |
+          +------------------+         +------------------+
+          |   ECC Encoding   |         |   ECC Decoding   |
+          +------------------+         +------------------+
+                   |                            |
+          +------------------+         +------------------+
+          | Add Magic Number |         |Strip Magic Number|
+          +------------------+         +------------------+
+                   |                            ^
+                   v                            |
+                 Shares ----------------&gt; Shares
+</pre></div><table border="0" cellpadding="0" cellspacing="2" align="center"><tr><td align="center"><font face="monaco, MS Sans Serif" size="1"><b>&nbsp;Figure&nbsp;5: The combined processing model.&nbsp;</b></font><br /></td></tr></table><hr class="insert" />
+
+<a name="anchor17"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.7"></a><h3>7.&nbsp;
+Design and Rationale</h3>
+
+<p>
+  In this implementation, the secret and the shares are octet
+  strings.  Each octet is treated as an element of the finite field
+  GF(256).  The share-generation algorithm is applied to each octet
+  of the secret independently.  Similarly, the octets are treated
+  independently during the reconstruction of the secrets from the
+  shares.
+
+</p>
+<p>
+  Shamir's original description treats the secret as a large integer
+  modulo a large prime number <a class='info' href='#shamir'>[shamir]<span> (</span><span class='info'>Shamir, A., &ldquo;How to share a secret,&rdquo; 1979.</span><span>)</span></a>.  The advantages
+  of using a vector over GF(256) are that the computations are more
+  efficient and the encoding is simpler.  Multiplication and inversion
+  over GF(256) can be done with two table lookups and two exors, using
+  two fixed tables of 256 bytes each.  One limitation of the GF(256)
+  approach is that the number of shares that can be generated cannot
+  be greater than 255; this limitation is unlikely to be important in
+  practice, since fewer than ten shares are typically used.
+
+</p>
+<p>
+  The reconstruction of the secret is done using Lagrange
+  interpolation polynomials.  This method is simple and easily
+  tested.  For large thresholds, this method is less efficient than
+  an optimal method would be.  However, performance is still good,
+  and it is expected that the reconstruction of the secret will not
+  be a performance-critical operation.
+ 
+</p>
+<a name="testing"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.8"></a><h3>8.&nbsp;
+Testing</h3>
+
+<p>
+As with every crypto algorithm, it is essential to test an
+implementation of TSS or RTSS for correctness.  This section provides
+guidance for such testing.
+
+</p>
+<p>
+The Secret Reconstruction algorithm can be tested using Known Answer
+Tests (KATs).  Test cases are provided in <a class='info' href='#CASES'>Section&nbsp;9<span> (</span><span class='info'>Test Cases</span><span>)</span></a>.
+
+</p>
+<p>
+The Share Generation algorithm cannot be directly tested using a KAT.
+It can be indirectly tested by generating secret values uniformly at
+random, then applying the Share Generation process to them to generate
+a set of shares, then applying the Share Reconstruction algorithm to
+the shares, then finally comparing the reconstructed secret to the
+original secret.  Implementations SHOULD perform this test, using a
+variety of thresholds and secret lengths.
+
+</p>
+<p>
+The Share Index (the initial octet of each share) can never be equal
+to zero.  This property SHOULD be tested.
+
+</p>
+<p>
+The random source must be tested to ensure that it has 
+high min-entropy.  
+
+</p>
+<a name="CASES"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.9"></a><h3>9.&nbsp;
+Test Cases</h3>
+
+<p>
+This section provides test cases that can be used to validate an
+implementation of the Secret Reconstruction algorithm.  All values are
+in hexadecimal.   
+
+</p>
+<p>
+</p>
+<blockquote class="text"><dl>
+<dt>algorithm  -</dt>
+<dd> 
+The algorithm used in the test case.
+
+</dd>
+<dt>secret -</dt>
+<dd> 
+The secret value to be split into shares.
+
+</dd>
+<dt>threshold  -</dt>
+<dd> 
+The number of shares required to reconstruct a secret; above, 
+this value is associated with the variable M.
+
+</dd>
+<dt>num. shares -</dt>
+<dd>
+The number of shares included in the example; above,
+this value is associated with the variable N.
+
+</dd>
+<dt>share index -</dt>
+<dd> 
+A share index.  Each test case has multiple distinct share values, and
+each share is associated with a distinct share index.
+
+</dd>
+<dt>share  -</dt>
+<dd> 
+A share value, which corresponds to the share index value immediately above it.
+
+</dd>
+</dl></blockquote><p>
+
+
+</p><div style='display: table; width: 0; margin-left: 3em; margin-right: auto'><pre>
+      algorithm = TSS
+         secret = 7465737400
+  threshold (M) = 2
+num. shares (N) = 2
+    share index = 1
+          share = B9FA07E185
+    share index = 2
+          share = F5409B4511
+</pre></div>
+<a name="anchor18"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.10"></a><h3>10.&nbsp;
+Security Considerations</h3>
+
+<p>
+	It is crucial for security that the source of randomness
+	used in the share generation process by cryptographically
+	strong; it MUST be suitable for generating cryptographic
+	keys.  <a class='info' href='#RFC4086'>[RFC4086]<span> (</span><span class='info'>Eastlake, D., Schiller, J., and S. Crocker, &ldquo;Randomness Requirements for Security,&rdquo; June&nbsp;2005.</span><span>)</span></a> provides guidance on 
+	the selection and implementation of random sources.  
+      
+</p>
+<p>
+	A TSS implementation SHOULD be tested as described in
+	<a class='info' href='#testing'>Section&nbsp;8<span> (</span><span class='info'>Testing</span><span>)</span></a>.
+	
+</p>
+<p>
+	The confidentiality of the shares generated by TSS should be
+	protected, since the exposure of too many shares will
+	undermine the security of the system.  Note that, in this
+	regard, share values are more comparable to secret keys than
+	to ciphertext.
+	
+</p>
+<a name="anchor19"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.11"></a><h3>11.&nbsp;
+IANA Considerations</h3>
+
+<p>
+	This document has no actions for IANA.  
+	
+</p>
+<a name="anchor20"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.12"></a><h3>12.&nbsp;
+Acknowledgements</h3>
+
+<p>
+	Thanks to Brian Weis and Jack Lloyd for constructive feedback.
+	
+</p>
+<a name="rfc.references"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.13"></a><h3>13.&nbsp;
+References</h3>
+
+<a name="rfc.references1"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<h3>13.1.&nbsp;Normative References</h3>
+<table width="99%" border="0">
+<tr><td class="author-text" valign="top"><a name="RFC2119">[RFC2119]</a></td>
+<td class="author-text"><a href="mailto:sob@harvard.edu">Bradner, S.</a>, &ldquo;<a href="http://tools.ietf.org/html/rfc2119">Key words for use in RFCs to Indicate Requirement Levels</a>,&rdquo; BCP&nbsp;14, RFC&nbsp;2119, March&nbsp;1997 (<a href="http://www.rfc-editor.org/rfc/rfc2119.txt">TXT</a>, <a href="http://xml.resource.org/public/rfc/html/rfc2119.html">HTML</a>, <a href="http://xml.resource.org/public/rfc/xml/rfc2119.xml">XML</a>).</td></tr>
+<tr><td class="author-text" valign="top"><a name="RFC4086">[RFC4086]</a></td>
+<td class="author-text">Eastlake, D., Schiller, J., and S. Crocker, &ldquo;<a href="http://tools.ietf.org/html/rfc4086">Randomness Requirements for Security</a>,&rdquo; BCP&nbsp;106, RFC&nbsp;4086, June&nbsp;2005 (<a href="http://www.rfc-editor.org/rfc/rfc4086.txt">TXT</a>).</td></tr>
+<tr><td class="author-text" valign="top"><a name="SHS">[SHS]</a></td>
+<td class="author-text">&ldquo;FIPS 180-3: Secure Hash Standard,,&rdquo; Federal Information Processing Standard (FIPS)&nbsp;http://csrc.nist.gov/publications/fips/fips180-2/fips180-3.pdf, 2008.</td></tr>
+</table>
+
+<a name="rfc.references2"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<h3>13.2.&nbsp;Informative References</h3>
+<table width="99%" border="0">
+<tr><td class="author-text" valign="top"><a name="FILESIG">[FILESIG]</a></td>
+<td class="author-text">Kessler, G., &ldquo;File Signatures Table,&rdquo; Web page&nbsp;http://www.garykessler.net/library/file_sigs.html, 2007.</td></tr>
+<tr><td class="author-text" valign="top"><a name="POLY">[POLY]</a></td>
+<td class="author-text">Seroussi, G., &ldquo;Table of Low-Weight Binary Irreducible Polynomials,&rdquo; Hewlett-Packard Computer Systems Laboratory Technical Report&nbsp;HPL-98-135, 1998.</td></tr>
+<tr><td class="author-text" valign="top"><a name="shamir">[shamir]</a></td>
+<td class="author-text">Shamir, A., &ldquo;How to share a secret,&rdquo; Communications of the ACM&nbsp;(22): 612-613, 1979.</td></tr>
+</table>
+
+<a name="anchor23"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<a name="rfc.section.A"></a><h3>Appendix A.&nbsp;
+Mathematical Background</h3>
+
+<p>
+	In abstract algebra, a finite field is an algebraic structure
+	for which the operations of addition, subtraction,
+	multiplication and division are defined and satisfy certain
+	axioms.  
+</p>
+<p>
+	The field GF(256) has exactly 256 elements in it.  There is
+	only one field with that number of elements, but there are
+	many different ways in which the elements of the field can be
+	represented.  This document uses a polynomial representation
+	in which the field polynomial is the unique irreducible
+	polynomial with minimum weight of degree 8 over GF(2)
+	<a class='info' href='#POLY'>[POLY]<span> (</span><span class='info'>Seroussi, G., &ldquo;Table of Low-Weight Binary Irreducible Polynomials,&rdquo; 1998.</span><span>)</span></a>, hence it is the 'canonical' choice for a
+	polynomial base representation of GF(256).  This field
+	representation is also used by the Advanced Encryption
+	Standard (AES).
+
+	
+</p>
+<a name="rfc.authors"></a><br /><hr />
+<table summary="layout" cellpadding="0" cellspacing="2" class="TOCbug" align="right"><tr><td class="TOCbug"><a href="#toc">&nbsp;TOC&nbsp;</a></td></tr></table>
+<h3>Authors' Addresses</h3>
+<table width="99%" border="0" cellpadding="0" cellspacing="0">
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">David A. McGrew</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Cisco Systems, Inc.</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">510 McCarthy Blvd.</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Milpitas, CA  95035</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">US</td></tr>
+<tr><td class="author" align="right">Email:&nbsp;</td>
+<td class="author-text"><a href="mailto:mcgrew@cisco.com">mcgrew@cisco.com</a></td></tr>
+<tr><td class="author" align="right">URI:&nbsp;</td>
+<td class="author-text"><a href="http://www.mindspring.com/~dmcgrew/dam.htm">http://www.mindspring.com/~dmcgrew/dam.htm</a></td></tr>
+<tr cellpadding="3"><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Praveen Patnala</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Consultant</td></tr>
+<tr><td class="author" align="right">Email:&nbsp;</td>
+<td class="author-text"><a href="mailto:praveenpatnala@yahoo.com">praveenpatnala@yahoo.com</a></td></tr>
+<tr cellpadding="3"><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Alfred Hoenes</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">TR-Sys</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Gerlinger Str. 12</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Ditzingen  D-71254</td></tr>
+<tr><td class="author-text">&nbsp;</td>
+<td class="author-text">Germany</td></tr>
+<tr><td class="author" align="right">Email:&nbsp;</td>
+<td class="author-text"><a href="mailto:ah@TR-Sys.de">ah@TR-Sys.de</a></td></tr>
+</table>
+</body></html>
