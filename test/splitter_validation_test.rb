@@ -2,7 +2,7 @@ require 'test_helper'
 
 describe Splitter do
   before do
-    @s = Splitter.new('my secret', 3, 5, SecureRandom.hex(8), Tss::SecretHash::SHA256)
+    @s = Splitter.new('my secret', 3, 5, SecureRandom.hex(8), SecretHash::SHA256)
   end
 
   describe 'secret' do
@@ -363,21 +363,21 @@ describe Splitter do
 
     describe 'when given valid hash_id for NONE' do
       it 'must be valid?' do
-        @s.hash_id = Tss::SecretHash::NONE
+        @s.hash_id = SecretHash::NONE
         @s.must_be :valid?
       end
     end
 
     describe 'when given valid hash_id for SHA1' do
       it 'must be valid?' do
-        @s.hash_id = Tss::SecretHash::SHA1
+        @s.hash_id = SecretHash::SHA1
         @s.must_be :valid?
       end
     end
 
     describe 'when given valid hash_id for SHA256' do
       it 'must be valid?' do
-        @s.hash_id = Tss::SecretHash::SHA256
+        @s.hash_id = SecretHash::SHA256
         @s.must_be :valid?
       end
     end

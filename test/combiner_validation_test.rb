@@ -3,7 +3,7 @@ require 'test_helper'
 describe Combiner do
   before do
     @secret = 'I love secrets with multi-byte unicode characters ½ ♥ 💩'
-    @shares = Splitter.new(@secret, 3, 5, SecureRandom.hex(8), Tss::SecretHash::SHA256).split
+    @shares = Splitter.new(@secret, 3, 5, SecureRandom.hex(8), SecretHash::SHA256).split
   end
 
   describe 'shares argument' do

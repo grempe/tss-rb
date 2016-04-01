@@ -26,9 +26,9 @@
 # Optionally, the secret is hashed with the algorithm specified
 # by `hash_id`. Valid values are:
 #
-#   Tss::SecretHash::NONE                 // code 0
-#   Tss::SecretHash::SHA1                 // code 1
-#   Tss::SecretHash::SHA256               // code 2
+#   SecretHash::NONE                 // code 0
+#   SecretHash::SHA1                 // code 1
+#   SecretHash::SHA256               // code 2
 #
 # Initializing an instance of this class *must* return an
 # Array of formatted shares or raise a `Tss::Error` exception
@@ -79,8 +79,8 @@ class Splitter
   end
 
   validates_each :hash_id do |record, attr, value|
-    unless value.is_a?(Integer) && Tss::SecretHash.valid?(value)
-      record.errors.add attr, "must be an Integer and in #{Tss::SecretHash::VALID_HASH_IDS}"
+    unless value.is_a?(Integer) && SecretHash.valid?(value)
+      record.errors.add attr, "must be an Integer and in #{SecretHash::VALID_HASH_IDS}"
     end
   end
 
