@@ -83,7 +83,6 @@ class Combiner
       end
 
       unless [:string_utf8, :array_bytes].include?(value[:output])
-        puts value.inspect
         record.errors.add attr, ':output arg must have valid values'
       end
 
@@ -100,6 +99,7 @@ class Combiner
   # FIXME : implement strict_first_x, sample_first_x, and any_combination
 
   def initialize(shares, args = {})
+    raise Tss::ArgumentError, 'optional args must be a Hash' unless args.is_a?(Hash)
     @opts = { share_selection: :strict_first_x, output: :string_utf8 }
     @opts.merge!(args)
     @shares = shares
