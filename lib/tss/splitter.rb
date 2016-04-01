@@ -79,7 +79,7 @@ class Splitter
   end
 
   validates_each :hash_id do |record, attr, value|
-    unless value.is_a?(Integer) && Tss::SecretHash::VALID_HASH_IDS.include?(value)
+    unless value.is_a?(Integer) && Tss::SecretHash.valid?(value)
       record.errors.add attr, "must be an Integer and in #{Tss::SecretHash::VALID_HASH_IDS}"
     end
   end
