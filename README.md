@@ -65,9 +65,9 @@ valid values which have been specified in constants for your convenience. SHA256
 is the recommended Hash Digest to use.
 
 ```
-Tss::SecretHash::NONE                 // code 0
-Tss::SecretHash::SHA1                 // code 1
-Tss::SecretHash::SHA256               // code 2
+SecretHash::NONE                 // code 0
+SecretHash::SHA1                 // code 1
+SecretHash::SHA256               // code 2
 ```
 
 Example:
@@ -77,7 +77,7 @@ secret = 'foo bar baz'
 threshold = 3
 num_shares = 5
 identifier = SecureRandom.hex(8)
-hash_id = Tss::SecretHash::SHA256
+hash_id = SecretHash::SHA256
 
 shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
 
