@@ -4,6 +4,10 @@ A Ruby Gem implementation of the Threshold Secret Sharing, as specified in
 the Network Working Group Internet-Draft submitted by D. McGrew
 ([draft-mcgrew-tss-03.txt](http://tools.ietf.org/html/draft-mcgrew-tss-03)).
 
+Shares are returned in binary string form and support Robust Threshold Secret
+Sharing (RTSS) as described in the Internet-Draft. RTSS hash types for
+`NONE`, `SHA1`, and `SHA256` are supported.
+
 ## Status
 
 [![Build Status](https://travis-ci.org/grempe/tss-rb.svg?branch=master)](https://travis-ci.org/grempe/tss-rb)
@@ -41,10 +45,12 @@ The basic usage is as follows using the arguments described below.
 shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
 ```
 
-The `secret` (required) value may be provided as:
+The `secret` (required) value must be provided as a String with either
+the `UTF-8` or `US-ASCII` encoding with a Byte length  `<= 65,534`. You can
+test this beforehand with `'my string secret'.bytes.to_a.length`
 
-* A String with either the `UTF-8` or `US-ASCII` encoding with a Byte length (`secret.bytes.to_a`) <= 65,534
-* An Array of unsigned 8-bit Bytes (0-255). This is the internal format for all processing.
+Internally, the `secret` String will be converted to and processed as an Array
+of Bytes. e.g. `'foo'.bytes.to_a`
 
 The `num_shares` (required) and `threshold` (required) values are Integers
 representing the total number of shares desired, and how many of those shares
@@ -61,8 +67,8 @@ so nothing that leaks information about the secret should be used as an `identif
 The `hash_id` is an Integer code that represents which cryptographic One-Way Hash function
 has been embedded in the shares to allow verification that the re-constructed
 secret is a match for the original at creation time. There are currently three
-valid values which have been specified in constants for your convenience. SHA256
-is the recommended Hash Digest to use.
+valid values which have been specified as constants for your convenience.
+`SecretHash::SHA256` is the recommended Hash Digest to use.
 
 ```
 SecretHash::NONE                 // code 0
@@ -81,13 +87,14 @@ hash_id = SecretHash::SHA256
 
 shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
 
-=> ["01191949DAE8D100FF01CCC5",
- "0251BB951ED35BB22C40F511",
- "032ECDB3E459EBC0F32358AE",
- "04013C6E35D50A79AA9B2B94",
- "057E4A48CF5FBA0B75F8862B"]
+=> ["ebe6ecfb44e31b12\x02\x03\x00,\x01\xB3\x81HJ\xF9\bNi\xE6\xBE\xC1b\xF8\xBFl\xBB>\xAB\x91O\xDAI\x8E\xD7\xB3\x13>m[K\xE1\x12p\x8E\x1D\x9E\x17_HM\x19\bw",
+ "ebe6ecfb44e31b12\x02\x03\x00,\x024\x02\x18\xD0\xE5>\xA3\x8E\x14cH\xB5r\xB7'}~\xBE\xEF\xAF\xBE\x1C\t\xAE.\x8A|\x7F\xC5\x87\x82\x99\xC9\x8AQU\x92\xE6\xD2\xAE~\xC4Q",
+ "ebe6ecfb44e31b12\x02\x03\x00,\x03\xE1\xEC?\xBA~W\x9F\xC7\x90\xBC\xF3\fY\x10\x8A\x02\"\xBB\x96\x92\x90D\x8E\xDDBJF\x9A\xEFl^fi\xFAB\xBE\xF9T\xCD9\xB1>\xF1",
+ "ebe6ecfb44e31b12\x02\x03\x00,\x04c+eK\xE9\xDDY\x97\x01\xCFy\e{\x98\xBC\xAA\xFC\xE6\x1Fy8\xC9]-\x82D\xC4\xE5\xAFk(w\xF1pO\xAC[0\x9C-)\xD7\x99",
+ "ebe6ecfb44e31b12\x02\x03\x00,\x05\xB6\xC5B!r\xB4e\xDE\x85\x10\xC2\xA2P?\x11\xD5\xA0\xE3fD\x16\x91\xDA^\xEE\x84\xFE\x00\x85\x80\xF4\x88Q\x00\\G0\x82\x83\xBA\xE6-9"]
 
 reconstructed_secret = Combiner.new(shares).combine
+=> "foo bar baz"
 ```
 
 ### Combining Shares to Recreate a Secret
@@ -99,7 +106,7 @@ secret = Combiner.new(shares, args).combine
 ```
 
 The `shares` is used when recreating the secret and must be provided as an Array
-of encoded Share Strings. You must provide at least as many shares as determined
+of encoded Share Byte Strings. You must provide at least as many shares as determined
 by the `threshold` value set when the shares were originally created. If you
 provide too few shares a `Tss::Error` exception will be raised.
 
@@ -141,18 +148,17 @@ output: :string_utf8
 output: :array_bytes
 ```
 
-`output:` : The value for the hash key `output:` can be the Symbol
-`:string_utf8` or `:array_bytes` which will return
-the recombined secret as either a UTF-8 String (default) or
-an Array of Bytes.
+`output:` : The value for the hash key `output:` can be the Symbol `:string_utf8`
+or `:array_bytes` which will return the recombined secret as either a UTF-8
+String (default) or an Array of Bytes.
 
 ### Exception Handling
 
 The splitting and combining operations may raise `Tss::ArgumentError`
 or `Tss::Error` exceptions and you should rescue and handle them in your code.
 
-`Tss::ArgumentError` exceptions will include the ActiveModel validation output
-where appropriate.
+`Tss::ArgumentError` exceptions will generally include the ActiveModel validation
+hints where appropriate.
 
 ## Performance
 
