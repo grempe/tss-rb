@@ -149,10 +149,10 @@ class Combiner
     # the size in Bytes of the defined binary header
     share_header_size = Splitter::SHARE_HEADER_STRUCT.size
 
-    # error if the shares are not *all* equal length
-    # or don't have the exact same binary header values
     first_share_header = extract_share_header(shares.first)
 
+    # error if the shares are not *all* equal length
+    # or don't have the exact same binary header values
     shares.each do |s|
       unless s.bytesize == shares.first.bytesize
         raise Tss::ArgumentError, 'invalid shares, different byte lengths'
@@ -162,7 +162,7 @@ class Combiner
         raise Tss::ArgumentError, 'invalid shares, different headers'
       end
 
-      unless s.bytesize > share_header_size
+      unless s.bytesize > share_header_size + 1
         raise Tss::ArgumentError, 'invalid shares, too short'
       end
     end
