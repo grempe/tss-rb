@@ -58,12 +58,8 @@ class Splitter
              value.bytes.to_a.size.between?(1, MAX_SECRET_BYTE_SIZE)
         record.errors.add attr, "must be a UTF-8 or US-ASCII String with a Byte length <= #{MAX_SECRET_BYTE_SIZE}"
       end
-    elsif value.is_a?(Array)
-      unless value.size.between?(1, MAX_SECRET_BYTE_SIZE) && value.all? { |x| x.is_a?(Integer) && x.between?(0,255) }
-        record.errors.add attr, "must be an Array of Bytes representing a UTF-8 or US-ASCII String with a Byte length <= #{MAX_SECRET_BYTE_SIZE}"
-      end
     else
-      record.errors.add attr, 'must be an Array of Bytes representing a UTF-8 or US-ASCII String or a UTF-8/US-ASCII String'
+      record.errors.add attr, "must be a String"
     end
   end
 
@@ -86,8 +82,12 @@ class Splitter
   end
 
   validates_each :hash_id do |record, attr, value|
-    unless value.is_a?(Integer) && SecretHash.valid?(value)
-      record.errors.add attr, "must be an Integer and in #{SecretHash::VALID_HASH_IDS}"
+    unless value.is_a?(Integer)
+      record.errors.add attr, "must be an Integer"
+    end
+
+    unless SecretHash.valid_id?(value)
+      record.errors.add attr, "must be a supported hash type id"
     end
   end
 
@@ -104,7 +104,13 @@ class Splitter
 
   def split
     raise Tss::ArgumentError, @errors.messages unless valid?
-    secret_bytes = secret.is_a?(Array) ? secret : Util.utf8_to_bytes(secret)
+
+    # Robust Threshold Secret Sharing (RTSS)
+    # Combine the secret with a hash digest before splitting. On recombine
+    # the two will be separated again and the hash used to validate the
+    # correct secret was returned.
+    # secret || hash(secret)
+    secret_bytes = Util.utf8_to_bytes(secret) + SecretHash.byte_array(hash_id, secret)
 
     # For each share, a distinct Share Index is generated. Each Share
     # Index is an octet other than the all-zero octet. All of the Share

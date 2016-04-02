@@ -10,15 +10,6 @@ describe Tss do
     end
   end
 
-  describe 'end-to-end test with a UTF-8 multi-byte string as an Array of Bytes' do
-    it 'must split and combine the secret properly' do
-      secret = 'I love secrets with multi-byte unicode characters ½ ♥ 💩'
-      shares = Splitter.new(secret.bytes.to_a, 3, 10, '123abc', 2).split
-      recovered_secret = Combiner.new(shares.sample(3)).combine
-      recovered_secret.must_equal secret
-    end
-  end
-
   describe 'end-to-end test with a US-ASCII string' do
     it 'must split and combine the secret properly' do
       secret = 'I love secrets with US-ASCII characters'.force_encoding('US-ASCII')

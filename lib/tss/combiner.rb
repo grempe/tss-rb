@@ -197,6 +197,18 @@ class Combiner
       secret << Util.lagrange_interpolation(u, v)
     end
 
+    # RTSS : pop off the hash digest bytes from the tail of the secret. This
+    # leaves `secret` with only the secret bytes remaining.
+    original_secret_hash_bytes = secret.pop(SecretHash.bytesize_for_id(first_share_header[:hash_id]))
+
+    # RTSS : verify that the recombined secret computes the same hash digest now
+    # as when it was originally created.
+    hash_id = first_share_header[:hash_id]
+    new_secret_hash_bytes = SecretHash.byte_array(hash_id, Util.bytes_to_utf8(secret))
+    unless new_secret_hash_bytes == original_secret_hash_bytes
+      raise Tss::Error, 'hash of combined secret does not match the hash of the secret when created'
+    end
+
     # return the secret as a UTF-8 String or an Array of Bytes
     case @opts[:output]
     when :string_utf8

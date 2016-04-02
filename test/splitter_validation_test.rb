@@ -25,7 +25,7 @@ describe Splitter do
       end
     end
 
-    describe 'when given a non String or Array secret' do
+    describe 'when given a non String secret' do
       it 'must not be valid?' do
         @s.secret = {}
         @s.wont_be :valid?
@@ -81,40 +81,6 @@ describe Splitter do
     describe 'when given a larger than max size 2**16 - 1 byte String secret' do
       it 'must not be valid?' do
         @s.secret = 'a' * (2**16 - 1)
-        @s.wont_be :valid?
-      end
-    end
-
-    describe 'when given a blank Array secret' do
-      it 'must not be valid?' do
-        @s.secret = []
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.secret = []
-        @s.valid?
-        @s.errors.messages[:secret].first.must_match "can't be blank"
-      end
-    end
-
-    describe 'when given a min size one byte Array secret' do
-      it 'must be valid?' do
-        @s.secret = 'a'.bytes.to_a
-        @s.must_be :valid?
-      end
-    end
-
-    describe 'when given a max size 2**16 - 2 byte Array secret' do
-      it 'must be valid?' do
-        @s.secret = ('a' * (2**16 - 2)).bytes.to_a
-        @s.must_be :valid?
-      end
-    end
-
-    describe 'when given a larger than max size 2**16 - 1 byte Array secret' do
-      it 'must not be valid?' do
-        @s.secret = ('a' * (2**16 - 1)).bytes.to_a
         @s.wont_be :valid?
       end
     end
@@ -344,7 +310,7 @@ describe Splitter do
       it 'must return an error message?' do
         @s.hash_id = '2'
         @s.valid?
-        @s.errors.messages[:hash_id].first.must_match 'must be an Integer and in'
+        @s.errors.messages[:hash_id].first.must_match 'must be an Integer'
       end
     end
 
@@ -357,7 +323,7 @@ describe Splitter do
       it 'must return an error message?' do
         @s.hash_id = 99
         @s.valid?
-        @s.errors.messages[:hash_id].first.must_match 'must be an Integer and in'
+        @s.errors.messages[:hash_id].first.must_match 'must be a supported hash type id'
       end
     end
 
