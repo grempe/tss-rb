@@ -3,7 +3,9 @@ require 'test_helper'
 describe Combiner do
   before do
     @secret = 'I love secrets with multi-byte unicode characters ½ ♥ 💩'
-    @shares = Splitter.new(@secret, 3, 5, SecureRandom.hex(8), SecretHash::SHA256).split
+    @threshold = 3
+    @num_shares = 5
+    @shares = Splitter.new(@secret, @threshold, @num_shares, SecureRandom.hex(8), SecretHash::SHA256).split
   end
 
   describe 'shares argument' do
@@ -19,7 +21,18 @@ describe Combiner do
       assert_raises(Tss::ArgumentError) { Combiner.new(['foo']).combine }
     end
 
-    it 'must return the right secret with valid shares' do
+    it 'must raise an error if too few shares are passed' do
+      assert_raises(Tss::ArgumentError) { Combiner.new(@shares.sample(@threshold - 1)).combine }
+    end
+
+    it 'must return the right secret with exactly the right amount of valid shares' do
+      secret = Combiner.new(@shares.sample(@threshold)).combine
+      assert_kind_of String, secret
+      secret.encoding.name.must_equal 'UTF-8'
+      secret.must_equal @secret
+    end
+
+    it 'must return the right secret with all of the valid shares' do
       secret = Combiner.new(@shares).combine
       assert_kind_of String, secret
       secret.encoding.name.must_equal 'UTF-8'

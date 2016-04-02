@@ -167,6 +167,11 @@ class Combiner
       end
     end
 
+    # verify that there are enough shares to meet the threshold
+    unless shares.size >= first_share_header[:threshold]
+      raise Tss::ArgumentError, 'invalid shares, fewer than required by threshold'
+    end
+
     # initialize the empty output secret Array of Bytes
     secret = []
 
