@@ -42,6 +42,13 @@ class Splitter
   MIN_SHARES = 1
   MAX_SHARES = 255
 
+  SHARE_HEADER_STRUCT = BinaryStruct.new([
+                   'a16', :identifier,  # String, 16 Bytes, arbitrary binary string (null padded, count is width)
+                   'C', :hash_id,
+                   'C', :threshold,
+                   'n', :share_len
+                  ])
+
   attr_accessor :secret, :threshold, :num_shares, :identifier, :hash_id
   validates_presence_of :secret, :threshold, :num_shares, :hash_id
 
@@ -98,7 +105,6 @@ class Splitter
   def split
     raise Tss::ArgumentError, @errors.messages unless valid?
     secret_bytes = secret.is_a?(Array) ? secret : Util.utf8_to_bytes(secret)
-    # identifier_bytes = Util.utf8_to_bytes(identifier)
 
     # For each share, a distinct Share Index is generated. Each Share
     # Index is an octet other than the all-zero octet. All of the Share
@@ -141,6 +147,19 @@ class Splitter
       end
     end
 
-    shares.map! { |s| Util.bytes_to_hex(s) }
+    # build up a common binary struct header for all shares
+    header = share_header(identifier, hash_id, threshold, shares.first.length)
+
+    # create each binary share and return it.
+    shares.map! { |s| header + s.pack('C*') }
+  end
+
+  private
+
+  def share_header(identifier, hash_id, threshold, share_len)
+    SHARE_HEADER_STRUCT.encode(identifier: identifier,
+                               hash_id: hash_id,
+                               threshold: threshold,
+                               share_len: share_len)
   end
 end

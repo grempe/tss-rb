@@ -67,12 +67,15 @@ class Combiner
 
   validates_each :shares do |record, attr, value|
     if value.is_a?(Array)
-      unless value.size.between?(1, Splitter::MAX_SHARES) &&
-             value.all? { |x| x.is_a?(String) && x.match(/^[0-9a-fA-F]+$/) }
-        record.errors.add attr, 'invalid share(s) provided in the Array'
+      unless value.size.between?(1, Splitter::MAX_SHARES)
+        record.errors.add attr, 'invalid shares, too few or too many'
+      end
+
+      unless value.all? { |x| x.is_a?(String) }
+        record.errors.add attr, 'invalid shares, not a String'
       end
     else
-      record.errors.add attr, 'must be an Array of valid share Strings'
+      record.errors.add attr, 'invalid shares, must be an Array of shares'
     end
   end
 
@@ -143,25 +146,48 @@ class Combiner
   def combine
     raise Tss::ArgumentError, @errors.messages unless valid?
 
+    # the size in Bytes of the defined binary header
+    share_header_size = Splitter::SHARE_HEADER_STRUCT.size
+
     # error if the shares are not *all* equal length
+    # or don't have the exact same binary header values
+    first_share_header = extract_share_header(shares.first)
+
     shares.each do |s|
-      unless s.length == shares.first.length
-        raise Tss::Error, 'invalid shares, different lengths'
+      unless s.bytesize == shares.first.bytesize
+        raise Tss::ArgumentError, 'invalid shares, different byte lengths'
+      end
+
+      unless extract_share_header(s) == first_share_header
+        raise Tss::ArgumentError, 'invalid shares, different headers'
+      end
+
+      unless s.bytesize > share_header_size
+        raise Tss::ArgumentError, 'invalid shares, too short'
       end
     end
 
     # initialize the empty output secret Array of Bytes
     secret = []
 
-    # convert the hex shares into an Array of Byte Arrays
-    shares_bytes = shares.collect { |s| Util.hex_to_bytes(s) }
+    # slice out the data after the header bytes in each share
+    # and unpack the byte string into an Array of Byte Arrays
+    shares_bytes = shares.collect do |s|
+      bytestring = s.byteslice(share_header_size..s.bytesize)
+      bytestring.unpack('C*') if bytestring.present?
+    end
 
     # build up an Array of index values from each share
     # u[i] equal to the first octet of the ith share
-    u = shares_bytes.collect { |s| s[0] }
+    u = shares_bytes.collect do |s|
+      index = s[0]
+      raise Tss::ArgumentError, 'invalid shares, no index value' if index.blank?
+      raise Tss::ArgumentError, 'invalid shares, illegal zero index value' if index == 0
+      index
+    end
 
     unless u.uniq.size == shares_bytes.size
-      raise Tss::Error, 'invalid shares, at least one has a duplicate index'
+      raise Tss::ArgumentError, 'invalid shares, duplicate indexes'
     end
 
     # loop through each byte in all the shares
@@ -178,5 +204,11 @@ class Combiner
     when :array_bytes
       secret
     end
+  end
+
+  private
+
+  def extract_share_header(share)
+    Splitter::SHARE_HEADER_STRUCT.decode(share)
   end
 end
