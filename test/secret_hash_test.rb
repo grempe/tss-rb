@@ -113,6 +113,14 @@ describe SecretHash do
     end
   end
 
+  it 'must raise a error if id is not an Integer' do
+    assert_raises(Tss::ArgumentError) { SecretHash.byte_array('2', 'foo') }
+  end
+
+  it 'must raise a error if id is negative' do
+    assert_raises(Tss::ArgumentError) { SecretHash.byte_array(-1, 'foo') }
+  end
+
   it 'must raise a RESERVED error if value between 3..127' do
     assert_raises(Tss::ArgumentError) { SecretHash.byte_array(3, 'foo') }
     assert_raises(Tss::ArgumentError) { SecretHash.byte_array(127, 'foo') }
