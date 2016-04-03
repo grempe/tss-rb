@@ -29,29 +29,34 @@ require_relative 'util'
 # `share_selection:` : This option determines how the Array of incoming shares
 # to be re-combined should be handled. One of the following options is valid:
 #
-# `:strict_first_x` : If X shares are required by the threshold, then the
-# first X shares in the Array of shares provided will be used. All others will
-# be discarded and the operation will fail if those selected shares cannot
-# recreate the secret.
+# `:strict_first_x` : If X shares are required by the threshold and more than X
+# shares are provided, then the first X shares in the Array of shares provided
+# will be used. All others will be discarded and the operation will fail if
+# those selected shares cannot recreate the secret.
 #
-# `:strict_sample_x` : If X shares are required, then X shares will be randomly
-# selected from the Array of shares provided.  All others will be discarded and
-# the operation will fail if those selected shares cannot recreate the secret.
+# `:strict_sample_x` : If X shares are required by the threshold and more than X
+# shares are provided, then X shares will be randomly selected from the Array
+# of shares provided.  All others will be discarded and the operation will
+# fail if those selected shares cannot recreate the secret.
 #
 # `:any_combination` : If X shares are required, and more than X shares are
-# provided, then all possible combinations of the shares provided will be
-# tried to see if the secret can be recreated. This is a more flexible, but
-# possibly less-safe approach.
+# provided, then all possible combinations of the threshold number of shares
+# will be tried to see if the secret can be recreated. This is a more flexible,
+# and probably slower, but is the best shot at finding a working combination of
+# shares. The tradeoff is that this could possibly be a less-safe approach if
+# you are collecting shares from cheaters.
+#
+# Another argument is the choice of output type:
 #
 # output: :string_utf8
 # output: :array_bytes
 #
 # `output:` : The value for the hash key `output:` can be the Symbol
 # `:string_utf8` or `:array_bytes` which will return
-# the recombined secret as either a UTF-8 String (default) or
+# the successfully recombined secret as either a UTF-8 String (default) or
 # an Array of Bytes.
 #
-# If the combine operation can not be completed successfully, then a
+# If the combine operation cannot be completed successfully, then a
 # `Tss::Error` exception should be raised.
 #
 # After the procedure is done, the String (or Bytes) returned contain
@@ -147,31 +152,31 @@ class Combiner
     # the size in Bytes of the defined binary header
     share_header_size = Splitter::SHARE_HEADER_STRUCT.size
 
-    first_share_header = extract_share_header(shares.first)
+    first_header = extract_share_header(shares.first)
 
     # ensure the first share header is complete
-    unless first_share_header.is_a?(Hash) &&
-           first_share_header.key?(:identifier) &&
-           first_share_header[:identifier].is_a?(String) &&
-           first_share_header.key?(:hash_id) &&
-           first_share_header[:hash_id].is_a?(Integer) &&
-           first_share_header.key?(:threshold) &&
-           first_share_header[:threshold].is_a?(Integer) &&
-           first_share_header.key?(:share_len) &&
-           first_share_header[:share_len].is_a?(Integer)
+    unless first_header.is_a?(Hash) &&
+           first_header.key?(:identifier) &&
+           first_header[:identifier].is_a?(String) &&
+           first_header.key?(:hash_id) &&
+           first_header[:hash_id].is_a?(Integer) &&
+           first_header.key?(:threshold) &&
+           first_header[:threshold].is_a?(Integer) &&
+           first_header.key?(:share_len) &&
+           first_header[:share_len].is_a?(Integer)
       raise Tss::ArgumentError, 'invalid shares, first share does not have a valid header'
     end
 
     # If there are more shares than the threshold would require
     # then choose a subset of the shares based on preference.
-    if shares.size > first_share_header[:threshold]
+    if shares.size > first_header[:threshold]
       case @opts[:share_selection]
       when :strict_first_x
         # choose the first shares in the Array
-        @shares = shares.shift(first_share_header[:threshold])
+        @shares = shares.shift(first_header[:threshold])
       when :strict_sample_x
         # choose a random sample of shares from the Array
-        @shares = shares.sample(first_share_header[:threshold])
+        @shares = shares.sample(first_header[:threshold])
       end
     end
 
@@ -182,7 +187,7 @@ class Combiner
         raise Tss::ArgumentError, 'invalid shares, different byte lengths'
       end
 
-      unless extract_share_header(s) == first_share_header
+      unless extract_share_header(s) == first_header
         raise Tss::ArgumentError, 'invalid shares, different headers'
       end
 
@@ -192,12 +197,9 @@ class Combiner
     end
 
     # Verify that there are enough shares to meet the threshold
-    unless shares.size >= first_share_header[:threshold]
+    unless shares.size >= first_header[:threshold]
       raise Tss::ArgumentError, 'invalid shares, fewer than required by threshold'
     end
-
-    # initialize the empty output secret Array of Bytes
-    secret = []
 
     # slice out the data after the header bytes in each share
     # and unpack the byte string into an Array of Byte Arrays
@@ -206,13 +208,46 @@ class Combiner
       bytestring.unpack('C*') if bytestring.present?
     end
 
+    # if :any_combination option was chosen, build an Array of all possible
+    # combinations of the shares provided and try each combination in turn until
+    # one is found that results in a good secret extraction. Otherwise just extract
+    # from a single set of shares as normal.
+    case @opts[:share_selection]
+    when :any_combination
+      unless [SecretHash::SHA1, SecretHash::SHA256].include?(first_header[:hash_id])
+        raise Tss::ArgumentError, 'invalid options, :any_combination can only be used with SHA1 or SHA256 digest shares.'
+      end
+
+      share_combos = shares_bytes.combination(first_header[:threshold]).to_a
+
+      secret = nil
+      while secret.nil? && share_combos.present?
+        result = extract_secret_from_shares(first_header, share_combos.shift)
+        secret = result unless result.nil?
+      end
+    else
+      secret = extract_secret_from_shares(first_header, shares_bytes)
+    end
+
+    if secret.present?
+      # return the secret as a UTF-8 String or an Array of Bytes
+      @opts[:output] == :string_utf8 ? Util.bytes_to_utf8(secret) : secret
+    else
+      raise Tss::Error, 'unable to recombine shares into a valid secret'
+    end
+  end
+
+  private
+
+  def extract_secret_from_shares(header, shares_bytes)
+    secret = []
+
     # build up an Array of index values from each share
     # u[i] equal to the first octet of the ith share
     u = shares_bytes.collect do |s|
-      index = s[0]
-      raise Tss::ArgumentError, 'invalid shares, no index value' if index.blank?
-      raise Tss::ArgumentError, 'invalid shares, illegal zero index value' if index == 0
-      index
+      raise Tss::ArgumentError, 'invalid shares, no index' if s[0].blank?
+      raise Tss::ArgumentError, 'invalid shares, zero index' if s[0] == 0
+      s[0]
     end
 
     unless u.uniq.size == shares_bytes.size
@@ -226,28 +261,22 @@ class Combiner
       secret << Util.lagrange_interpolation(u, v)
     end
 
-    # RTSS : pop off the hash digest bytes from the tail of the secret. This
-    # leaves `secret` with only the secret bytes remaining.
-    original_secret_hash_bytes = secret.pop(SecretHash.bytesize_for_id(first_share_header[:hash_id]))
+    # Only run the hash digest checks if the shares were created with SHA1 or SHA256
+    if [SecretHash::SHA1, SecretHash::SHA256].include?(header[:hash_id])
+      # RTSS : pop off the hash digest bytes from the tail of the secret. This
+      # leaves `secret` with only the secret bytes remaining.
+      orig_secret_hash_bytes = secret.pop(SecretHash.bytesize_for_id(header[:hash_id]))
 
-    # RTSS : verify that the recombined secret computes the same hash digest now
-    # as when it was originally created.
-    hash_id = first_share_header[:hash_id]
-    new_secret_hash_bytes = SecretHash.byte_array(hash_id, Util.bytes_to_utf8(secret))
-    unless new_secret_hash_bytes == original_secret_hash_bytes
-      raise Tss::Error, 'hash of combined secret does not match the hash of the secret when created'
-    end
+      # RTSS : verify that the recombined secret computes the same hash digest now
+      # as when it was originally created.
+      new_secret_hash_bytes = SecretHash.byte_array(header[:hash_id], Util.bytes_to_utf8(secret))
 
-    # return the secret as a UTF-8 String or an Array of Bytes
-    case @opts[:output]
-    when :string_utf8
-      Util.bytes_to_utf8(secret)
-    when :array_bytes
+      # return the secret only if the hash test passed
+      new_secret_hash_bytes == orig_secret_hash_bytes ? secret : nil
+    else
       secret
     end
   end
-
-  private
 
   def extract_share_header(share)
     Splitter::SHARE_HEADER_STRUCT.decode(share)

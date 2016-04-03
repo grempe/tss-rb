@@ -93,5 +93,26 @@ describe Combiner do
     it 'must raise an error if a an invalid share_selection: value is passed' do
       assert_raises(Tss::ArgumentError) { Combiner.new(@shares, {share_selection: :foo}).combine }
     end
+
+    describe 'when share_selection arg is set to :strict_first_x' do
+      it 'must return a secret' do
+        secret = Combiner.new(@shares, {share_selection: :strict_first_x}).combine
+        secret.must_equal @secret
+      end
+    end
+
+    describe 'when share_selection arg is set to :strict_sample_x' do
+      it 'must return a secret' do
+        secret = Combiner.new(@shares, {share_selection: :strict_sample_x}).combine
+        secret.must_equal @secret
+      end
+    end
+
+    describe 'when share_selection arg is set to :any_combination' do
+      it 'must return a secret' do
+        secret = Combiner.new(@shares, {share_selection: :any_combination}).combine
+        secret.must_equal @secret
+      end
+    end
   end
 end
