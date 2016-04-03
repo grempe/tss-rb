@@ -99,8 +99,6 @@ class Combiner
     end
   end
 
-  # FIXME : implement strict_first_x, sample_first_x, and any_combination
-
   def initialize(shares, args = {})
     raise Tss::ArgumentError, 'optional args must be a Hash' unless args.is_a?(Hash)
     @opts = { share_selection: :strict_first_x, output: :string_utf8 }
@@ -151,7 +149,33 @@ class Combiner
 
     first_share_header = extract_share_header(shares.first)
 
-    # error if the shares are not *all* equal length
+    # ensure the first share header is complete
+    unless first_share_header.is_a?(Hash) &&
+           first_share_header.key?(:identifier) &&
+           first_share_header[:identifier].is_a?(String) &&
+           first_share_header.key?(:hash_id) &&
+           first_share_header[:hash_id].is_a?(Integer) &&
+           first_share_header.key?(:threshold) &&
+           first_share_header[:threshold].is_a?(Integer) &&
+           first_share_header.key?(:share_len) &&
+           first_share_header[:share_len].is_a?(Integer)
+      raise Tss::ArgumentError, 'invalid shares, first share does not have a valid header'
+    end
+
+    # If there are more shares than the threshold would require
+    # then choose a subset of the shares based on preference.
+    if shares.size > first_share_header[:threshold]
+      case @opts[:share_selection]
+      when :strict_first_x
+        # choose the first shares in the Array
+        @shares = shares.shift(first_share_header[:threshold])
+      when :strict_sample_x
+        # choose a random sample of shares from the Array
+        @shares = shares.sample(first_share_header[:threshold])
+      end
+    end
+
+    # Error if the shares are not *all* equal length
     # or don't have the exact same binary header values
     shares.each do |s|
       unless s.bytesize == shares.first.bytesize
@@ -167,7 +191,7 @@ class Combiner
       end
     end
 
-    # verify that there are enough shares to meet the threshold
+    # Verify that there are enough shares to meet the threshold
     unless shares.size >= first_share_header[:threshold]
       raise Tss::ArgumentError, 'invalid shares, fewer than required by threshold'
     end
