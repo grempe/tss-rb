@@ -21,23 +21,17 @@ Gem::Specification.new do |spec|
     control on key material and other secrets that must be strongly
     protected.
 
-    This note defines a threshold secret sharing method based on
+    This gem implements a threshold secret sharing method based on
     polynomial interpolation in GF(256) and a format for the storage and
     transmission of shares.
+
+    This implementation follows the specification in the document:
 
     http://tools.ietf.org/html/draft-mcgrew-tss-03
   EOF
 
   spec.homepage      = 'https://github.com/grempe/tss-rb'
   spec.license       = 'MIT'
-
-  # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
-  # delete this section to allow pushing this gem to any host.
-  if spec.respond_to?(:metadata)
-    spec.metadata['allowed_push_host'] = "TODO: Set to 'http://mygemserver.com'"
-  else
-    raise 'RubyGems 2.0 or newer is required to protect against public gem pushes.'
-  end
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = 'exe'

@@ -1,12 +1,35 @@
 # TSS
 
-A Ruby Gem implementation of the Threshold Secret Sharing, as specified in
+This Ruby gem implements Threshold Secret Sharing, as specified in
 the Network Working Group Internet-Draft submitted by D. McGrew
 ([draft-mcgrew-tss-03.txt](http://tools.ietf.org/html/draft-mcgrew-tss-03)).
 
-Shares are returned in binary string form and support Robust Threshold Secret
-Sharing (RTSS) as described in the Internet-Draft. RTSS hash types for
-`NONE`, `SHA1`, and `SHA256` are supported.
+Threshold Secret Sharing (TSS) provides a way to generate `N` shares
+from a value, so that any `M` of those shares can be used to
+reconstruct the original value, but any `M-1` shares provide no
+information about that value. This method can provide shared access
+control on key material and other secrets that must be strongly
+protected.
+
+This threshold secret sharing method is based on polynomial interpolation in
+GF(256) and also provides a robust format for the storage and transmission
+of shares.
+
+The sharing format is Robust Threshold Secret Sharing (RTSS) as described
+in the Internet-Draft. RTSS is a binary data format and a method for
+ensuring that any secrets recovered are identical to the secret that was
+originally shared.
+
+This implementation supports RTSS digest types for `NONE`, `SHA1`, and
+`SHA256`. `SHA256` is the recommended digest. In the RTSS scheme a digest of
+the original secret is concatenated with the secret itself prior to the splitting
+of the secret into shares. Later, this digest is compared with any secret recovered
+by recombining shares. If the hash of the recovered secret does not match the
+original hash stored in the shares the secret will not be returned. The verifier
+hash for the secret is not available to shareholders prior to recombining shares.
+
+The specification also addresses the optional implementation of a `MAGIC_NUMBER` and
+advanced error correction schemes. These are not currently implemented.
 
 ## Status
 
@@ -28,12 +51,15 @@ gem 'tss'
 ```
 
 And then execute:
-
-    $ bundle
+```sh
+$ bundle
+```
 
 Or install it yourself as:
 
-    $ gem install tss
+```sh
+$ gem install tss
+```
 
 ## Usage
 
@@ -41,9 +67,11 @@ Or install it yourself as:
 
 The basic usage is as follows using the arguments described below.
 
-```
+```ruby
 shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
 ```
+
+#### Arguments
 
 The `secret` (required) value must be provided as a String with either
 the `UTF-8` or `US-ASCII` encoding with a Byte length  `<= 65,534`. You can
@@ -70,15 +98,15 @@ secret is a match for the original at creation time. There are currently three
 valid values which have been specified as constants for your convenience.
 `SecretHash::SHA256` is the recommended Hash Digest to use.
 
-```
+```ruby
 SecretHash::NONE                 // code 0
 SecretHash::SHA1                 // code 1
 SecretHash::SHA256               // code 2
 ```
 
-Example:
+#### Example Usage
 
-```
+```ruby
 secret = 'foo bar baz'
 threshold = 3
 num_shares = 5
@@ -101,56 +129,47 @@ reconstructed_secret = Combiner.new(shares).combine
 
 The basic usage is as follows using the arguments described below.
 
-```
+```ruby
 secret = Combiner.new(shares, args).combine
 ```
+
+#### Arguments
 
 The `shares` is used when recreating the secret and must be provided as an Array
 of encoded Share Byte Strings. You must provide at least as many shares as determined
 by the `threshold` value set when the shares were originally created. If you
 provide too few shares a `Tss::Error` exception will be raised.
 
-The second argument expects a Hash to be provided where the default is:
+The second argument expects a Hash and is set to use the following defaults:
 
-```
-{share_selection: :strict_first_x, output: :string_utf8}
-```
-
-#### Share Handling Args
-
-```
-share_selection: :strict_first_x
-share_selection: :strict_sample_x
-share_selection: :any_combination
+```ruby
+args = {share_selection: :strict_first_x, output: :string_utf8}
 ```
 
 `share_selection:` : This option determines how the Array of incoming shares
 to be re-combined should be handled. One of the following options is valid:
 
-`:strict_first_x` : If X shares are required by the threshold, then the
-first X shares in the Array of shares provided will be used. All others will
-be discarded and the operation will fail if those selected shares cannot
-recreate the secret.
+`:strict_first_x` : If `M` shares are required as a threshold, then the
+first `M` shares in the Array of `shares` provided will be used. All other
+`shares` will be discarded and the operation will fail if the selected shares
+cannot recreate the secret.
 
-`:strict_sample_x` : If X shares are required, then X shares will be randomly
-selected from the Array of shares provided.  All others will be discarded and
-the operation will fail if those selected shares cannot recreate the secret.
+`:strict_sample_x` : If `M` shares are required as a threshold, then a random
+`M` shares in the Array of `shares` provided will be used. All other
+`shares` will be discarded and the operation will fail if the selected shares
+cannot recreate the secret.
 
-`:any_combination` : If X shares are required, and more than X shares are
-provided, then all possible combinations of the shares provided will be
-tried to see if the secret can be recreated. This is a more flexible, but
-possibly less-safe approach.
+`:any_combination` :  If `M` shares are required as a threshold, then all possible
+`M` share combinations in the Array of `shares` provided will be used. The combinations
+will be tried one after the other until the first one succeeds or they all fail.
+This combination technique can only be used if the RTSS hash type was set to
+`SHA1` or `SHA256` when the shares were created.
 
 #### Secret Output Format Args
 
-```
-output: :string_utf8
-output: :array_bytes
-```
-
 `output:` : The value for the hash key `output:` can be the Symbol `:string_utf8`
 or `:array_bytes` which will return the recombined secret as either a UTF-8
-String (default) or an Array of Bytes.
+String (default) or an Array of unisgned Integer Bytes.
 
 ### Exception Handling
 
@@ -160,17 +179,64 @@ or `Tss::Error` exceptions and you should rescue and handle them in your code.
 `Tss::ArgumentError` exceptions will generally include the ActiveModel validation
 hints where appropriate.
 
+## RTSS Data Format
+
+We use a data format with the following fields, in order:
+
+`Identifier`. This field contains 16 octets.  It identifies the secret
+with which a share is associated.  All of the shares associated
+with a particular secret MUST use the same value Identifier.  When
+a secret is reconstructed, the Identifier fields of each of the
+shares used as input MUST have the same value.  The value of the
+Identifier should be chosen so that it is unique, but the details
+on how it is chosen are left as an exercise for the reader.
+
+`Hash Algorithm Identifier`. This field contains a single octet that
+indicates the hash function used in the RTSS processing, if any.
+A value of `0` indicates that no hash algorithm was used, no hash
+was appended to the secret, and no RTSS check should be performed
+after the reconstruction of the secret.
+
+`Threshold`. This field contains a single octet that indicates the
+number of shares required to reconstruct the secret. This field
+MUST be checked during the reconstruction process, and that
+process MUST halt and return an error if the number of shares
+available is fewer than the value indicated in this field.
+
+`Share Length`. This field is two octets long. It contains the number
+of octets in the Share Data field, represented as an unsigned
+integer in network byte order.
+
+`Share Data`. This field has a length that is a variable number of
+octets. It contains the actual share data.
+
+```
+0                   1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                          Identifier                           |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| Hash Alg. Id. |   Threshold   |         Share Length          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+:                                                               :
+:                          Share Data                           :
+:                                                               :
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
 ## Performance
 
 The amount of time it takes to split or combine secrets grows significantly as
 the size of the secret and the total `num_shares` increase. Splitting a secret
 with the maximum size of `2**16 - 2` (65,534) Bytes and the maximum `255` shares
-may take a long, long time to run. Splitting a secret with more reasonable values,
-for example a `32 Byte` secret key with `16` total shares and a threshold of `8`
-may only take milliseconds to run.
-
-In either case it is likely prudent to run all operations asynchronously
-in a background worker process or thread.
+may take a long time to run. Splitting a secret with more reasonable values,
+for example a `32 Byte` encryption key with `16` total shares and a threshold of `8`
+may only take milliseconds to run. If you will be splitting large secrets or
+using large numbers of shares, you may consider running those operations in
+background processes for performance.
 
 There are some simple benchmark tests you can run with `rake bench`.
 
@@ -189,9 +255,10 @@ to [rubygems.org](https://rubygems.org).
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub
-at [https://github.com/grempe/tss-rb](https://github.com/grempe/tss-rb). This project is intended to be a safe,
-welcoming space for collaboration, and contributors are expected to adhere
-to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+at [https://github.com/grempe/tss-rb](https://github.com/grempe/tss-rb). This
+project is intended to be a safe, welcoming space for collaboration, and
+contributors are expected to adhere to the
+[Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## Legal
 
@@ -201,7 +268,8 @@ to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ### License
 
-The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+The gem is available as open source under the terms of
+the [MIT License](http://opensource.org/licenses/MIT).
 
 ### Warranty
 
@@ -226,9 +294,9 @@ the Network Working Group Internet-Draft submitted by D. McGrew
 ([draft-mcgrew-tss-03.txt](http://tools.ietf.org/html/draft-mcgrew-tss-03)).
 This code would not have been possible without this very well designed and
 documented specification. Many examples of the relevant text from the specification
-has been used as comments to annotate this source code.
+have been used as comments to annotate this source code.
 
 Great respect to Sébastien Martini ([@seb-m](https://github.com/seb-m)) for
 his [seb-m/tss](https://github.com/seb-m/tss) Python implementation of TSS.
-It was invaluable as a real-world reference implementation of the TSS Internet-Draft
-when coding this version of the TSS in Ruby.
+It was invaluable as a real-world reference implementation of the
+TSS Internet-Draft.
