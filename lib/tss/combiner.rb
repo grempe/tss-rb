@@ -46,16 +46,6 @@ require_relative 'util'
 # shares. The tradeoff is that this could possibly be a less-safe approach if
 # you are collecting shares from cheaters.
 #
-# Another argument is the choice of output type:
-#
-# output: :string_utf8
-# output: :array_bytes
-#
-# `output:` : The value for the hash key `output:` can be the Symbol
-# `:string_utf8` or `:array_bytes` which will return
-# the successfully recombined secret as either a UTF-8 String (default) or
-# an Array of Bytes.
-#
 # If the combine operation cannot be completed successfully, then a
 # `Tss::Error` exception should be raised.
 #
@@ -83,12 +73,8 @@ class Combiner
 
   validates_each :opts do |record, attr, value|
     if value.is_a?(Hash)
-      unless value.key?(:output) && value.key?(:share_selection)
+      unless value.key?(:share_selection)
         record.errors.add attr, 'must have expected keys'
-      end
-
-      unless [:string_utf8, :array_bytes].include?(value[:output])
-        record.errors.add attr, ':output arg must have valid values'
       end
 
       unless [:strict_first_x,
@@ -103,7 +89,7 @@ class Combiner
 
   def initialize(shares, args = {})
     raise Tss::ArgumentError, 'optional args must be a Hash' unless args.is_a?(Hash)
-    @opts = { share_selection: :strict_first_x, output: :string_utf8 }
+    @opts = { share_selection: :strict_first_x }
     @opts.merge!(args)
     @shares = shares
   end
@@ -139,9 +125,6 @@ class Combiner
   #     computed, then appended to the output string.
   #
   #     The output string is returned.
-  #
-  #  After the procedure is done, the string that is returned contains one
-  #  fewer octet than do the shares.
   #
   def combine
     raise Tss::ArgumentError, @errors.messages unless valid?
@@ -227,10 +210,9 @@ class Combiner
     end
 
     if secret.present?
-      # return the secret as a UTF-8 String or an Array of Bytes
-      @opts[:output] == :string_utf8 ? Util.bytes_to_utf8(secret) : secret
+      Util.bytes_to_utf8(secret)
     else
-      raise Tss::Error, 'unable to recombine shares into a valid secret'
+      raise Tss::Error, 'unable to recombine shares into a verifiable secret'
     end
   end
 

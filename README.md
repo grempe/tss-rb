@@ -167,16 +167,9 @@ secret = Combiner.new(shares, args).combine
 You must provide at least `threshold` shares as specified when the secret was split.
 Providing too few shares will result in a `Tss::ArgumentError` exception being raised.
 
-`args` (optional) : A Hash or options to determine how shares are selected if
-more than `threshold` shares are provided, and for determining the output format.
+Options Hash (optional) : A Hash of options.
 
-Defaults :
-
-```ruby
-args = {share_selection: :strict_first_x, output: :string_utf8}
-```
-
-#### Share selection
+#### Option : Share selection
 
 `share_selection:` : This key determines how the Array of incoming shares
 to be re-combined should be handled when more than `threshold` shares are
@@ -197,14 +190,6 @@ cannot recreate the secret.
 will be tried one after the other until the first one succeeds or they all fail.
 This combination technique can only be used if the RTSS hash type was set to
 `SHA1` or `SHA256` when the shares were created.
-
-#### Output Format
-
-`output:` : The value for the hash key `output:` can be:
-
-`:string_utf8` : will return the recombined secret as a UTF-8 String (default)
-
-`:array_bytes`  will return the recombined secret as an Array of unisgned Integer Bytes
 
 ### Exception Handling
 
