@@ -30,9 +30,9 @@
 #   SecretHash::SHA1                 // code 1
 #   SecretHash::SHA256               // code 2
 #
-# Initializing an instance of this class *must* return an
-# Array of formatted shares or raise a `Tss::Error` exception
-# if anything has gone wrong.
+# Calling `split` on an instance of this class *must* return an
+# Array of formatted shares or raise one of `Tss::Error`
+# or `Tss::ArgumentError` if anything has gone wrong.
 #
 class Splitter
   include ActiveModel::Validations

@@ -13,11 +13,11 @@ require_relative 'util'
 # used to select the shares can be arbitrary.
 #
 # If the shares are not equal length, then the input is
-# inconsistent. A `Tss::Error` exception should be raised,
+# inconsistent. A `Tss::ArgumentError` exception should be raised,
 # and processing must halt.
 #
 # If any two elements of the shares array have the same value then the
-# input is inconsistent. A `Tss::Error` exception should be raised,
+# input is inconsistent. A `Tss::ArgumentError` exception should be raised,
 # and processing must halt.
 #
 # The following can be provided as optional Hash args.
@@ -58,9 +58,6 @@ require_relative 'util'
 #
 # If the combine operation cannot be completed successfully, then a
 # `Tss::Error` exception should be raised.
-#
-# After the procedure is done, the String (or Bytes) returned contain
-# one fewer octet than do the original shares.
 #
 class Combiner
   include ActiveModel::Validations

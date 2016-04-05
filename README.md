@@ -165,7 +165,7 @@ secret = Combiner.new(shares, args).combine
 
 `shares` (required) : Must be provided as an Array of encoded Share Byte Strings.
 You must provide at least `threshold` shares as specified when the secret was split.
-Providing too few shares will result in a `Tss::Error` exception being raised.
+Providing too few shares will result in a `Tss::ArgumentError` exception being raised.
 
 `args` (optional) : A Hash or options to determine how shares are selected if
 more than `threshold` shares are provided, and for determining the output format.
@@ -210,9 +210,7 @@ This combination technique can only be used if the RTSS hash type was set to
 
 The splitting and combining operations may raise `Tss::ArgumentError`
 or `Tss::Error` exceptions and you should rescue and handle them in your code.
-
-`Tss::ArgumentError` exceptions will generally include the ActiveModel validation
-hints where appropriate.
+Exception messages may include hints as to what went wrong.
 
 ## RTSS Binary Data Format
 
