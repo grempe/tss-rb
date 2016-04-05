@@ -218,4 +218,11 @@ module Util
   def self.utf8_to_hex(str)
     bytes_to_hex(utf8_to_bytes(str))
   end
+
+  # Binary Header Helpers
+
+  def self.extract_share_header(share)
+    Splitter::SHARE_HEADER_STRUCT.decode(share)
+  end
+
 end

@@ -132,7 +132,7 @@ class Combiner
     # the size in Bytes of the defined binary header
     share_header_size = Splitter::SHARE_HEADER_STRUCT.size
 
-    first_header = extract_share_header(shares.first)
+    first_header = Util.extract_share_header(shares.first)
 
     # ensure the first share header is complete
     unless first_header.is_a?(Hash) &&
@@ -167,7 +167,7 @@ class Combiner
         raise Tss::ArgumentError, 'invalid shares, different byte lengths'
       end
 
-      unless extract_share_header(s) == first_header
+      unless Util.extract_share_header(s) == first_header
         raise Tss::ArgumentError, 'invalid shares, different headers'
       end
 
@@ -185,7 +185,7 @@ class Combiner
     # and unpack the byte string into an Array of Byte Arrays
     shares_bytes = shares.collect do |s|
       bytestring = s.byteslice(share_header_size..s.bytesize)
-      bytestring.unpack('C*') if bytestring.present?
+      bytestring.unpack('C*') unless bytestring.nil?
     end.compact
 
     # if :any_combination option was chosen, build an Array of all possible
@@ -264,9 +264,5 @@ class Combiner
     while secret.first == 31
       secret.shift
     end
-  end
-
-  def extract_share_header(share)
-    Splitter::SHARE_HEADER_STRUCT.decode(share)
   end
 end
