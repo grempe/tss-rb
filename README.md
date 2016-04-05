@@ -1,4 +1,15 @@
-# TSS
+# TSS - Threshold Secret Sharing
+
+[![Build Status](https://travis-ci.org/grempe/tss-rb.svg?branch=master)](https://travis-ci.org/grempe/tss-rb)
+[![Coverage Status](https://coveralls.io/repos/github/grempe/tss-rb/badge.svg?branch=master)](https://coveralls.io/github/grempe/tss-rb?branch=master)
+
+## WARNING : PRE-ALPHA CODE
+
+This code is currently a work in progress and is not yet ready for production
+use. The API, input and output formats, and other aspects are likely to change
+before release. There has been no security review of this code.
+
+## About
 
 This Ruby gem implements Threshold Secret Sharing, as specified in
 the Network Working Group Internet-Draft submitted by D. McGrew
@@ -29,25 +40,15 @@ original hash stored in the shares the secret will not be returned. The verifier
 hash for the secret is not available to shareholders prior to recombining shares.
 
 The specification also addresses the optional implementation of a `MAGIC_NUMBER` and
-advanced error correction schemes. These are not currently implemented.
+advanced error correction schemes. These extras are not currently implemented.
 
-## Status
-
-[![Build Status](https://travis-ci.org/grempe/tss-rb.svg?branch=master)](https://travis-ci.org/grempe/tss-rb)
-[![Coverage Status](https://coveralls.io/repos/github/grempe/tss-rb/badge.svg?branch=master)](https://coveralls.io/github/grempe/tss-rb?branch=master)
-
-## WARNING : PRE-ALPHA CODE
-
-This code is currently a work in progress and is not yet ready for production
-use. The API, input and output formats, and other aspects are likely to change
-before release.
 
 ## Installation
 
 Add this line to your application's `Gemfile`:
 
 ```ruby
-gem 'tss'
+gem 'tss', '~> 1.0.0'
 ```
 
 And then execute:
@@ -61,9 +62,31 @@ Or install it yourself as:
 $ gem install tss
 ```
 
-## Usage
+## Guidelines for Use
 
-### Splitting a Secret
+* Don't split large texts. Instead, split the much smaller encryption
+keys that protect encrypted large texts. Supply the encrypted
+files and the shares separately to recipients. Threshold secret sharing can be
+very slow at splitting and recovering very large bodies of text. Every byte must
+be processed `num_shares` times.
+
+* Don't treat shares like encrypted data, but instead like the encryption keys
+that unlock the data. Shares are keys, and need to be protected as such. There is
+nothing to slow down an attacker if they have access to enough shares.
+
+* If you send keys by email, or some other insecure channel,  then your email
+provider, or any entity with access to their data, now also has the keys to
+your data. They just need to collect enough keys to meet the threshold.
+
+* Use public key cryptography to encrypt secret shares with the public key of
+each individual recipient. This can protect the share data from unwanted use while
+in transit or at rest.
+
+* Put careful thought into how you want to distribute shares. It often makes
+sense to give individuals more than one share.
+
+
+## Splitting a Secret
 
 The basic usage is as follows using the arguments described below.
 
@@ -71,11 +94,16 @@ The basic usage is as follows using the arguments described below.
 shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
 ```
 
-#### Arguments
+### Arguments
 
 The `secret` (required) value must be provided as a String with either
 the `UTF-8` or `US-ASCII` encoding with a Byte length  `<= 65,534`. You can
-test this beforehand with `'my string secret'.bytes.to_a.length`
+test this beforehand with `'my string secret'.bytes.to_a.length`. The secret
+will be left-padded with the Unicode `"\u001F"` `Unit Separator, decimal 31` character
+up to 32 Bytes. This padding will be removed before the secret is checked against
+its RTSS hash when recombined. Your secret **MUST NOT** *begin* with this character
+(which is unlikely in any case). If your secret is 32 Bytes or longer no padding will
+be applied. This padding masks the size of relatively small secrets from an attacker.
 
 Internally, the `secret` String will be converted to and processed as an Array
 of Bytes. e.g. `'foo'.bytes.to_a`
@@ -104,7 +132,7 @@ SecretHash::SHA1                 // code 1
 SecretHash::SHA256               // code 2
 ```
 
-#### Example Usage
+### Example
 
 ```ruby
 secret = 'foo bar baz'
@@ -115,17 +143,17 @@ hash_id = SecretHash::SHA256
 
 shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
 
-=> ["ebe6ecfb44e31b12\x02\x03\x00,\x01\xB3\x81HJ\xF9\bNi\xE6\xBE\xC1b\xF8\xBFl\xBB>\xAB\x91O\xDAI\x8E\xD7\xB3\x13>m[K\xE1\x12p\x8E\x1D\x9E\x17_HM\x19\bw",
- "ebe6ecfb44e31b12\x02\x03\x00,\x024\x02\x18\xD0\xE5>\xA3\x8E\x14cH\xB5r\xB7'}~\xBE\xEF\xAF\xBE\x1C\t\xAE.\x8A|\x7F\xC5\x87\x82\x99\xC9\x8AQU\x92\xE6\xD2\xAE~\xC4Q",
- "ebe6ecfb44e31b12\x02\x03\x00,\x03\xE1\xEC?\xBA~W\x9F\xC7\x90\xBC\xF3\fY\x10\x8A\x02\"\xBB\x96\x92\x90D\x8E\xDDBJF\x9A\xEFl^fi\xFAB\xBE\xF9T\xCD9\xB1>\xF1",
- "ebe6ecfb44e31b12\x02\x03\x00,\x04c+eK\xE9\xDDY\x97\x01\xCFy\e{\x98\xBC\xAA\xFC\xE6\x1Fy8\xC9]-\x82D\xC4\xE5\xAFk(w\xF1pO\xAC[0\x9C-)\xD7\x99",
- "ebe6ecfb44e31b12\x02\x03\x00,\x05\xB6\xC5B!r\xB4e\xDE\x85\x10\xC2\xA2P?\x11\xD5\xA0\xE3fD\x16\x91\xDA^\xEE\x84\xFE\x00\x85\x80\xF4\x88Q\x00\\G0\x82\x83\xBA\xE6-9"]
+=> ["ca81eda2c6b80c23\x02\x03\x00A\x01T\xE5W\xB8q\x01\x1F\xE3\x85GqG\xD2\x8D\xC8\xC9C\x89\xE9\xDA\xD4\xD2\x98k.\x99\x06\x87M\xA6\x11\xE1\xCDAw\xAD\x00x\xB7vA4=\xB4}Z\xECD\xE3/C`\xF0v\xA2\xB3\xC3\x8F\xB9\xC2\x06\x12\xDB\xE4",
+ "ca81eda2c6b80c23\x02\x03\x00A\x02\x9C\x7FH\xC3\xD8\x8E\xCEd\xB5\xFAD\x02\x88\xC1\xEC\x1C\xF4R\xB9\x19.\x93\x14\x17\xB2\xC5\x06N\xC2\x88\xF3\x18\x00\xB7\x1Fz\x8Av\r\xDE\x05\xF6 \xE1\x8A\xD2B\x96\x99\xC4\x18\xBFQ\x92\xE3\xCF`s:\be\xEF\x10D",
+ "ca81eda2c6b80c23\x02\x03\x00A\x03\xD7\x85\x00d\xB6\x90\xCE\x98/\xA2*ZES;\xCA\xA8\xC4O\xDC\xE5'\xE3\x13\xBC>a\xBB\xAFL\x83\x83\x16%p\x16Nl\x14@66\f\\SW}\xD6\xF2\x9A\xFB\xE2L4\xBFr\xD6\x80n\x9D\xB9+9w",
+ "ca81eda2c6b80c23\x02\x03\x00A\x04V\xD5\x80\xAE\xE6\xA4\xCF\xBFr\x81\x83\xA7r\x11\xE1\xFF\x85v\x17y\xBB\xB9\x97D\x11\x04=\x13\x1FR\x8D\x99\x87l_;\x01\xCA\x81\xC0\xD8\xA2\xCC\xD0\xD2\xB5{s\x9B$D\xC2\xA0\x00f!\xCC\x87\xBFJ\xCF:\xDB\x13",
+ "ca81eda2c6b80c23\x02\x03\x00A\x05\x1D/\xC8\t\x88\xBA\xCFC\xE8\xD9\xED\xFF\xBF\x836)\xD9\xE0\xE1\xBCp\r`@\x1F\xFFZ\xE6r\x96\xFD\x02\x91\xFE0W\xC5\xD0\x98^\xEBb\xE0m\v0D3\xF0z\xA7\x9F\xBD\xA6:\x9Czt\xEB\xDF\x13\xFE\xF2 "]
 
 reconstructed_secret = Combiner.new(shares).combine
 => "foo bar baz"
 ```
 
-### Combining Shares to Recreate a Secret
+## Combining Shares to Recreate a Secret
 
 The basic usage is as follows using the arguments described below.
 
@@ -133,21 +161,26 @@ The basic usage is as follows using the arguments described below.
 secret = Combiner.new(shares, args).combine
 ```
 
-#### Arguments
+### Arguments
 
-The `shares` is used when recreating the secret and must be provided as an Array
-of encoded Share Byte Strings. You must provide at least as many shares as determined
-by the `threshold` value set when the shares were originally created. If you
-provide too few shares a `Tss::Error` exception will be raised.
+`shares` (required) : Must be provided as an Array of encoded Share Byte Strings.
+You must provide at least `threshold` shares as specified when the secret was split.
+Providing too few shares will result in a `Tss::Error` exception being raised.
 
-The second argument expects a Hash and is set to use the following defaults:
+`args` (optional) : A Hash or options to determine how shares are selected if
+more than `threshold` shares are provided, and for determining the output format.
+
+Defaults :
 
 ```ruby
 args = {share_selection: :strict_first_x, output: :string_utf8}
 ```
 
-`share_selection:` : This option determines how the Array of incoming shares
-to be re-combined should be handled. One of the following options is valid:
+#### Share selection
+
+`share_selection:` : This key determines how the Array of incoming shares
+to be re-combined should be handled when more than `threshold` shares are
+provided. One of the following `Symbol` values for this key are valid:
 
 `:strict_first_x` : If `M` shares are required as a threshold, then the
 first `M` shares in the Array of `shares` provided will be used. All other
@@ -165,11 +198,13 @@ will be tried one after the other until the first one succeeds or they all fail.
 This combination technique can only be used if the RTSS hash type was set to
 `SHA1` or `SHA256` when the shares were created.
 
-#### Secret Output Format Args
+#### Output Format
 
-`output:` : The value for the hash key `output:` can be the Symbol `:string_utf8`
-or `:array_bytes` which will return the recombined secret as either a UTF-8
-String (default) or an Array of unisgned Integer Bytes.
+`output:` : The value for the hash key `output:` can be:
+
+`:string_utf8` : will return the recombined secret as a UTF-8 String (default)
+
+`:array_bytes`  will return the recombined secret as an Array of unisgned Integer Bytes
 
 ### Exception Handling
 
@@ -179,7 +214,7 @@ or `Tss::Error` exceptions and you should rescue and handle them in your code.
 `Tss::ArgumentError` exceptions will generally include the ActiveModel validation
 hints where appropriate.
 
-## RTSS Data Format
+## RTSS Binary Data Format
 
 We use a data format with the following fields, in order:
 
@@ -232,13 +267,19 @@ octets. It contains the actual share data.
 The amount of time it takes to split or combine secrets grows significantly as
 the size of the secret and the total `num_shares` increase. Splitting a secret
 with the maximum size of `2**16 - 2` (65,534) Bytes and the maximum `255` shares
-may take a long time to run. Splitting a secret with more reasonable values,
-for example a `32 Byte` encryption key with `16` total shares and a threshold of `8`
-may only take milliseconds to run. If you will be splitting large secrets or
-using large numbers of shares, you may consider running those operations in
-background processes for performance.
+may take an unreasonably long time to run. Splitting and Combining involves
+at least `num_shares**secret_bytes` operations so larger values can quickly
+result in huge processing time. If you need to splitting large secrets,
+into a large number of shares, you should consider running those operations in
+background worker processes for performance.
 
-There are some simple benchmark tests you can run with `rake bench`.
+I have found that a reasonable set of values seems to be what I'll call the
+'rule of 64'. If you keep the `secret <= 64 Bytes`, the `threshold <= 64`,
+and the `num_shares <= 64` you can do a round-trip split and combine
+operation in ~250ms on a modern laptop. These should be very reasonable max values
+for most use cases.
+
+There are some simple benchmark tests to exercise things with `rake bench`.
 
 ## Development
 
@@ -252,7 +293,7 @@ run `bundle exec rake release`, which will create a git tag for the version,
 push git commits and tags, and push the `.gem` file
 to [rubygems.org](https://rubygems.org).
 
-## Contributing
+### Contributing
 
 Bug reports and pull requests are welcome on GitHub
 at [https://github.com/grempe/tss-rb](https://github.com/grempe/tss-rb). This
@@ -264,7 +305,7 @@ contributors are expected to adhere to the
 
 ### Copyright
 
-(c) 2016 Glenn Rempe
+(c) 2016 Glenn Rempe <[glenn@rempe.us](mailto:glenn@rempe.us)> ([https://www.rempe.us/](https://www.rempe.us/))
 
 ### License
 
@@ -280,14 +321,7 @@ either express or implied. See the LICENSE.txt file for the
 specific language governing permissions and limitations under
 the License.
 
-## Authors
-
-***Glenn Rempe***</br>
-<glenn@rempe.us></br>
-<https://www.rempe.us></br>
-@grempe on Twitter</br>
-
-## Thank You
+### Thank You
 
 This code is an implementation of the Threshold Secret Sharing, as specified in
 the Network Working Group Internet-Draft submitted by D. McGrew
