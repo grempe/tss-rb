@@ -108,9 +108,15 @@ class Splitter
     # Robust Threshold Secret Sharing (RTSS)
     # Combine the secret with a hash digest before splitting. On recombine
     # the two will be separated again and the hash used to validate the
-    # correct secret was returned.
-    # secret || hash(secret)
-    secret_bytes = Util.utf8_to_bytes(secret) + SecretHash.byte_array(hash_id, secret)
+    # correct secret was returned. secret || hash(secret)
+    #
+    # Pad left the secret 32 Bytes minimum length with "\u001F"
+    # (decimal 31 in Byte Array) to address an encode/decode issue with very small
+    # (1 or 2 char) secrets. This padding of smaller secrets makes them
+    # more uniform in size which may help mask their contents from an attacker.
+    # The padding will be stripped off of the secret bytes when the shares
+    # are recombined and prior to verifying the secret with an RTSS hash.
+    secret_bytes = Util.utf8_to_bytes(left_pad(secret)) + SecretHash.byte_array(hash_id, secret)
 
     # For each share, a distinct Share Index is generated. Each Share
     # Index is an octet other than the all-zero octet. All of the Share
@@ -157,10 +163,14 @@ class Splitter
     header = share_header(identifier, hash_id, threshold, shares.first.length)
 
     # create each binary share and return it.
-    shares.map! { |s| header + s.pack('C*') }
+    shares.map! { |s| (header + s.pack('C*')).force_encoding('ASCII-8BIT') }
   end
 
   private
+
+  def left_pad(secret)
+    secret.rjust(32, "\u001F")
+  end
 
   def share_header(identifier, hash_id, threshold, share_len)
     SHARE_HEADER_STRUCT.encode(identifier: identifier,

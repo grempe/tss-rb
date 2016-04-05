@@ -206,7 +206,7 @@ class Combiner
     shares_bytes = shares.collect do |s|
       bytestring = s.byteslice(share_header_size..s.bytesize)
       bytestring.unpack('C*') if bytestring.present?
-    end
+    end.compact
 
     # if :any_combination option was chosen, build an Array of all possible
     # combinations of the shares provided and try each combination in turn until
@@ -261,7 +261,9 @@ class Combiner
       secret << Util.lagrange_interpolation(u, v)
     end
 
-    # Only run the hash digest checks if the shares were created with SHA1 or SHA256
+    strip_left_pad(secret)
+
+    # Only run the hash digest checks if the shares were created with a digest
     if [SecretHash::SHA1, SecretHash::SHA256].include?(header[:hash_id])
       # RTSS : pop off the hash digest bytes from the tail of the secret. This
       # leaves `secret` with only the secret bytes remaining.
@@ -275,6 +277,13 @@ class Combiner
       new_secret_hash_bytes == orig_secret_hash_bytes ? secret : nil
     else
       secret
+    end
+  end
+
+  # strip off any leading padding chars ("\u001F", decimal 31)
+  def strip_left_pad(secret)
+    while secret.first == 31
+      secret.shift
     end
   end
 
