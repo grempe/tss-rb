@@ -90,7 +90,7 @@ class Combiner
   def initialize(shares, args = {})
     raise Tss::ArgumentError, 'optional args must be a Hash' unless args.is_a?(Hash)
     @opts = { share_selection: :strict_first_x }
-    @opts.merge!(args)
+    @opts.merge!(args) if args.is_a?(Hash)
     @shares = shares
   end
 

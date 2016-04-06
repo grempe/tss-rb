@@ -169,4 +169,41 @@ describe Util do
       Util.utf8_to_hex(test_str).must_equal '4920C2BD20E299A520F09F92A9'
     end
   end
+
+  describe 'left_pad' do
+    it 'must increase length of a short string the same size as the byte_multiple' do
+      mult = 8
+      res = Util.left_pad(mult, 'a'*1)
+      res.must_equal "\u001F\u001F\u001F\u001F\u001F\u001F\u001Fa"
+      res.length.must_equal 8
+    end
+
+    it 'must maintain the length of a string the same size as the byte_multiple' do
+      mult = 8
+      res = Util.left_pad(mult, 'a'*8)
+      res.must_equal "aaaaaaaa"
+      res.length.must_equal 8
+    end
+
+    it 'must increase length of a string to the next multiple when string is larger than the byte_multiple' do
+      mult = 8
+      res = Util.left_pad(mult, 'a'*9)
+      res.must_equal "\u001F\u001F\u001F\u001F\u001F\u001F\u001Faaaaaaaaa"
+      res.length.must_equal 16
+    end
+
+    it 'must not change the string if the byte_multiple is 0 (no padding)' do
+      mult = 0
+      res = Util.left_pad(mult, 'a'*9)
+      res.must_equal "aaaaaaaaa"
+      res.length.must_equal 9
+    end
+
+    it 'must pad with the specified padding character' do
+      mult = 8
+      res = Util.left_pad(mult, 'a', '0')
+      res.must_equal "0000000a"
+      res.length.must_equal 8
+    end
+  end
 end

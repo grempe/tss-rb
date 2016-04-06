@@ -49,8 +49,8 @@ class Splitter
                    'n', :share_len
                   ])
 
-  attr_accessor :secret, :threshold, :num_shares, :identifier, :hash_id
-  validates_presence_of :secret, :threshold, :num_shares, :hash_id
+  attr_accessor :secret, :threshold, :num_shares, :identifier, :hash_id, :opts
+  validates_presence_of :secret, :threshold, :num_shares, :hash_id, :opts
 
   validates_each :secret do |record, attr, value|
     if value.is_a?(String)
@@ -91,15 +91,31 @@ class Splitter
     end
   end
 
+  validates_each :opts do |record, attr, value|
+    if value.is_a?(Hash)
+      unless value.key?(:padding)
+        record.errors.add attr, 'must have expected keys'
+      end
+
+      unless value[:padding].between?(0, 128)
+        record.errors.add attr, ':padding option must have valid Integer value'
+      end
+    else
+      record.errors.add attr, 'must be a Hash of args'
+    end
+  end
+
   # Secret arg can be an Array of Bytes derived from a UTF-8 or US-ASCII
   # String ('foo'.bytes.to_a), or just a UTF-8 or US-ASCII String which
   # will be internally converted to an Array of Bytes.
-  def initialize(secret, threshold, num_shares, identifier, hash_id)
+  def initialize(secret, threshold, num_shares, identifier, hash_id, args = {})
     @secret     = secret
     @threshold  = threshold
     @num_shares = num_shares
     @identifier = identifier
     @hash_id    = hash_id
+    @opts       = { padding: 0 }
+    @opts.merge!(args) if args.is_a?(Hash)
   end
 
   def split
@@ -110,13 +126,20 @@ class Splitter
     # the two will be separated again and the hash used to validate the
     # correct secret was returned. secret || hash(secret)
     #
-    # Pad left the secret 32 Bytes minimum length with "\u001F"
-    # (decimal 31 in Byte Array) to address an encode/decode issue with very small
-    # (1 or 2 char) secrets. This padding of smaller secrets makes them
-    # more uniform in size which may help mask their contents from an attacker.
-    # The padding will be stripped off of the secret bytes when the shares
-    # are recombined and prior to verifying the secret with an RTSS hash.
-    secret_bytes = Util.utf8_to_bytes(left_pad(secret)) + SecretHash.byte_array(hash_id, secret)
+    # Optionally, pad left the secret to the nearest multiple of Bytes specified
+    # with the `padding: X` optional argument. Defaults to no padding (0). Pads
+    # with the "\u001F" character (decimal 31 when in a Byte Array). Padding
+    # addresses an encode/decode issue with very small (1 or 2 char) secrets.
+    # Since TSS share data is essentially the same size as the original secret,
+    # padding smaller secrets may help mask the size of the contents from an
+    # attacker. Padding is not part of the RTSS spec so other TSS clients
+    # won't strip off the padding. If you need this interoperability you
+    # should probably pad the secret yourself prior to splitting it and
+    # leave the default zero-length pad in place.
+    #
+    # During the share combining operation the padding will be stripped off
+    # of the secret bytes prior to verifying the secret with any RTSS hash.
+    secret_bytes = Util.utf8_to_bytes(Util.left_pad(@opts[:padding], secret)) + SecretHash.byte_array(hash_id, secret)
 
     # For each share, a distinct Share Index is generated. Each Share
     # Index is an octet other than the all-zero octet. All of the Share
@@ -167,10 +190,6 @@ class Splitter
   end
 
   private
-
-  def left_pad(secret)
-    secret.rjust(32, "\u001F")
-  end
 
   def share_header(identifier, hash_id, threshold, share_len)
     SHARE_HEADER_STRUCT.encode(identifier: identifier,

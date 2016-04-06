@@ -348,4 +348,32 @@ describe Splitter do
       end
     end
   end # hash_id
+
+  describe 'padding options' do
+    it 'must use default padding if nil is passed' do
+      s = Splitter.new('a', 3, 5, 'id', 2, nil)
+      s.opts[:padding].must_equal 0
+    end
+
+    it 'must raise an error if a an invalid negative value is passed' do
+      assert_raises(Tss::ArgumentError) { Splitter.new('a', 3, 5, 'id', 2, {padding: -1}).split }
+    end
+
+    it 'must raise an error if a an invalid too high value is passed' do
+      assert_raises(Tss::ArgumentError) { Splitter.new('a', 3, 5, 'id', 2, {padding: 129}).split }
+    end
+
+    describe 'when padding arg is set' do
+      it 'must return a correctly sized share' do
+        share_0 = Splitter.new('a', 3, 5, 'id', 0, {padding: 0}).split
+        share_0.first.length.must_equal 22
+
+        share_8 = Splitter.new('a', 3, 5, 'id', 0, {padding: 8}).split
+        share_8.first.length.must_equal 29
+
+        share_16 = Splitter.new('a', 3, 5, 'id', 0, {padding: 16}).split
+        share_16.first.length.must_equal 37
+      end
+    end
+  end # options hash
 end

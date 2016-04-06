@@ -67,7 +67,7 @@ $ gem install tss
 * Don't split large texts. Instead, split the much smaller encryption
 keys that protect encrypted large texts. Supply the encrypted
 files and the shares separately to recipients. Threshold secret sharing can be
-very slow at splitting and recovering very large bodies of text. Every byte must
+very slow at splitting and recombining very large bodies of text. Every byte must
 be processed `num_shares` times.
 
 * Don't treat shares like encrypted data, but instead like the encryption keys
@@ -91,7 +91,7 @@ sense to give individuals more than one share.
 The basic usage is as follows using the arguments described below.
 
 ```ruby
-shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
+shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id, opts).split
 ```
 
 ### Arguments
@@ -131,6 +131,35 @@ SecretHash::NONE                 // code 0
 SecretHash::SHA1                 // code 1
 SecretHash::SHA256               // code 2
 ```
+
+The `opts` arg is a hash of optional arguments which currently accepts a single
+hash key `padding` which takes a value between 0..127 inclusive.
+
+```ruby
+{ padding: 8 }
+
+If padded with zeros for example:
+
+'a'         -> "0000000a"
+'aaaaaaaa'  -> "aaaaaaaa"
+'aaaaaaaaa' -> "0000000aaaaaaaaa"
+
+```
+
+This will left pad the secret to the nearest multiple of Bytes specified.
+Defaults to no padding (0). Padding is done with the "\u001F" character
+(decimal 31 when in a Byte Array). Your secret must not begin with this
+character.
+
+Since TSS share data is essentially the same size as the original secret,
+padding smaller secrets may help mask the size of the contents from an
+attacker. Padding is not part of the RTSS spec so other TSS clients
+won't strip off the padding and may fail when recombining. If you need
+this interoperability you should probably pad the secret yourself prior
+to splitting it and leave the default zero-length pad in place.
+
+During the share combining operation the padding will be stripped off
+of the secret bytes prior to verifying the secret with any RTSS hash.
 
 ### Example
 
@@ -245,22 +274,26 @@ octets. It contains the actual share data.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
+This code has been tested for binary compatibility with the
+[seb-m/tss](https://github.com/seb-m/tss) Python implementation of TSS. There
+are test cases to ensure it remains compatible.
+
 ## Performance
 
 The amount of time it takes to split or combine secrets grows significantly as
-the size of the secret and the total `num_shares` increase. Splitting a secret
-with the maximum size of `2**16 - 2` (65,534) Bytes and the maximum `255` shares
-may take an unreasonably long time to run. Splitting and Combining involves
-at least `num_shares**secret_bytes` operations so larger values can quickly
-result in huge processing time. If you need to splitting large secrets,
-into a large number of shares, you should consider running those operations in
-background worker processes for performance.
+the size of the secret and the total `num_shares` and `threshold` increase.
+Splitting a secret with the maximum size of `2**16 - 2` (65,534) Bytes and
+the maximum `255` shares may take an unreasonably long time to run. Splitting
+and Combining involves at least `num_shares**secret_bytes` operations so
+larger values can quickly result in huge processing time. If you need to
+split large secrets into a large number of shares you should consider
+running those operations in a background worker process or thread for
+best performance.
 
-I have found that a reasonable set of values seems to be what I'll call the
-'rule of 64'. If you keep the `secret <= 64 Bytes`, the `threshold <= 64`,
-and the `num_shares <= 64` you can do a round-trip split and combine
-operation in ~250ms on a modern laptop. These should be very reasonable max values
-for most use cases.
+A reasonable set of values seems to be what I'll call the 'rule of 64'. If you
+keep the `secret <= 64 Bytes`, the `threshold <= 64`, and the `num_shares <= 64`
+you can do a round-trip split and combine operation in ~250ms on a modern
+laptop. These should be very reasonable and secure max values for most use cases.
 
 There are some simple benchmark tests to exercise things with `rake bench`.
 

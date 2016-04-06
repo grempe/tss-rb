@@ -219,6 +219,15 @@ module Util
     bytes_to_hex(utf8_to_bytes(str))
   end
 
+  # String Helpers
+
+  def self.left_pad(byte_multiple, input_string, pad_char = "\u001F")
+    return input_string if byte_multiple == 0
+    pad_length = byte_multiple - (input_string.length % byte_multiple)
+    return input_string if pad_length == byte_multiple
+    (pad_char * pad_length) + input_string
+  end
+
   # Binary Header Helpers
 
   def self.extract_share_header(share)
