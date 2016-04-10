@@ -206,4 +206,10 @@ describe Util do
       res.length.must_equal 8
     end
   end
+
+  describe 'int_commas' do
+    it 'must add commas as expected for human reading to large Integers' do
+      Util.int_commas(1234567890000000).must_equal '1,234,567,890,000,000'
+    end
+  end
 end
