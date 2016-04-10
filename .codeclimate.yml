@@ -9,7 +9,8 @@ engines:
       - python
       - php
     exclude_fingerprints:
-      - ff3b0ae9caf19067c4e103fe1456a126
+    - ff3b0ae9caf19067c4e103fe1456a126
+    - 8ec23fad3fad979a5d1de264823ba8fa
   fixme:
     enabled: true
   rubocop:
