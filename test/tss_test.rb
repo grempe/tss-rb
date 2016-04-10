@@ -1,6 +1,20 @@
 require 'test_helper'
 
 describe TSS do
+  describe 'split' do
+    it 'must raise an error if called without a Hash arg with secret key' do
+      assert_raises(TSS::ArgumentError) { TSS.split([]) }
+      assert_raises(TSS::ArgumentError) { TSS.split({}) }
+    end
+  end
+
+  describe 'combine' do
+    it 'must raise an error if called without a Hash arg with shares key' do
+      assert_raises(TSS::ArgumentError) { TSS.combine([]) }
+      assert_raises(TSS::ArgumentError) { TSS.combine({}) }
+    end
+  end
+
   describe 'end-to-end test with a UTF-8 multi-byte string and NONE hash' do
     it 'must split and combine the secret properly' do
       secret = 'I love secrets with multi-byte unicode characters ½ ♥ 💩'
