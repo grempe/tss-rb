@@ -1,3 +1,5 @@
+require 'rubygems'
+require 'digest'
 require 'binary_struct'
 require 'dry-types'
 require 'tss/version'
