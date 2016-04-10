@@ -2,378 +2,230 @@ require 'test_helper'
 
 describe Splitter do
   before do
-    @s = Splitter.new('my secret', 3, 5, SecureRandom.hex(8), SecretHash::SHA256)
+    @s = Splitter.new(secret: 'my secret')
   end
 
   describe 'secret' do
-    describe 'when given a valid object' do
-      it 'must respond positively' do
-        @s.must_be :valid?
-      end
+    it 'must raise an error if nil' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: nil).split }
     end
 
-    describe 'when given a nil secret' do
-      it 'must not be valid?' do
-        @s.secret = nil
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.secret = nil
-        @s.valid?
-        @s.errors.messages[:secret].first.must_match "can't be blank"
-      end
+    it 'must raise an error if not a string' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 123).split }
     end
 
-    describe 'when given a non String secret' do
-      it 'must not be valid?' do
-        @s.secret = {}
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.secret = {}
-        @s.valid?
-        @s.errors.messages[:secret].first.must_match "can't be blank"
-      end
+    it 'must raise an error if size < 1' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: '').split }
     end
 
-    describe 'when given a non-UTF-8 String secret' do
-      it 'must not be valid?' do
-        @s.secret = 'foo'.force_encoding('ASCII-8BIT')
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.secret = 'foo'.force_encoding('ASCII-8BIT')
-        @s.valid?
-        @s.errors.messages[:secret].first.must_match 'must be a UTF-8 or US-ASCII String'
-      end
+    it 'must raise an error if size > 65_534' do
+      assert_raises(TSS::ArgumentError) { Splitter.new(secret: 'a' * ((65_534 - 32) + 1)).split }
     end
 
-    describe 'when given a blank String secret' do
-      it 'must not be valid?' do
-        @s.secret = ''
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.secret = ''
-        @s.valid?
-        @s.errors.messages[:secret].first.must_match "can't be blank"
-      end
+    it 'must raise an error if first byte of secret is reserved padding char' do
+      assert_raises(TSS::ArgumentError) { Splitter.new(secret: "\u001F" + 'foo').split }
     end
 
-    describe 'when given a min size one byte String secret' do
-      it 'must be valid?' do
-        @s.secret = 'a'
-        @s.must_be :valid?
-      end
+    it 'must raise an error if String encoding is not UTF-8' do
+      assert_raises(TSS::ArgumentError) { Splitter.new(secret: 'a'.force_encoding('ISO-8859-1')).split }
     end
 
-    describe 'when given a max size 2**16 - 2 byte String secret' do
-      it 'must be valid?' do
-        @s.secret = 'a' * (2**16 - 2)
-        @s.must_be :valid?
-      end
+    it 'must return an Array of default shares with US-ASCII encoded secret' do
+      s = Splitter.new(secret: 'a'.force_encoding('US-ASCII')).split
+      assert_kind_of Array, s
+      assert s.size.must_equal 5
+      assert_kind_of String, s.first
     end
 
-    describe 'when given a larger than max size 2**16 - 1 byte String secret' do
-      it 'must not be valid?' do
-        @s.secret = 'a' * (2**16 - 1)
-        @s.wont_be :valid?
-      end
+    it 'must return an Array of default shares with a min size secret' do
+      s = Splitter.new(secret: 'a').split
+      assert_kind_of Array, s
+      assert s.size.must_equal 5
+      assert_kind_of String, s.first
     end
-  end # secret
+
+    it 'must return an Array of default shares with a max size secret' do
+      s = Splitter.new(secret: 'a' * (65_534 - 32)).split
+      assert_kind_of Array, s
+      assert s.size.must_equal 5
+      assert_kind_of String, s.first
+    end
+  end
 
   describe 'threshold' do
-    describe 'when given a nil' do
-      it 'must not be valid?' do
-        @s.threshold = nil
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.threshold = nil
-        @s.valid?
-        @s.errors.messages[:threshold].first.must_match "can't be blank"
-      end
+    it 'must raise an error if size < 1' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', threshold: 0).split }
     end
 
-    describe 'when given an non-Integer' do
-      it 'must not be valid?' do
-        @s.threshold = '5'
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.threshold = '5'
-        @s.valid?
-        @s.errors.messages[:threshold].first.must_match 'must be an Integer between'
-      end
+    it 'must raise an error if size > 255' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', threshold: 256).split }
     end
 
-    describe 'when given a 0 value' do
-      it 'must not be valid?' do
-        @s.threshold = 0
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.threshold = 0
-        @s.valid?
-        @s.errors.messages[:threshold].first.must_match 'must be an Integer between'
-      end
+    it 'must accept String Coercible to Integer' do
+      s = Splitter.new(secret: 'a', threshold: '1').split
+      secret = Combiner.new(shares: s.sample(1)).combine
+      secret[:threshold].must_equal 1
     end
 
-    describe 'when given a too large value' do
-      it 'must not be valid?' do
-        @s.threshold = 255 + 1
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.threshold = 255 + 1
-        @s.valid?
-        @s.errors.messages[:threshold].first.must_match 'must be an Integer between'
-      end
+    it 'must return an Array of default shares with a min size threshold' do
+      s = Splitter.new(secret: 'a', threshold: 1).split
+      assert_kind_of Array, s
+      assert s.size.must_equal 5
+      secret = Combiner.new(shares: s.sample(1)).combine
+      assert_kind_of String, secret[:secret]
+      secret[:threshold].must_equal 1
+      secret[:num_shares_provided].must_equal 1
     end
 
-    describe 'when given valid min value' do
-      it 'must be valid?' do
-        @s.threshold = 1
-        @s.must_be :valid?
-      end
+    it 'must return an Array of default threshold (3) shares with no threshold' do
+      s = Splitter.new(secret: 'a').split
+      assert_kind_of Array, s
+      assert s.size.must_equal 5
+      secret = Combiner.new(shares: s.sample(3)).combine
+      assert_kind_of String, secret[:secret]
+      secret[:threshold].must_equal 3
+      secret[:num_shares_provided].must_equal 3
     end
 
-    describe 'when given valid max value' do
-      it 'must be valid?' do
-        @s.threshold = 255
-        @s.num_shares = 255
-        @s.must_be :valid?
-      end
+    it 'must return an Array of default shares with a max size threshold' do
+      s = Splitter.new(secret: 'a', threshold: 255, num_shares: 255).split
+      assert_kind_of Array, s
+      assert s.size.must_equal 255
+      secret = Combiner.new(shares: s.sample(255)).combine
+      assert_kind_of String, secret[:secret]
+      secret[:threshold].must_equal 255
+      secret[:num_shares_provided].must_equal 255
     end
-  end # threshold
+  end
 
   describe 'num_shares' do
-    describe 'when given a nil' do
-      it 'must not be valid?' do
-        @s.num_shares = nil
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.num_shares = nil
-        @s.valid?
-        @s.errors.messages[:num_shares].first.must_match "can't be blank"
-      end
+    it 'must raise an error if size < 1' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', num_shares: 0).split }
     end
 
-    describe 'when given an non-Integer' do
-      it 'must not be valid?' do
-        @s.num_shares = '5'
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.num_shares = '5'
-        @s.valid?
-        @s.errors.messages[:num_shares].first.must_match 'must be an Integer between'
-      end
+    it 'must raise an error if size > 255' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', num_shares: 256).split }
     end
 
-    describe 'when given a 0 value' do
-      it 'must not be valid?' do
-        @s.num_shares = 0
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.num_shares = 0
-        @s.valid?
-        @s.errors.messages[:num_shares].first.must_match 'must be an Integer between'
-      end
+    it 'must raise an error if num_shares < threshold' do
+      assert_raises(TSS::ArgumentError) { Splitter.new(secret: 'a', threshold: 3, num_shares: 2).split }
     end
 
-    describe 'when given a too large value' do
-      it 'must not be valid?' do
-        @s.num_shares = 255 + 1
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.num_shares = 255 + 1
-        @s.valid?
-        @s.errors.messages[:num_shares].first.must_match 'must be an Integer between'
-      end
+    it 'must accept String Coercible to Integer' do
+      s = Splitter.new(secret: 'a', threshold: 1, num_shares: '1').split
+      secret = Combiner.new(shares: s.sample(1)).combine
+      secret[:threshold].must_equal 1
     end
 
-    describe 'when given valid min value' do
-      it 'must be valid?' do
-        @s.threshold = 1
-        @s.num_shares = 1
-        @s.must_be :valid?
-      end
+    it 'must return an Array of shares with a min size' do
+      s = Splitter.new(secret: 'a', threshold: 1, num_shares: 1).split
+      assert_kind_of Array, s
+      assert s.size.must_equal 1
+      secret = Combiner.new(shares: s.sample(1)).combine
+      assert_kind_of String, secret[:secret]
+      secret[:threshold].must_equal 1
+      secret[:num_shares_provided].must_equal 1
     end
 
-    describe 'when given valid max value' do
-      it 'must be valid?' do
-        @s.num_shares = 255
-        @s.must_be :valid?
-      end
+    it 'must return an Array of threshold (5) shares with no num_shares' do
+      s = Splitter.new(secret: 'a').split
+      assert_kind_of Array, s
+      assert s.size.must_equal 5
+      secret = Combiner.new(shares: s).combine
+      assert_kind_of String, secret[:secret]
+      secret[:threshold].must_equal 3
+      secret[:num_shares_provided].must_equal 5
     end
-  end # num_shares
+
+    it 'must return an Array of shares with a max size' do
+      s = Splitter.new(secret: 'a', threshold: 255, num_shares: 255).split
+      assert_kind_of Array, s
+      assert s.size.must_equal 255
+      secret = Combiner.new(shares: s.sample(255)).combine
+      assert_kind_of String, secret[:secret]
+      secret[:threshold].must_equal 255
+      secret[:num_shares_provided].must_equal 255
+    end
+  end
 
   describe 'identifier' do
-    describe 'when given an non-String' do
-      it 'must not be valid?' do
-        @s.identifier = 222
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.identifier = 222
-        @s.valid?
-        @s.errors.messages[:identifier].first.must_match 'must be a String'
-      end
+    it 'must raise an error if size > 16' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', identifier: 'a'*17).split }
     end
 
-    describe 'when given a nil arg' do
-      it 'must be valid?' do
-        @s.identifier = nil
-        @s.must_be :valid?
-      end
+    it 'must raise an error if non-whitelisted characters' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', identifier: '&').split }
     end
 
-    describe 'when given an empty String' do
-      it 'must be valid?' do
-        @s.identifier = ''
-        @s.must_be :valid?
-      end
+    it 'must accept an empty String' do
+      s = Splitter.new(secret: 'a', identifier: '').split
+      secret = Combiner.new(shares: s).combine
+      secret[:identifier].must_equal ''
     end
 
-    describe 'when given an 1 Byte String' do
-      it 'must be valid?' do
-        @s.identifier = 'a'
-        @s.must_be :valid?
-      end
+    it 'must accept a String with all whitelisted characters' do
+      id = 'abc-ABC_0.9'
+      s = Splitter.new(secret: 'a', identifier: id).split
+      secret = Combiner.new(shares: s).combine
+      secret[:identifier].must_equal id
     end
 
-    describe 'when given an 16 Byte String' do
-      it 'must be valid?' do
-        @s.identifier = 'a' * 16
-        @s.must_be :valid?
-      end
+    it 'must accept a 16 Byte String' do
+      id = SecureRandom.hex(8)
+      s = Splitter.new(secret: 'a', identifier: id).split
+      secret = Combiner.new(shares: s).combine
+      secret[:identifier].must_equal id
+    end
+  end
+
+  describe 'hash_alg' do
+    it 'must raise an error if empty' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', hash_alg: '').split }
     end
 
-    describe 'when given a random 16 Byte Hex String' do
-      it 'must be valid?' do
-        @s.identifier = SecureRandom.hex(8)
-        @s.must_be :valid?
-      end
+    it 'must raise an error if value is not in the Enum' do
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', hash_alg: 'foo').split }
     end
 
-    describe 'when given a too large String' do
-      it 'must not be valid?' do
-        @s.identifier = 'a' * 17
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.identifier = 'a' * 17
-        @s.valid?
-        @s.errors.messages[:identifier].first.must_match 'must be a String'
-      end
-    end
-  end # identifier
-
-  describe 'hash_id' do
-    describe 'when given a nil' do
-      it 'must not be valid?' do
-        @s.hash_id = nil
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.hash_id = nil
-        @s.valid?
-        @s.errors.messages[:hash_id].first.must_match "can't be blank"
-      end
+    it 'must accept an NONE String' do
+      s = Splitter.new(secret: 'a', hash_alg: 'NONE').split
+      secret = Combiner.new(shares: s).combine
+      secret[:hash_alg].must_equal 'NONE'
     end
 
-    describe 'when given an non-Integer' do
-      it 'must not be valid?' do
-        @s.hash_id = '2'
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.hash_id = '2'
-        @s.valid?
-        @s.errors.messages[:hash_id].first.must_match 'must be an Integer'
-      end
+    it 'must accept an SHA1 String' do
+      s = Splitter.new(secret: 'a', hash_alg: 'SHA1').split
+      secret = Combiner.new(shares: s).combine
+      secret[:hash_alg].must_equal 'SHA1'
     end
 
-    describe 'when given an invalid hash_id code' do
-      it 'must not be valid?' do
-        @s.hash_id = 99
-        @s.wont_be :valid?
-      end
-
-      it 'must return an error message?' do
-        @s.hash_id = 99
-        @s.valid?
-        @s.errors.messages[:hash_id].first.must_match 'must be a supported hash type id'
-      end
+    it 'must accept an SHA256 String' do
+      s = Splitter.new(secret: 'a', hash_alg: 'SHA256').split
+      secret = Combiner.new(shares: s).combine
+      secret[:hash_alg].must_equal 'SHA256'
     end
+  end
 
-    describe 'when given valid hash_id for NONE' do
-      it 'must be valid?' do
-        @s.hash_id = SecretHash::NONE
-        @s.must_be :valid?
-      end
-    end
-
-    describe 'when given valid hash_id for SHA1' do
-      it 'must be valid?' do
-        @s.hash_id = SecretHash::SHA1
-        @s.must_be :valid?
-      end
-    end
-
-    describe 'when given valid hash_id for SHA256' do
-      it 'must be valid?' do
-        @s.hash_id = SecretHash::SHA256
-        @s.must_be :valid?
-      end
-    end
-  end # hash_id
-
-  describe 'padding options' do
-    it 'must use default padding if nil is passed' do
-      s = Splitter.new('a', 3, 5, 'id', 2, nil)
-      s.opts[:padding].must_equal 0
-    end
-
+  describe 'pad_blocksize' do
     it 'must raise an error if a an invalid negative value is passed' do
-      assert_raises(Tss::ArgumentError) { Splitter.new('a', 3, 5, 'id', 2, {padding: -1}).split }
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', pad_blocksize: -1).split }
     end
 
     it 'must raise an error if a an invalid too high value is passed' do
-      assert_raises(Tss::ArgumentError) { Splitter.new('a', 3, 5, 'id', 2, {padding: 129}).split }
+      assert_raises(Dry::Types::ConstraintError) { Splitter.new(secret: 'a', pad_blocksize: 256).split }
     end
 
     describe 'when padding arg is set' do
       it 'must return a correctly sized share' do
-        share_0 = Splitter.new('a', 3, 5, 'id', 0, {padding: 0}).split
+        share_0 = Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 0).split
         share_0.first.length.must_equal 22
 
-        share_8 = Splitter.new('a', 3, 5, 'id', 0, {padding: 8}).split
+        share_8 = Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 8).split
         share_8.first.length.must_equal 29
 
-        share_16 = Splitter.new('a', 3, 5, 'id', 0, {padding: 16}).split
+        share_16 = Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 16).split
         share_16.first.length.must_equal 37
       end
     end
-  end # options hash
+  end
 end

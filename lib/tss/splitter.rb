@@ -1,46 +1,5 @@
-# A threshold secret sharing system provides two operations: one that
-# creates a set of shares given a secret, and one that reconstructs the
-# secret, given a set of shares. This section defines the inputs and
-# outputs of these operations. The following sections describe the
-# details of TSS based on a polynomial interpolation in GF(256).
-#
-# The secret is treated as an unstructured sequence of octets.  It is
-# not expected to be null-terminated. The number of octets in the
-# secret may be anywhere from zero up to 65,534 (that is, two
-# less than 2^16). It may be provided as an Array of Bytes or a UTF-8 String.
-#
-# The threshold parameter (M, threshold) is the number of shares that
-# will be needed to reconstruct the secret.  This value may be any number
-# between one and 255, inclusive.
-#
-# The number of shares (N, num_shares) that will be generated MUST be
-# between the threshold value M and 255, inclusive.  The upper limit is
-# particular to the TSS algorithm specified in this code.
-#
-# The identifier must be a 0-16 bytes String and must be present. This
-# identifier will be embedded in each share and should not reveal anything
-# about the secret. One method of creating it randomly could be:
-#
-#   identifier = SecureRandom.hex(8)
-#
-# Optionally, the secret is hashed with the algorithm specified
-# by `hash_id`. Valid values are:
-#
-#   SecretHash::NONE                 // code 0
-#   SecretHash::SHA1                 // code 1
-#   SecretHash::SHA256               // code 2
-#
-# Calling `split` on an instance of this class *must* return an
-# Array of formatted shares or raise one of `Tss::Error`
-# or `Tss::ArgumentError` if anything has gone wrong.
-#
-class Splitter
-  include ActiveModel::Validations
+class Splitter < Dry::Types::Struct
   include Util
-
-  MAX_SECRET_BYTE_SIZE = 2**16 - 2 # 65534
-  MIN_SHARES = 1
-  MAX_SHARES = 255
 
   SHARE_HEADER_STRUCT = BinaryStruct.new([
                    'a16', :identifier,  # String, 16 Bytes, arbitrary binary string (null padded, count is width)
@@ -49,97 +8,97 @@ class Splitter
                    'n', :share_len
                   ])
 
-  attr_accessor :secret, :threshold, :num_shares, :identifier, :hash_id, :opts
-  validates_presence_of :secret, :threshold, :num_shares, :hash_id, :opts
+  # dry-types
+  constructor_type(:schema)
 
-  validates_each :secret do |record, attr, value|
-    if value.is_a?(String)
-      unless (value.encoding.name == 'UTF-8' || value.encoding.name == 'US-ASCII') &&
-             value.bytes.to_a.size.between?(1, MAX_SECRET_BYTE_SIZE)
-        record.errors.add attr, "must be a UTF-8 or US-ASCII String with a Byte length <= #{MAX_SECRET_BYTE_SIZE}"
-      end
-    else
-      record.errors.add attr, "must be a String"
-    end
-  end
+  attribute :secret, Types::Strict::String
+    .constrained(min_size: 1)
 
-  validates_each :threshold do |record, attr, value|
-    unless value.is_a?(Integer) && value.between?(MIN_SHARES, MAX_SHARES)
-      record.errors.add attr, "must be an Integer between min (#{MIN_SHARES}) and max (#{MAX_SHARES}) inclusive"
-    end
-  end
+  attribute :threshold, Types::Coercible::Int
+    .constrained(gteq: 1)
+    .constrained(lteq: 255)
+    .default(3)
 
-  validates_each :num_shares, if: Proc.new { threshold.is_a?(Integer) } do |record, attr, value|
-    unless value.is_a?(Integer) && value.between?(record.threshold, MAX_SHARES)
-      record.errors.add attr, "must be an Integer between threshold value (#{record.threshold}) and max (#{MAX_SHARES}) inclusive"
-    end
-  end
+  attribute :num_shares, Types::Coercible::Int
+    .constrained(gteq: 1)
+    .constrained(lteq: 255)
+    .default(5)
 
-  validates_each :identifier, allow_blank: true do |record, attr, value|
-    unless value.is_a?(String) && value.bytes.to_a.size.between?(0, 16)
-      record.errors.add attr, 'must be a String with a Byte length 0..16 inclusive'
-    end
-  end
+  attribute :identifier, Types::Strict::String
+    .constrained(min_size: 0)
+    .constrained(max_size: 16)
+    .default { SecureRandom.hex(8) }
+    .constrained(format: /^[a-zA-Z0-9\-\_\.]*$/i) # 0 or more of these chars
 
-  validates_each :hash_id do |record, attr, value|
-    unless value.is_a?(Integer)
-      record.errors.add attr, "must be an Integer"
-    end
+  attribute :hash_alg, Types::Strict::String.enum('NONE', 'SHA1', 'SHA256')
+    .default('SHA256')
 
-    unless SecretHash.valid_id?(value)
-      record.errors.add attr, "must be a supported hash type id"
-    end
-  end
+  attribute :pad_blocksize, Types::Coercible::Int
+    .constrained(gteq: 0)
+    .constrained(lteq: 255)
+    .default(0)
 
-  validates_each :opts do |record, attr, value|
-    if value.is_a?(Hash)
-      unless value.key?(:padding)
-        record.errors.add attr, 'must have expected keys'
-      end
-
-      unless value[:padding].between?(0, 128)
-        record.errors.add attr, ':padding option must have valid Integer value'
-      end
-    else
-      record.errors.add attr, 'must be a Hash of args'
-    end
-  end
-
-  # Secret arg can be an Array of Bytes derived from a UTF-8 or US-ASCII
-  # String ('foo'.bytes.to_a), or just a UTF-8 or US-ASCII String which
-  # will be internally converted to an Array of Bytes.
-  def initialize(secret, threshold, num_shares, identifier, hash_id, args = {})
-    @secret     = secret
-    @threshold  = threshold
-    @num_shares = num_shares
-    @identifier = identifier
-    @hash_id    = hash_id
-    @opts       = { padding: 0 }
-    @opts.merge!(args) if args.is_a?(Hash)
-  end
-
+  # The `split` method takes a Hash of arguments. The following hash key args
+  # may be passed. Only `secret:` is required and the rest will be set to
+  # reasonable and secure defaults if unset. All args will be validated for
+  # correct type and values on object instantiation.
+  #
+  # `secret:` (required) takes a String (UTF-8 or US-ASCII encoding) with a
+  #           length between 1..65_534
+  #
+  # `threshold:` The number of shares (M) that will be required to recombine the
+  #              secret. Must be a value between 1..255 inclusive. Defaults to
+  #              a threshold of 3 shares.
+  #
+  # `num_shares:` The total number of shares (N) that will be created. Must be
+  #               a value between the `threshold` value (M) and 255 inclusive.
+  #               The upper limit is particular to the TSS algorithm used.
+  #               Defaults to generating 5 total shares.
+  #
+  # `identifier:` A 0-16 bytes String limited to the characters 0-9, a-z, A-Z,
+  # the dash (-), the underscore (_), and the period (.). The identifier will
+  # be embedded in each the binary header of each share and should not reveal
+  # anything about the secret. It defaults to the value of `SecureRandom.hex(8)`
+  # which returns a random 16 Byte string which represents a Base10 decimal
+  # between 1 and 18446744073709552000.
+  #
+  # `hash_alg:` The one-way hash algorithm that will be used to verify the
+  # secret returned by a later recombine operation is identical to what was
+  # split. This value will be concatenated with the secret prior to splitting.
+  # The valid hash algorithm values are `NONE`, `SHA1`, and `SHA256`. Defaults
+  # to `SHA256`. The use of `NONE` is discouraged as it does not allow those
+  # who are recombining the shares to verify if they have in fact recovered
+  # the correct secret.
+  #
+  # `pad_blocksize:` An integer representing the nearest multiple of Bytes
+  # to left pad the secret to. Defaults to not adding any padding (0). Padding
+  # is done with the "\u001F" character (decimal 31 in a Byte Array).
+  # Since TSS share data (minus the header) is essentially the same size as the
+  # original secret, padding smaller secrets may help mask the size of the
+  # contents from an attacker. Padding is not part of the RTSS spec so other
+  # TSS clients won't strip off the padding and may not validate correctly.
+  # If you need this interoperability you should probably pad the secret
+  # yourself prior to splitting it and leave the default zero-length pad in
+  # place. You would also need to manually remove the padding you added after
+  # the share is recombined.
+  #
+  # Calling `split` *must* return an Array of formatted shares or raise one of
+  # `TSS::Error` or `TSS::ArgumentError` exceptions if anything has gone wrong.
+  #
   def split
-    raise Tss::ArgumentError, @errors.messages unless valid?
+    secret_has_acceptable_encoding(secret)
+    secret_does_not_begin_with_padding_char(secret)
+    num_shares_not_less_than_threshold(threshold, num_shares)
 
-    # Robust Threshold Secret Sharing (RTSS)
-    # Combine the secret with a hash digest before splitting. On recombine
+    # RTSS : Combine the secret with a hash digest before splitting. On recombine
     # the two will be separated again and the hash used to validate the
-    # correct secret was returned. secret || hash(secret)
-    #
-    # Optionally, pad left the secret to the nearest multiple of Bytes specified
-    # with the `padding: X` optional argument. Defaults to no padding (0). Pads
-    # with the "\u001F" character (decimal 31 when in a Byte Array). Padding
-    # addresses an encode/decode issue with very small (1 or 2 char) secrets.
-    # Since TSS share data is essentially the same size as the original secret,
-    # padding smaller secrets may help mask the size of the contents from an
-    # attacker. Padding is not part of the RTSS spec so other TSS clients
-    # won't strip off the padding. If you need this interoperability you
-    # should probably pad the secret yourself prior to splitting it and
-    # leave the default zero-length pad in place.
-    #
-    # During the share combining operation the padding will be stripped off
-    # of the secret bytes prior to verifying the secret with any RTSS hash.
-    secret_bytes = Util.utf8_to_bytes(Util.left_pad(@opts[:padding], secret)) + SecretHash.byte_array(hash_id, secret)
+    # correct secret was returned. secret || hash(secret). You can also
+    # optionally pad the secret first.
+    padded_secret = Util.left_pad(pad_blocksize, secret)
+    hashed_secret = Hasher.byte_array(hash_alg, secret)
+    secret_bytes = Util.utf8_to_bytes(padded_secret) + hashed_secret
+
+    secret_bytes_is_smaller_than_max_size(secret_bytes)
 
     # For each share, a distinct Share Index is generated. Each Share
     # Index is an octet other than the all-zero octet. All of the Share
@@ -175,15 +134,12 @@ class Splitter
       # Unpack random Byte String into Byte Array of 8 bit unsigned Integers
       r = SecureRandom.random_bytes(threshold - 1).unpack('C*')
 
-      # build up each share one byte at a time representing each
-      # byte of the secret.
-      shares.map! do |s|
-        s << Util.f(s[0], [byte] + r)
-      end
+      # Build each share one byte at a time for each byte of the secret.
+      shares.map! { |s| s << Util.f(s[0], [byte] + r) }
     end
 
     # build up a common binary struct header for all shares
-    header = share_header(identifier, hash_id, threshold, shares.first.length)
+    header = share_header(identifier, hash_alg, threshold, shares.first.length)
 
     # create each binary share and return it.
     shares.map! { |s| (header + s.pack('C*')).force_encoding('ASCII-8BIT') }
@@ -191,9 +147,33 @@ class Splitter
 
   private
 
-  def share_header(identifier, hash_id, threshold, share_len)
+  def secret_has_acceptable_encoding(secret)
+    unless secret.encoding.name == 'UTF-8' || secret.encoding.name == 'US-ASCII'
+      raise TSS::ArgumentError, "invalid secret, must be a UTF-8 or US-ASCII encoded String not '#{secret.encoding.name}'"
+    end
+  end
+
+  def secret_does_not_begin_with_padding_char(secret)
+    if secret.slice(0) == "\u001F"
+      raise TSS::ArgumentError, 'invalid secret, first byte of secret is the reserved left-pad character (\u001F)'
+    end
+  end
+
+  def num_shares_not_less_than_threshold(threshold, num_shares)
+    if num_shares < threshold
+      raise TSS::ArgumentError, "invalid num_shares, must be >= threshold (#{threshold})"
+    end
+  end
+
+  def secret_bytes_is_smaller_than_max_size(secret_bytes)
+    if secret_bytes.size >= 65_535
+      raise TSS::ArgumentError, 'invalid secret, combined padded secret and hash are too large'
+    end
+  end
+
+  def share_header(identifier, hash_alg, threshold, share_len)
     SHARE_HEADER_STRUCT.encode(identifier: identifier,
-                               hash_id: hash_id,
+                               hash_id: Hasher.code(hash_alg),
                                threshold: threshold,
                                share_len: share_len)
   end

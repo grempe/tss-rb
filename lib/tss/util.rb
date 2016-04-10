@@ -102,7 +102,7 @@ module Util
   # EXP[(LOG[X] - LOG[Y]) modulo 255] is returned.
   def self.gf256_div(x, y)
     return 0 if x == 0
-    raise Tss::Error, 'divide by zero' if y == 0
+    raise TSS::Error, 'divide by zero' if y == 0
     EXP[(LOG[x] - LOG[y]) % 255]
   end
 
@@ -124,7 +124,7 @@ module Util
   # f can be computed by multiplying a value by X once for each term in
   # the summation.
   def self.f(x, bytes)
-    raise Tss::Error, 'invalid share index value, cannot be 0' if x == 0
+    raise TSS::Error, 'invalid share index value, cannot be 0' if x == 0
     y = 0
     x_i = 1
 
@@ -205,7 +205,7 @@ module Util
     strc = str.clone
     bytes = []
     len = strc.length
-    raise Tss::Error, 'invalid hex value, cannot be an odd length' if len.odd?
+    raise TSS::Error, 'invalid hex value, cannot be an odd length' if len.odd?
     # slice off two hex chars at a time and convert them to an Integer Byte.
     (len / 2).times { bytes << strc.slice!(0, 2).hex }
     bytes
@@ -234,4 +234,29 @@ module Util
     Splitter::SHARE_HEADER_STRUCT.decode(share)
   end
 
+  # Math Helpers
+
+  def self.factorial(n)
+    (1..n).reduce(:*) || 1
+  end
+
+  # Calculate the number of combinations possible
+  # for a given number of shares and threshold.
+  #
+  # See : http://www.wolframalpha.com/input/?i=20+choose+5
+  # See : http://www.mathsisfun.com/combinatorics/combinations-permutations-calculator.html (Set balls, 20, 5, no, no) == 15504
+  # See : http://www.mathsisfun.com/combinatorics/combinations-permutations.html
+  # See : https://jdanger.com/calculating-factorials-in-ruby.html
+  # See : http://chriscontinanza.com/2010/10/29/Array.html
+  # See : http://stackoverflow.com/questions/2434503/ruby-factorial-function
+  #
+  # n is the total number of shares
+  # r is the threshold number of shares
+  def self.calc_combinations(n, r)
+    factorial(n) / (factorial(r) * factorial(n - r))
+  end
+
+  def self.int_commas(n, delimiter = ',')
+    n.to_s.reverse.gsub(%r{([0-9]{3}(?=([0-9])))}, "\\1#{delimiter}").reverse
+  end
 end

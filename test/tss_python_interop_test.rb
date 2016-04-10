@@ -2,7 +2,7 @@ require 'test_helper'
 
 # Test interoperability with Python TSS library shares:
 # See : https://github.com/seb-m/tss
-describe Tss do
+describe TSS do
 
   # Python Code:
   # >>> secret = 'I love Python secrets too!'
@@ -22,9 +22,9 @@ describe Tss do
       header[:hash_id].must_equal 0
       header[:threshold].must_equal 2
       header[:share_len].must_equal 27
-      recovered_secret = Combiner.new(shares).combine
-      recovered_secret.must_equal secret
-      recovered_secret.encoding.name.must_equal 'UTF-8'
+      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret[:secret].must_equal secret
+      recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end
   end
 
@@ -47,9 +47,9 @@ describe Tss do
       header[:hash_id].must_equal 1
       header[:threshold].must_equal 2
       header[:share_len].must_equal 47
-      recovered_secret = Combiner.new(shares).combine
-      recovered_secret.must_equal secret
-      recovered_secret.encoding.name.must_equal 'UTF-8'
+      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret[:secret].must_equal secret
+      recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end
   end
 
@@ -72,9 +72,9 @@ describe Tss do
       header[:hash_id].must_equal 2
       header[:threshold].must_equal 2
       header[:share_len].must_equal 59
-      recovered_secret = Combiner.new(shares).combine
-      recovered_secret.must_equal secret
-      recovered_secret.encoding.name.must_equal 'UTF-8'
+      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret[:secret].must_equal secret
+      recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end
   end
 
@@ -98,9 +98,9 @@ describe Tss do
       header[:hash_id].must_equal 2
       header[:threshold].must_equal 2
       header[:share_len].must_equal 94
-      recovered_secret = Combiner.new(shares).combine
-      recovered_secret.must_equal secret
-      recovered_secret.encoding.name.must_equal 'UTF-8'
+      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret[:secret].must_equal secret
+      recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end
   end
 end

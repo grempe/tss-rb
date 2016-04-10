@@ -48,7 +48,7 @@ advanced error correction schemes. These extras are not currently implemented.
 Add this line to your application's `Gemfile`:
 
 ```ruby
-gem 'tss', '~> 1.0.0'
+gem 'tss', '~> 0.1.0'
 ```
 
 And then execute:
@@ -62,19 +62,20 @@ Or install it yourself as:
 $ gem install tss
 ```
 
-## Guidelines for Use
+## Suggestions for Use
 
 * Don't split large texts. Instead, split the much smaller encryption
 keys that protect encrypted large texts. Supply the encrypted
 files and the shares separately to recipients. Threshold secret sharing can be
-very slow at splitting and recombining very large bodies of text. Every byte must
+very slow at splitting and recombining very large bodies of text, especially
+when combined with a large number of shares. Every byte of the secret must
 be processed `num_shares` times.
 
 * Don't treat shares like encrypted data, but instead like the encryption keys
 that unlock the data. Shares are keys, and need to be protected as such. There is
 nothing to slow down an attacker if they have access to enough shares.
 
-* If you send keys by email, or some other insecure channel,  then your email
+* If you send keys by email, or some other insecure channel, then your email
 provider, or any entity with access to their data, now also has the keys to
 your data. They just need to collect enough keys to meet the threshold.
 
@@ -85,150 +86,199 @@ in transit or at rest.
 * Put careful thought into how you want to distribute shares. It often makes
 sense to give individuals more than one share.
 
-
 ## Splitting a Secret
 
 The basic usage is as follows using the arguments described below.
 
 ```ruby
-shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id, opts).split
+shares = TSS.split(secret: secret,
+              threshold: threshold,
+              num_shares: num_shares,
+              identifier: identifier,
+              hash_alg: hash_alg,
+              pad_blocksize: pad_blocksize)
 ```
 
 ### Arguments
 
+All arguments are passed as keys in a single Hash.
+
 The `secret` (required) value must be provided as a String with either
-the `UTF-8` or `US-ASCII` encoding with a Byte length  `<= 65,534`. You can
-test this beforehand with `'my string secret'.bytes.to_a.length`. The secret
-will be left-padded with the Unicode `"\u001F"` `Unit Separator, decimal 31` character
-up to 32 Bytes. This padding will be removed before the secret is checked against
-its RTSS hash when recombined. Your secret **MUST NOT** *begin* with this character
-(which is unlikely in any case). If your secret is 32 Bytes or longer no padding will
-be applied. This padding masks the size of relatively small secrets from an attacker.
+a `UTF-8` or `US-ASCII` encoding. The Byte length must be `<= 65,534`. You can
+test this beforehand with `'my string secret'.bytes.to_a.length`. Keep in mind
+that this length also includes padding and the verification hash so your
+secret may need to be shorter depending on the settings you choose.
 
 Internally, the `secret` String will be converted to and processed as an Array
 of Bytes. e.g. `'foo'.bytes.to_a`
 
-The `num_shares` (required) and `threshold` (required) values are Integers
-representing the total number of shares desired, and how many of those shares
-are required to re-create a `secret`. Both arguments must be Integers with a value
-between `1-255` inclusive. The `num_shares` must be greater-than-or-equal-to the
-`threshold` value specified.
+The `num_shares` and `threshold` values are Integers representing the total
+number of shares desired, and how many of those shares are required to
+re-create a `secret`. Both arguments must be Integers with a value
+between `1-255` inclusive. They can be Strings if directly coercible to Ints.
+The `num_shares` value must be greater-than-or-equal-to the `threshold` value.
+If you don't pass in these options they will be set to `threshold = 3` and
+`num_shares = 5` by default.
 
-The `identifier` (required) is a `0-16` Byte String that will be embedded in
-each output share and should be unique. All shares output from the same
-secret splitting operation will have the same `identifier`. This value
-can be retrieved from any share and should be assumed to be known to shareholders
-so nothing that leaks information about the secret should be used as an `identifier`.
+The `identifier` is a `0-16` Byte String that will be embedded in
+each output share and should uniquely identify a secret. All shares output
+from the same secret splitting operation will have the same `identifier`. This
+value can be retrieved easily from a share header and should be assumed to be
+known to shareholders. Nothing that leaks information about the secret should
+be used as an `identifier`. If an `identifier` is not set, it will default
+to the output of `SecureRandom.hex(8)` which is 8 random hex bytes and
+16 characters long.
 
-The `hash_id` is an Integer code that represents which cryptographic One-Way Hash function
-has been embedded in the shares to allow verification that the re-constructed
-secret is a match for the original at creation time. There are currently three
-valid values which have been specified as constants for your convenience.
-`SecretHash::SHA256` is the recommended Hash Digest to use.
+The `hash_alg` is a String that represents which cryptographic one-way
+hash function should be embedded in shares. The hash is used to verify
+that the re-combined secret is a match for the original at creation time.
+The value of the hash is not available to shareholders until a secret is
+successfully re-combined. The hash is calculated from the original secret
+and then combined with it prior to secret splitting. This means that the hash
+is protected the same way as the secret. The algorithm used is
+`secret || hash(secret)`. You can use one of `NONE`, `SHA1`, or `SHA256`.
+
+The `pad_blocksize` arg takes an Integer between 0..255 inclusive. Your secret
+**MUST NOT** *begin* with this character (which was chosen to make less likely).
+The padding character used is `"\u001F"` `Unit Separator, decimal 31`.
+
+Padding is applied to the nearest multiple of the number of bytes specified.
+`pad_blocksize` defaults to no padding (0). For example:
 
 ```ruby
-SecretHash::NONE                 // code 0
-SecretHash::SHA1                 // code 1
-SecretHash::SHA256               // code 2
-```
+padding_blocksize: 8
+(padded with zeros for illustration purposes)
 
-The `opts` arg is a hash of optional arguments which currently accepts a single
-hash key `padding` which takes a value between 0..127 inclusive.
-
-```ruby
-{ padding: 8 }
-
-If padded with zeros for example:
-
+# a single char, padded up to 8
 'a'         -> "0000000a"
-'aaaaaaaa'  -> "aaaaaaaa"
-'aaaaaaaaa' -> "0000000aaaaaaaaa"
 
+# 8 chars, no padding needed to get to 8
+'aaaaaaaa'  -> "aaaaaaaa"
+
+# 9 chars, bumps blocksize up to 16 and pads
+'aaaaaaaaa' -> "0000000aaaaaaaaa"
 ```
 
-This will left pad the secret to the nearest multiple of Bytes specified.
-Defaults to no padding (0). Padding is done with the "\u001F" character
-(decimal 31 when in a Byte Array). Your secret must not begin with this
-character.
+Since TSS share data is essentially the same size as the original secret
+(with a known size header), padding smaller secrets may help mask the size
+of the secret itself from an attacker. Padding is not part of the RTSS spec
+so other TSS clients won't strip off the padding and may fail when recombining
+shares. If you need this level of interoperability you should probably skip
+the `pad_blocksize` padding and just pad the secret yourself prior to splitting
+it. You need to pad using a character other than `"\u001F"`.
 
-Since TSS share data is essentially the same size as the original secret,
-padding smaller secrets may help mask the size of the contents from an
-attacker. Padding is not part of the RTSS spec so other TSS clients
-won't strip off the padding and may fail when recombining. If you need
-this interoperability you should probably pad the secret yourself prior
-to splitting it and leave the default zero-length pad in place.
-
-During the share combining operation the padding will be stripped off
-of the secret bytes prior to verifying the secret with any RTSS hash.
-
-### Example
+If you want to do padding this way, there is a utility method you can use
+to do that. This is the same method used interally.
 
 ```ruby
-secret = 'foo bar baz'
-threshold = 3
+# Util.left_pad(byte_multiple, input_string, pad_char = "\u001F")
+
+> Util.left_pad(16, 'abc', "0")
+=> "0000000000000abc"
+```
+
+### Example Usage
+
+```ruby
+secret     = 'foo bar baz'
+threshold  = 3
 num_shares = 5
 identifier = SecureRandom.hex(8)
-hash_id = SecretHash::SHA256
+hash_alg   = 'SHA256'
 
-shares = Splitter.new(secret, threshold, num_shares, identifier, hash_id).split
+s = TSS.split(secret: secret, threshold: threshold, num_shares: num_shares, identifier: identifier, hash_alg: 'SHA256', pad_blocksize: 16)
 
-=> ["ca81eda2c6b80c23\x02\x03\x00A\x01T\xE5W\xB8q\x01\x1F\xE3\x85GqG\xD2\x8D\xC8\xC9C\x89\xE9\xDA\xD4\xD2\x98k.\x99\x06\x87M\xA6\x11\xE1\xCDAw\xAD\x00x\xB7vA4=\xB4}Z\xECD\xE3/C`\xF0v\xA2\xB3\xC3\x8F\xB9\xC2\x06\x12\xDB\xE4",
- "ca81eda2c6b80c23\x02\x03\x00A\x02\x9C\x7FH\xC3\xD8\x8E\xCEd\xB5\xFAD\x02\x88\xC1\xEC\x1C\xF4R\xB9\x19.\x93\x14\x17\xB2\xC5\x06N\xC2\x88\xF3\x18\x00\xB7\x1Fz\x8Av\r\xDE\x05\xF6 \xE1\x8A\xD2B\x96\x99\xC4\x18\xBFQ\x92\xE3\xCF`s:\be\xEF\x10D",
- "ca81eda2c6b80c23\x02\x03\x00A\x03\xD7\x85\x00d\xB6\x90\xCE\x98/\xA2*ZES;\xCA\xA8\xC4O\xDC\xE5'\xE3\x13\xBC>a\xBB\xAFL\x83\x83\x16%p\x16Nl\x14@66\f\\SW}\xD6\xF2\x9A\xFB\xE2L4\xBFr\xD6\x80n\x9D\xB9+9w",
- "ca81eda2c6b80c23\x02\x03\x00A\x04V\xD5\x80\xAE\xE6\xA4\xCF\xBFr\x81\x83\xA7r\x11\xE1\xFF\x85v\x17y\xBB\xB9\x97D\x11\x04=\x13\x1FR\x8D\x99\x87l_;\x01\xCA\x81\xC0\xD8\xA2\xCC\xD0\xD2\xB5{s\x9B$D\xC2\xA0\x00f!\xCC\x87\xBFJ\xCF:\xDB\x13",
- "ca81eda2c6b80c23\x02\x03\x00A\x05\x1D/\xC8\t\x88\xBA\xCFC\xE8\xD9\xED\xFF\xBF\x836)\xD9\xE0\xE1\xBCp\r`@\x1F\xFFZ\xE6r\x96\xFD\x02\x91\xFE0W\xC5\xD0\x98^\xEBb\xE0m\v0D3\xF0z\xA7\x9F\xBD\xA6:\x9Czt\xEB\xDF\x13\xFE\xF2 "]
+=> ["c70963b2e20fccfd\x02\x03\x001\x01\x1Fg4\xDC\xAA\x96\x9D3\xCB\xFB\xF7\xB0\x91}\xCA\xB7\x0E\xB0\xF3.}O\xD0&Z\x11\xB0\xAB\xF48f#*\xBA\xB7)l\x05\xAF4\xFA\x95\x9C\xF2\x8E\xA6\xB9=",
+ "c70963b2e20fccfd\x02\x03\x001\x02Y|\x1F\x1Co\x8BW\f^\xFE\xA5\x92G\xA4\xD0K\xC6@G\xDC\x02\xBF\xF1\xAE\xE7\vP\xF1*\x9C\xA5$\edM#\xB0\xEBy\a}\xA18\rBZ\x8A\xEE",
+ "c70963b2e20fccfd\x02\x03\x001\x03Y\x044\xDF\xDA{\xA5P\xB5g3P\xF6\xBB{\x86\x13#\xAC3\xBB\x92\x8F`\xCF\xEE\xF1Sz{\x10\x03\xB9\xAFZ71>(=\xF2HI\xA8\x16*\xC1\x04",
+ "c70963b2e20fccfd\x02\x03\x001\x04\x90\xA3\\W\xFB\xFF.\xE8&\xA3\x13N\x968\xC5\xEEg\xA1\xD8\xB6\xD9\xE9\xAAMz\xA9\xF3H\e7#\xE7\xA8\r@\xD9\\\xB8\x7F\xF3Q\x8D\x80\xCF1~\x97P",
+ "c70963b2e20fccfd\x02\x03\x001\x05\x90\xDBw\x94N\x0F\xDC\xB4\xCD:\x85\x8C''n#\xB2\xC23Y`\xC4\xD4\x83RLR\xEAK\xD0\x96\xC0\n\xC6W\xCD\xDDm.\xC9\xDEd\xF1je\x0E\xDC\xBA"]
 
-reconstructed_secret = Combiner.new(shares).combine
-=> "foo bar baz"
-```
+ secret = TSS.combine(shares: s)
+ => {:identifier=>"c70963b2e20fccfd",
+  :num_shares_provided=>5,
+  :num_shares_used=>3,
+  :processing_started_at=>"2016-04-10T00:58:04Z",
+  :processing_finished_at=>"2016-04-10T00:58:04Z",
+  :processing_time_ms=>0.37,
+  :secret=>"foo bar baz",
+  :shares_select_by=>"first",
+  :combinations=>nil,
+  :threshold=>3}
+  ```
 
 ## Combining Shares to Recreate a Secret
 
-The basic usage is as follows using the arguments described below.
+The basic usage is:
 
 ```ruby
-secret = Combiner.new(shares, args).combine
+secret = TSS.combine(shares: shares)
 ```
 
 ### Arguments
 
-`shares` (required) : Must be provided as an Array of encoded Share Byte Strings.
-You must provide at least `threshold` shares as specified when the secret was split.
-Providing too few shares will result in a `Tss::ArgumentError` exception being raised.
+All arguments are passed as keys in a single Hash. The return value is either
+a Hash (with the `:secret` key being most important and other metadata provided
+for informational purposes), or an `TSS::Error` Exception if the secret could
+not be created and verified with its hash.
 
-Options Hash (optional) : A Hash of options.
+`shares:` (required) : Must be provided as an Array of encoded Share Byte Strings.
+You must provide at least `threshold` shares as specified when the secret was
+split. Providing too few shares will result in a `TSS::ArgumentError` exception
+being raised. There are a large number of verifications that are performed on
+shares provided to make sure they are valid and consistent with each other. An
+Exception will be raised if any of these tests fail.
 
-#### Option : Share selection
+`select_by:` : If the number of shares provided as input to the secret
+reconstruction operation is greater than the threshold M, then M
+of those shares are selected for use in the operation.  The method
+used to select the shares can be chosen with the `select_by:` argument
+which takes the following values as options:
 
-`share_selection:` : This key determines how the Array of incoming shares
-to be re-combined should be handled when more than `threshold` shares are
-provided. One of the following `Symbol` values for this key are valid:
+`select_by: first` : If X shares are required by the threshold and more than X
+shares are provided, then the first X shares in the Array of shares provided
+will be used. All others will be discarded and the operation will fail if
+those selected shares cannot recreate the secret.
 
-`:strict_first_x` : If `M` shares are required as a threshold, then the
-first `M` shares in the Array of `shares` provided will be used. All other
-`shares` will be discarded and the operation will fail if the selected shares
-cannot recreate the secret.
+`select_by: sample` : If X shares are required by the threshold and more than X
+shares are provided, then X shares will be randomly selected from the Array
+of shares provided.  All others will be discarded and the operation will
+fail if those selected shares cannot recreate the secret.
 
-`:strict_sample_x` : If `M` shares are required as a threshold, then a random
-`M` shares in the Array of `shares` provided will be used. All other
-`shares` will be discarded and the operation will fail if the selected shares
-cannot recreate the secret.
+`select_by: combinations` : If X shares are required, and more than X shares are
+provided, then all possible combinations of the threshold number of shares
+will be tried to see if the secret can be recreated.
 
-`:any_combination` :  If `M` shares are required as a threshold, then all possible
-`M` share combinations in the Array of `shares` provided will be used. The combinations
-will be tried one after the other until the first one succeeds or they all fail.
-This combination technique can only be used if the RTSS hash type was set to
-`SHA1` or `SHA256` when the shares were created.
+**Warning**
+
+This `combinations` flexibility comes with a cost. All combinations of
+`threshold` shares must be generated before processing. Due to the math
+associated with combinations it is possible that the system would try to
+generate a number of combinations that could never be generated or processed
+in many times the life of the Universe. This option can only be used if the
+possible combinations for the number of shares and the threshold needed to
+reconstruct a secret result in a number of combinations that is small enough
+to have a chance at being processed. If the number of combinations will be too
+large then the an Exception will be raised before processing has started.
+
+If the combine operation does not result in a secret being successfully
+extracted, then a `TSS::Error` exception will be raised.
 
 ### Exception Handling
 
-The splitting and combining operations may raise `Tss::ArgumentError`
-or `Tss::Error` exceptions and you should rescue and handle them in your code.
-Exception messages may include hints as to what went wrong.
+Initial validation of options is done when the `TSS.split` or `TSS.combine`
+methods are called. If the arguments passed are of the wrong Type or value
+a `Dry::Types::ConstraintError` Exception will be raised.
+
+The splitting and combining operations may also raise `TSS::ArgumentError`
+or `TSS::Error` exceptions as they are run.
+
+All Exception messages should include hints as to what went wrong in the
+`ex.messages` attribute.
 
 ## RTSS Binary Data Format
 
-We use a data format with the following fields, in order:
+TSS provides shares in a binary data format with the following fields:
 
 `Identifier`. This field contains 16 octets.  It identifies the secret
 with which a share is associated.  All of the shares associated
@@ -292,7 +342,7 @@ best performance.
 
 A reasonable set of values seems to be what I'll call the 'rule of 64'. If you
 keep the `secret <= 64 Bytes`, the `threshold <= 64`, and the `num_shares <= 64`
-you can do a round-trip split and combine operation in ~250ms on a modern
+you can do a round-trip split and combine operation in `~250ms` on a modern
 laptop. These should be very reasonable and secure max values for most use cases.
 
 There are some simple benchmark tests to exercise things with `rake bench`.
@@ -337,7 +387,7 @@ either express or implied. See the LICENSE.txt file for the
 specific language governing permissions and limitations under
 the License.
 
-### Thank You
+## Thank You!
 
 This code is an implementation of the Threshold Secret Sharing, as specified in
 the Network Working Group Internet-Draft submitted by D. McGrew

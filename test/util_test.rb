@@ -116,7 +116,7 @@ describe Util do
     end
 
     it 'must raise an error if Y == 0 (divide by zero)' do
-      assert_raises(Tss::Error) { Util.gf256_div(15, 0) }
+      assert_raises(TSS::Error) { Util.gf256_div(15, 0) }
     end
 
     it 'must return a correct result' do

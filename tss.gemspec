@@ -5,12 +5,13 @@ require 'tss/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'tss'
-  spec.version       = Tss::VERSION
+  spec.version       = TSS::VERSION
   spec.authors       = ['Glenn Rempe']
   spec.email         = ['glenn@rempe.us']
 
   spec.summary = <<-EOF
-    A Ruby implementation of Threshold Secret Sharing as defined in IETF Internet-Draft draft-mcgrew-tss-03.txt
+    A Ruby implementation of Threshold Secret Sharing as defined in
+    IETF Internet-Draft draft-mcgrew-tss-03.txt
   EOF
 
   spec.description = <<-EOF
@@ -21,7 +22,7 @@ Gem::Specification.new do |spec|
     control on key material and other secrets that must be strongly
     protected.
 
-    This gem implements a threshold secret sharing method based on
+    This gem implements a Threshold Secret Sharing method based on
     polynomial interpolation in GF(256) and a format for the storage and
     transmission of shares.
 
@@ -38,7 +39,8 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'activemodel', '~> 4.2.6'
+  spec.add_dependency 'activesupport', '~> 4.2.6'
+  spec.add_dependency 'dry-types', '~> 0.7.1'
   spec.add_dependency 'binary_struct', '~> 2.1.0'
 
   spec.add_development_dependency 'bundler', '~> 1.11'
