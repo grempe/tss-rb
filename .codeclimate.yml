@@ -12,6 +12,7 @@ engines:
     - ff3b0ae9caf19067c4e103fe1456a126
     - 8ec23fad3fad979a5d1de264823ba8fa
     - cd954cababda47d20480edce9f605ac2
+    - 22f73502e4c082c4f78cf483f0150bef
   fixme:
     enabled: true
   rubocop:
