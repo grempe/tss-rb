@@ -1,12 +1,7 @@
-require 'active_support'
-require 'active_support/core_ext/object/blank.rb'
-require 'active_support/core_ext/numeric'
-require 'active_support/core_ext/string/starts_ends_with.rb'
-require 'active_support/core_ext/object/try.rb'
 require 'binary_struct'
 require 'dry-types'
-
 require 'tss/version'
+require 'tss/blank'
 require 'tss/types'
 require 'tss/errors'
 require 'tss/util'
