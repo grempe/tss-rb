@@ -94,7 +94,7 @@ module TSS
 
       h          = Util.extract_share_header(shares.sample)
       threshold  = h[:threshold]
-      identifier = h[:identifier].delete("\x00")
+      identifier = h[:identifier]
       hash_id    = h[:hash_id]
 
       # If there are more shares than the threshold would require

@@ -232,7 +232,9 @@ module TSS
     # Binary Header Helpers
 
     def self.extract_share_header(share)
-      Splitter::SHARE_HEADER_STRUCT.decode(share)
+      h = Splitter::SHARE_HEADER_STRUCT.decode(share)
+      h[:identifier] = h[:identifier].delete("\x00")
+      return h
     end
 
     # Math Helpers
