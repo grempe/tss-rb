@@ -1,5 +1,5 @@
-require 'rubygems'
 require 'digest'
+require 'base64'
 require 'binary_struct'
 require 'dry-types'
 require 'tss/version'
@@ -16,13 +16,13 @@ module TSS
     unless args.is_a?(Hash) && args.key?(:secret)
       raise TSS::ArgumentError, 'TSS.split takes a Hash of arguments with at least a :secret key'
     end
-    Splitter.new(args).split
+    TSS::Splitter.new(args).split
   end
 
   def self.combine(args)
     unless args.is_a?(Hash) && args.key?(:shares)
       raise TSS::ArgumentError, 'TSS.combine takes a Hash of arguments with at least a :shares key'
     end
-    Combiner.new(args).combine
+    TSS::Combiner.new(args).combine
   end
 end

@@ -17,12 +17,12 @@ describe TSS do
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x1b\x02\x02\n\xf1\xc5C7\xe3\xa5!\xd4\xfd\xfd\x9f\xb3\xfb\xa6\x85{\x9b.\xca\xb0H\x9fP\x06",
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x1b\x03\xaa\x1f2\x90\xd4\x1e\x0fR\r\x84:\xb4jw\xbfJ\xf6\xf2\xe4\x03\x1b\xf8V\xe7\xc2\x98"]
 
-      header = Util.extract_share_header(shares.first)
+      header = TSS::Util.extract_share_header(shares.first)
       header[:identifier].must_equal "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       header[:hash_id].must_equal 0
       header[:threshold].must_equal 2
       header[:share_len].must_equal 27
-      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret = TSS::Combiner.new(shares: shares).combine
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end
@@ -42,12 +42,12 @@ describe TSS do
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x00/\x03B\xd9\xaar6FU\x9a\n\x94R~\xb3\x19;}\xd16\xd74\x9d\xa4\xcd\xfa\x8f\xc6\x03\n\x93\xe7%\xa5\xe4\xc7\xee\xc0:p\xa1\xbb]@\xcf\xd4\xa5\xde"
             ]
 
-      header = Util.extract_share_header(shares.first)
+      header = TSS::Util.extract_share_header(shares.first)
       header[:identifier].must_equal "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       header[:hash_id].must_equal 1
       header[:threshold].must_equal 2
       header[:share_len].must_equal 47
-      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret = TSS::Combiner.new(shares: shares).combine
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end
@@ -67,12 +67,12 @@ describe TSS do
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x02\x00;\x02j\xa5D\xcb\xa4A\x9b)\x94\x18+\xb1+$\xd9\x04N\x80\xcc\xc7\xd2HS\xfc\xb2\xf10\x0e\x85\xec\x9c\xf5\xc7L\x81\xe1\xe4\xae=G\xc4G\xe5\xd5\x9f\xe1n\xbeo\xd3\xda\xfan\xf2\xb2\xdd>\xd0",
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x02\x00;\x03\xf6jP\x99\xcdSK\x98o.\x87\xde\x84&\x8c\xb9\xd5\xf9\x15\x13\x0f|\xcd8Q\x99P&\xc8\xee^\xbd\xaa\xfc\xea$\x97@\xcb\x99/\xc4\x15r\x83\x1a\xd4z\xcav\xfbd[\xa3\xe4L\xe4\xfb"
             ]
-      header = Util.extract_share_header(shares.first)
+      header = TSS::Util.extract_share_header(shares.first)
       header[:identifier].must_equal "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       header[:hash_id].must_equal 2
       header[:threshold].must_equal 2
       header[:share_len].must_equal 59
-      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret = TSS::Combiner.new(shares: shares).combine
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end
@@ -93,12 +93,12 @@ describe TSS do
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x02\x00^\x03\x0f\xd3\x1f@\x14\xb0\xf9\x8a\xce\x93\xf19Ei%\x11t\x12\xe3\x02\x0c[gg\xb0\x1a\x19\xe4\x0e\xc4\'?F?r\xba\x0bm*\x876\x87\xc3\x94;O`7\xc80\xdc,\x95\xeeVw\x81\t\xb1z\x00\xefEU\"\xa2G:\xa2\xb6\xe4\xc0K\x97C\xadWSd\x1d\xa2\xe9z#S\x1c19\x96\xa2\xfd\xe5\xf2"
             ]
 
-      header = Util.extract_share_header(shares.first)
+      header = TSS::Util.extract_share_header(shares.first)
       header[:identifier].must_equal "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       header[:hash_id].must_equal 2
       header[:threshold].must_equal 2
       header[:share_len].must_equal 94
-      recovered_secret = Combiner.new(shares: shares).combine
+      recovered_secret = TSS::Combiner.new(shares: shares).combine
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
     end

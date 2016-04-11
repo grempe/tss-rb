@@ -1,4 +1,4 @@
-# Extracted from active_support gem.
+# Extracted from activesupport gem.
 # https://github.com/rails/rails/blob/52ce6ece8c8f74064bb64e0a0b1ddd83092718e1/activesupport/lib/active_support/core_ext/object/blank.rb
 class Object
   # An object is blank if it's false, empty, or a whitespace string.

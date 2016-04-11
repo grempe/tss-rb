@@ -8,9 +8,9 @@ describe TSS do
           (m..32).each do |n|
             secret = SecureRandom.hex(rand(1..32))
             identifier = SecureRandom.hex(rand(8))
-            shares = Splitter.new(secret: secret, threshold: m, num_shares: n, identifier: identifier, hash_alg: hash_alg).split
+            shares = TSS::Splitter.new(secret: secret, threshold: m, num_shares: n, identifier: identifier, hash_alg: hash_alg).split
             shares.first.encoding.name.must_equal 'ASCII-8BIT'
-            recovered_secret = Combiner.new(shares: shares.sample(m)).combine
+            recovered_secret = TSS::Combiner.new(shares: shares.sample(m)).combine
             recovered_secret[:secret].must_equal secret
             recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
           end

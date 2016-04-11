@@ -12,7 +12,7 @@ class SplitBenchmarkNumShares < Minitest::Benchmark
 
   def bench_tss_split_num_shares
     assert_performance_linear(0.900) do |n|
-      Splitter.new(secret: 'secret', threshold: n, num_shares: n, hash_alg: 'SHA256').split
+      TSS::Splitter.new(secret: 'secret', threshold: n, num_shares: n, hash_alg: 'SHA256').split
     end
   end
 end
@@ -26,7 +26,7 @@ class SplitBenchmarkSecretLength < Minitest::Benchmark
   def bench_tss_split_secret_size
     assert_performance_linear(0.900) do |n|
       @secret = 'a' * n
-      Splitter.new(secret: @secret, threshold: 3, num_shares: 3, hash_alg: 'SHA256').split
+      TSS::Splitter.new(secret: @secret, threshold: 3, num_shares: 3, hash_alg: 'SHA256').split
     end
   end
 end
@@ -38,12 +38,12 @@ class CombineBenchmarkNumShares < Minitest::Benchmark
   end
 
   def setup
-    @s = Splitter.new(secret: SecureRandom.hex(32), threshold: 8, num_shares: 255, hash_alg: 'SHA256').split
+    @s = TSS::Splitter.new(secret: SecureRandom.hex(32), threshold: 8, num_shares: 255, hash_alg: 'SHA256').split
   end
 
   def bench_tss_combine_num_shares
     assert_performance_constant(0.900) do |n|
-      Combiner.new(shares: @s.sample(n)).combine
+      TSS::Combiner.new(shares: @s.sample(n)).combine
     end
   end
 end

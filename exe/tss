@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 
-$LOAD_PATH.unshift(File.dirname(File.realpath(__FILE__)) + '/../lib')
-
 require 'tss/cli'
 
 TSS::CLI.start
