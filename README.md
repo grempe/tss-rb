@@ -49,7 +49,7 @@ advanced error correction schemes. These extras are not currently implemented.
 Add this line to your application's `Gemfile`:
 
 ```ruby
-gem 'tss', '~> 0.1.0'
+gem 'tss', '~> 0.1'
 ```
 
 And then execute:
@@ -62,6 +62,55 @@ Or install it yourself as:
 ```sh
 $ gem install tss
 ```
+
+### Installation Security : Signed Ruby Gem
+
+The TSS gem is cryptographically signed. To be sure the gem you install hasn’t
+been tampered with you can install it using the following method:
+
+Add my public key (if you haven’t already) as a trusted certificate
+
+```
+# Caveat: Gem certificates are trusted globally, such that adding a
+# cert.pem for one gem automatically trusts all gems signed by that cert.
+gem cert --add <(curl -Ls https://raw.github.com/grempe/tss-rb/master/certs/gem-public_cert_grempe.pem)
+```
+
+To install, it is possible to specify either `HighSecurity` or `MediumSecurity`
+mode. Since the `tss` gem depends on one or more gems that are not cryptographically
+signed you will likely need to use `MediumSecurity`. You should receive a warning
+if any signed gem does not match its signature.
+
+```
+# All dependent gems must be signed and verified.
+gem install tss -P MediumSecurity
+```
+
+```
+# All signed dependent gems must be verified.
+gem install tss -P MediumSecurity
+```
+
+```
+# Same as above, except Bundler only recognizes
+# the long --trust-policy flag, not the short -P
+bundle --trust-policy MediumSecurity
+```
+
+You can [learn more about security and signed Ruby Gems](http://guides.rubygems.org/security/).
+
+### Installation Security : Signed Git Commits
+
+Most, if not all, of the commits and tags to the repository for this code are
+signed with my PGP/GPG code signing key. I have uploaded my code signing public
+keys to GitHub and you can now verify those signatures with the GitHub UI.
+See [this list of commits](https://github.com/grempe/tss-rb/commits/master)
+and look for the `Verified` tag next to each commit. You can click on that tag
+for additional information.
+
+You can also clone the repository and verify the signatures locally using your
+own GnuPG installation. You can find my certificates and read about how to conduct
+this verification at [https://www.rempe.us/keys/](https://www.rempe.us/keys/).
 
 ## Suggestions for Use
 
@@ -139,6 +188,16 @@ and then combined with it prior to secret splitting. This means that the hash
 is protected the same way as the secret. The algorithm used is
 `secret || hash(secret)`. You can use one of `NONE`, `SHA1`, or `SHA256`.
 
+The `format` arg takes a String Enum with either `'binary'` or `'human'` values.
+This instructs the output of a split to either provide an array of binary octet
+strings (standard RTSS format for interoperability), or a human friendly
+URL Safe Base 64 encoded version of that same binary output. The `human` format
+can be easily shared in a tweet, email, or even a URL. The `human` format is
+prefixed with `tss-VERSION-IDENTIFIER-THRESHOLD-` to make it easier to visually
+compare shares and see if they have matching identifiers and if you have
+enough shares to reach the threshold. Note, this prefix is not parsed
+or used by the `tss` combiner code at all. It is only for user convenience.
+
 The `pad_blocksize` arg takes an Integer between 0..255 inclusive. Your secret
 **MUST NOT** *begin* with this character (which was chosen to make less likely).
 The padding character used is `"\u001F"` `Unit Separator, decimal 31`.
@@ -169,7 +228,7 @@ the `pad_blocksize` padding and just pad the secret yourself prior to splitting
 it. You need to pad using a character other than `"\u001F"`.
 
 If you want to do padding this way, there is a utility method you can use
-to do that. This is the same method used interally.
+to do that. This is the same method used internally.
 
 ```ruby
 # Util.left_pad(byte_multiple, input_string, pad_char = "\u001F")
@@ -236,17 +295,17 @@ of those shares are selected for use in the operation.  The method
 used to select the shares can be chosen with the `select_by:` argument
 which takes the following values as options:
 
-`select_by: first` : If X shares are required by the threshold and more than X
+`select_by: 'first'` : If X shares are required by the threshold and more than X
 shares are provided, then the first X shares in the Array of shares provided
 will be used. All others will be discarded and the operation will fail if
 those selected shares cannot recreate the secret.
 
-`select_by: sample` : If X shares are required by the threshold and more than X
+`select_by: 'sample'` : If X shares are required by the threshold and more than X
 shares are provided, then X shares will be randomly selected from the Array
 of shares provided.  All others will be discarded and the operation will
 fail if those selected shares cannot recreate the secret.
 
-`select_by: combinations` : If X shares are required, and more than X shares are
+`select_by: 'combinations'` : If X shares are required, and more than X shares are
 provided, then all possible combinations of the threshold number of shares
 will be tried to see if the secret can be recreated.
 

@@ -9,6 +9,12 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Glenn Rempe']
   spec.email         = ['glenn@rempe.us']
 
+  cert = File.expand_path('~/.gem-certs/gem-private_key_grempe.pem')
+  if File.exist?(cert)
+    spec.signing_key = cert
+    spec.cert_chain = ['certs/gem-public_cert_grempe.pem']
+  end
+
   spec.summary = <<-EOF
     A Ruby implementation of Threshold Secret Sharing as defined in
     IETF Internet-Draft draft-mcgrew-tss-03.txt
@@ -35,13 +41,13 @@ Gem::Specification.new do |spec|
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = 'exe'
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.bindir        = 'bin'
+  spec.executables   << 'tss'
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'dry-types', '~> 0.7.1'
-  spec.add_dependency 'binary_struct', '~> 2.1.0'
-  spec.add_dependency 'thor', '~> 0.19.1'
+  spec.add_dependency 'dry-types', '~> 0.7'
+  spec.add_dependency 'binary_struct', '~> 2.1'
+  spec.add_dependency 'thor', '~> 0.19'
 
   spec.add_development_dependency 'bundler', '~> 1.11'
   spec.add_development_dependency 'rake', '~> 11.1'

@@ -34,6 +34,9 @@ module TSS
     attribute :hash_alg, Types::Strict::String.enum('NONE', 'SHA1', 'SHA256')
       .default('SHA256')
 
+    attribute :format, Types::Strict::String.enum('binary', 'human')
+      .default('binary')
+
     attribute :pad_blocksize, Types::Coercible::Int
       .constrained(gteq: 0)
       .constrained(lteq: 255)
@@ -143,7 +146,11 @@ module TSS
       header = share_header(identifier, hash_alg, threshold, shares.first.length)
 
       # create each binary share and return it.
-      shares.map! { |s| (header + s.pack('C*')).force_encoding('ASCII-8BIT') }
+      shares.map! do |s|
+        binary = (header + s.pack('C*')).force_encoding('ASCII-8BIT')
+        human = ['tss', 'v1', identifier, threshold, Base64.urlsafe_encode64(binary)].join('-')
+        format == 'binary' ? binary : human
+      end
     end
 
     private
