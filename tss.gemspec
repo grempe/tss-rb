@@ -16,8 +16,9 @@ Gem::Specification.new do |spec|
   end
 
   spec.summary = <<-EOF
-    A Ruby implementation of Threshold Secret Sharing as defined in
-    IETF Internet-Draft draft-mcgrew-tss-03.txt
+    A Ruby gem implementing Threshold Secret Sharing. This code can be
+    used in your Ruby applications or as a simple command line (CLI)
+    executable for splitting and reconstructing secrets.
   EOF
 
   spec.description = <<-EOF
