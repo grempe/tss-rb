@@ -94,7 +94,7 @@ module TSS
 
         say('')
         say('Secret Recovered and Verified!')
-        say ('')
+        say('')
         say("identifier : " + sec[:identifier]) if sec[:identifier].present?
         say("threshold : " + sec[:threshold].to_s) if sec[:threshold].present?
         say("processing time (ms) : " + sec[:processing_time_ms].to_s) if sec[:processing_time_ms].present?
