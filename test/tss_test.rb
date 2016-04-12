@@ -8,10 +8,23 @@ describe TSS do
     end
   end
 
+  describe 'split' do
+    it 'must raise an TSS::ArgumentError if a Dry::Types::ConstraintError was raised by Splitter' do
+      assert_raises(TSS::ArgumentError) { TSS.split(secret: '') }
+      assert_raises(TSS::ArgumentError) { TSS.split(secret: 'foo', threshold: 0) }
+    end
+  end
+
   describe 'combine' do
     it 'must raise an error if called without a Hash arg with shares key' do
       assert_raises(TSS::ArgumentError) { TSS.combine([]) }
       assert_raises(TSS::ArgumentError) { TSS.combine({}) }
+    end
+  end
+
+  describe 'combine' do
+    it 'must raise an TSS::ArgumentError if a Dry::Types::ConstraintError was raised by Combiner' do
+      assert_raises(TSS::ArgumentError) { TSS.combine(shares: '') }
     end
   end
 
