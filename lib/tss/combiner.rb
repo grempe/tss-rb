@@ -88,6 +88,20 @@ module TSS
     #     The output string is returned.
     #
     def combine
+      # unwrap 'human' share format
+      if shares.first.start_with?('tss~')
+        shares.collect! do |s|
+          matcher = /^tss~v1~*[a-zA-Z0-9\.\-\_]{0,16}~[0-9]{1,3}~([a-zA-Z0-9\-\_]+\={0,2})$/
+          s_b64 = s.match(matcher)
+          if s_b64.present?
+            # puts s_b64.to_a[1].inspect
+            Base64.urlsafe_decode64(s_b64.to_a[1])
+          else
+            raise TSS::ArgumentError, 'invalid shares, human format shares do not match expected pattern'
+          end
+        end
+      end
+
       validate_all_shares(shares)
       orig_shares_size = shares.size
       start_processing_time = Time.now

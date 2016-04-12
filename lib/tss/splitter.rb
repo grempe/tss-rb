@@ -148,7 +148,8 @@ module TSS
       # create each binary share and return it.
       shares.map! do |s|
         binary = (header + s.pack('C*')).force_encoding('ASCII-8BIT')
-        human = ['tss', 'v1', identifier, threshold, Base64.urlsafe_encode64(binary)].join('-')
+        # join with URL safe '~'
+        human = ['tss', 'v1', identifier, threshold, Base64.urlsafe_encode64(binary)].join('~')
         format == 'binary' ? binary : human
       end
     end

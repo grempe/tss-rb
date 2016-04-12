@@ -10,7 +10,7 @@ This code is currently a work in progress and is not yet ready for production
 use. The API, input and output formats, and other aspects are likely to change
 before release. There has been no security review of this code.
 
-## About
+## About TSS
 
 This Ruby gem implements Threshold Secret Sharing, as specified in
 the Network Working Group Internet-Draft submitted by D. McGrew
@@ -112,7 +112,7 @@ You can also clone the repository and verify the signatures locally using your
 own GnuPG installation. You can find my certificates and read about how to conduct
 this verification at [https://www.rempe.us/keys/](https://www.rempe.us/keys/).
 
-## Suggestions for Use
+## TSS : Suggestions for Use
 
 * Don't split large texts. Instead, split the much smaller encryption
 keys that protect encrypted large texts. Supply the encrypted
@@ -136,7 +136,111 @@ in transit or at rest.
 * Put careful thought into how you want to distribute shares. It often makes
 sense to give individuals more than one share.
 
-## Splitting a Secret
+## Command Line Interface
+
+When you install the gem a simple `tss` command-line interface (CLI)
+is also installed and should be available on your PATH.
+
+The CLI is a simple interface for splitting and combining secrets. You can
+see the options available with `tss help`, `tss help split`, or `tss help combine`.
+
+### CLI Secret Splitting
+
+```
+$ tss help split
+Usage:
+  tss split SECRET
+
+Options:
+  -t, [--threshold=threshold]          # # of shares, of total, required to reconstruct a secret
+  -n, [--num-shares=num_shares]        # # of shares total that will be generated
+  -i, [--identifier=identifier]        # A unique identifier string, 0-16 Bytes, [a-zA-Z0-9.-_]
+  -h, [--hash-alg=hash_alg]            # A hash type for verification, NONE, SHA1, SHA256
+  -f, [--format=format]                # Share output format, binary or human
+                                       # Default: human
+  -p, [--pad-blocksize=pad_blocksize]  # Block size # secrets will be left-padded to, 0-255
+
+Description:
+  `tss split` will generate a set of Threshold Secret Sharing shares from the SECRET provided. To protect your secret from being saved in
+  your shell history you will be prompted for the single-line secret.
+
+  Optional Params:
+
+  num_shares : The number of total shares that will be generated.
+
+  threshold : The threshold is the number of shares required to recreate a secret. This is always a subset of the total shares.
+
+  identifier : A unique identifier string that will be attached to each share. It can be 0-16 Bytes long and use the characters
+  [a-zA-Z0-9.-_]
+
+  hash_alg : One of NONE, SHA1, SHA256. The algorithm to use for a one-way hash of the secret that will be split along with the secret.
+
+  pad_blocksize : An Integer, 0-255, that represents a multiple to which the secret will be padded. For example if pad_blocksize is set to
+  8, the secret 'abc' would be left-padded to '00000abc' (the padding char is not zero, that is just for illustration).
+
+  format : Whether to output the shares as a binary octet string (RTSS), or the same encoded as more human friendly Base 64 text with some
+  metadata prefixed.
+
+  Example using all options:
+
+  $ tss split -t 3 -n 6 -i abc123 -h SHA256 -p 8 -f human
+
+  Enter your secret:
+
+  secret > my secret
+
+  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEBQ-AQG3PuU4oT4qHOh2oJmu-vQwGE6O5hsGRBNtdAYauTIi7VoIdi5imWSrswDdRy
+  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADECM0OK5TSamH3nubH3FJ2EGZ4Yux4eQC-mvcYY85oOe6ae3kpvVXjuRUDU1m6sX20X
+  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEDb7yF4Vhr1JqNe2Nc8IXo98hmKAxsqC3c_Mn3r3t60NxQMC22ate51StDOM-BImch
+  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEEIXU0FajldnRtEQMLK-ZYMO2MRa0NmkBFfNAOx7olbgXLkVbP9txXMDsdokblVwke
+  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEFfYo7EcQUOpMH09Ggz_403rvy1r9_ckI_Pd_hm1tRxX8FfzEWyXMAoFCKTOfIKgMo
+  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEGDSmh74Ng8WTziMGZXAm5XcpFLqDl2oP4MH24XhYf33IIg1WsPIyMAznI0DJUeLpN
+
+```
+
+**Example CLI Split Usage**
+
+For security purposes you will be prompted for your secret and cannot enter it
+on the command line.
+
+```
+$ tss split -i abc
+Enter your secret:
+secret >  abc
+tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQB4zjuAvBL1P2AJciAHdicf6I2qxMkLGo2Hhr4dhI_v1CSKrE=
+tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQCNAFhHSQd8nDgihYUrdM_IsMJqYZicLuk8jBS06kUJLZTU2g=
+tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQDtlvspaxAmQJhYDTV8Ut9AM8dISVFPXIE-1A2EavU-hTBbHQ=
+tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQE-NVr8ofyfwYVW9_2yauIT7t4Hmt9WeFNN_ADt7vpThYNeeU=
+tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQFeo_mSg-vFHSUsf03lTPKbbdslshaFCjtPpBndbkpkLSfRvk=
+```
+
+### CLI Share Combining
+
+**Example CLI Combine Usage**
+
+For security purposes you will be prompted for your shares and cannot them
+on the command line.
+
+```sh
+tss combine
+Enter shares, one per line, blank line or dot (.) to finish:
+share> tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQB4zjuAvBL1P2AJciAHdicf6I2qxMkLGo2Hhr4dhI_v1CSKrE=
+share> tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQCNAFhHSQd8nDgihYUrdM_IsMJqYZicLuk8jBS06kUJLZTU2g=
+share> tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQDtlvspaxAmQJhYDTV8Ut9AM8dISVFPXIE-1A2EavU-hTBbHQ=
+share>
+
+Secret Recovered and Verified!
+
+identifier : abc
+threshold : 3
+processing time (ms) : 0.48
+secret :
+**************************************************
+abc
+**************************************************
+```
+
+## Ruby : Splitting a Secret
 
 The basic usage is as follows using the arguments described below.
 
@@ -267,7 +371,7 @@ s = TSS.split(secret: secret, threshold: threshold, num_shares: num_shares, iden
   :threshold=>3}
   ```
 
-## Combining Shares to Recreate a Secret
+## Ruby : Combining Shares to Recreate a Secret
 
 The basic usage is:
 
@@ -336,17 +440,20 @@ or `TSS::Error` exceptions as they are run.
 All Exception messages should include hints as to what went wrong in the
 `ex.messages` attribute.
 
-## RTSS Binary Data Format
+## Share Data Formats
+
+### RTSS Binary
 
 TSS provides shares in a binary data format with the following fields:
 
-`Identifier`. This field contains 16 octets.  It identifies the secret
+`Identifier`. This field contains 16 octets. It identifies the secret
 with which a share is associated.  All of the shares associated
 with a particular secret MUST use the same value Identifier.  When
 a secret is reconstructed, the Identifier fields of each of the
 shares used as input MUST have the same value.  The value of the
 Identifier should be chosen so that it is unique, but the details
-on how it is chosen are left as an exercise for the reader.
+on how it is chosen are left as an exercise for the reader. The
+characters `a-zA-Z0-9.-_` are allowed in the identifier.
 
 `Hash Algorithm Identifier`. This field contains a single octet that
 indicates the hash function used in the RTSS processing, if any.
@@ -387,6 +494,27 @@ octets. It contains the actual share data.
 This code has been tested for binary compatibility with the
 [seb-m/tss](https://github.com/seb-m/tss) Python implementation of TSS. There
 are test cases to ensure it remains compatible.
+
+### RTSS Human Friendly Wrapper
+
+To make `tss` more friendly to use when sending shares to others an enhanced
+version of the RTSS binary data format is provided that is more human friendly.
+
+Shares formatted this way can easily be shared via any communication channel.
+
+The `human` data format is simply the same RTSS binary data, URL Safe Base64
+encoded, and prefixed with a String thet contains the following tilde `~`
+separated elements. The `~` is used to ensure the share remains URL Safe.
+
+```text
+tss~VERSION~IDENTIFIER~THRESHOLD~BASE64_ENCODED_BINARY_SHARE
+```
+
+A typical share with this format looks like:
+
+```text
+tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQB10mUbJPQZ94WpgKC2kKivfnSpCHTMr6BajbwzqOrvyMCpH0=
+```
 
 ## Performance
 

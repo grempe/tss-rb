@@ -59,6 +59,17 @@ describe TSS do
     end
   end
 
+  describe 'end-to-end test with human format shares' do
+    it 'must split and combine the secret properly' do
+      secret = 'I love secrets with multi-byte unicode characters ½ ♥ 💩'
+      shares = TSS.split(secret: secret, format: 'human')
+      shares.first.encoding.name.must_equal 'UTF-8'
+      recovered_secret = TSS.combine(shares: shares.sample(3))
+      recovered_secret[:secret].must_equal secret
+      recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+    end
+  end
+
   describe 'end-to-end test with a single char string and NONE hash (shortest)' do
     it 'must split and combine the secret properly' do
       secret = 'a'
