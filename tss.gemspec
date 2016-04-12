@@ -9,6 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Glenn Rempe']
   spec.email         = ['glenn@rempe.us']
 
+  spec.required_ruby_version = '>= 2.1.0'
+
   cert = File.expand_path('~/.gem-certs/gem-private_key_grempe.pem')
   if File.exist?(cert)
     spec.signing_key = cert
