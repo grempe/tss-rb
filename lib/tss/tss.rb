@@ -1,3 +1,17 @@
+require 'digest'
+require 'base64'
+require 'securerandom'
+require 'binary_struct'
+require 'dry-types'
+require 'tss/blank'
+require 'tss/version'
+require 'tss/types'
+require 'tss/errors'
+require 'tss/util'
+require 'tss/hasher'
+require 'tss/splitter'
+require 'tss/combiner'
+
 module TSS
   def self.split(args)
     unless args.is_a?(Hash) && args.key?(:secret)
