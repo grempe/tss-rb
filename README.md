@@ -5,11 +5,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/grempe/tss-rb/badge.svg?branch=master)](https://coveralls.io/github/grempe/tss-rb?branch=master)
 [![Code Climate](https://codeclimate.com/github/grempe/tss-rb/badges/gpa.svg)](https://codeclimate.com/github/grempe/tss-rb)
 
-## WARNING : PRE-ALPHA CODE
+## WARNING : BETA CODE
 
-This code is currently a work in progress and is not yet ready for production
-use. The API, input and output formats, and other aspects are likely to change
-before release. There has been no security review of this code.
+This code is new and has not yet been tested in production. Use at your own risk.
+The share format and interface should be fairly stable now but should not be
+considered fully stable until v1.0.0 is released.
 
 ## About TSS
 
