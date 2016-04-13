@@ -229,6 +229,24 @@ module TSS
       (pad_char * pad_length) + input_string
     end
 
+    # Constant time string comparison.
+    # Extracted from Rack::Utils
+    # https://github.com/rack/rack/blob/master/lib/rack/utils.rb
+    #
+    # NOTE: the values compared should be of fixed length, such as strings
+    # that have already been processed by HMAC. This should not be used
+    # on variable length plaintext strings because it could leak length info
+    # via timing attacks.
+    def self.secure_compare(a, b)
+      return false unless a.bytesize == b.bytesize
+
+      l = a.unpack("C*")
+
+      r, i = 0, -1
+      b.each_byte { |v| r |= v ^ l[i+=1] }
+      r == 0
+    end
+
     # Binary Header Helpers
 
     def self.extract_share_header(share)

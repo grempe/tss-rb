@@ -198,10 +198,13 @@ module TSS
         # digest now as when it was originally created.
         new_hash_bytes = Hasher.byte_array(hash_alg, Util.bytes_to_utf8(secret))
 
-        # return the secret only if the hash test passed
-        new_hash_bytes == orig_hash_bytes ? secret : nil
+        if Util.secure_compare(Util.bytes_to_hex(orig_hash_bytes), Util.bytes_to_hex(new_hash_bytes))
+          return secret
+        else
+          return nil
+        end
       else
-        secret
+        return secret
       end
     end
 

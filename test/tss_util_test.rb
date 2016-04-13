@@ -212,4 +212,14 @@ describe TSS::Util do
       TSS::Util.int_commas(1234567890000000).must_equal '1,234,567,890,000,000'
     end
   end
+
+  describe 'secure_compare' do
+    it 'must return true for same strings' do
+      TSS::Util.secure_compare('a', 'a').must_equal true
+    end
+
+    it 'must return false for different strings' do
+      TSS::Util.secure_compare('a', 'b').must_equal false
+    end
+  end
 end
