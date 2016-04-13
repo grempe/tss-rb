@@ -1,6 +1,9 @@
 # Common utility and math functions
 module TSS
   module Util
+    # The regex to match human style shares
+    HUMAN_SHARE_RE = /^tss~v1~*[a-zA-Z0-9\.\-\_]{0,16}~[0-9]{1,3}~([a-zA-Z0-9\-\_]+\={0,2})$/
+
     # The EXP table.  The elements are to be read from top to
     # bottom and left to right.  For example, EXP[0] is 0x01, EXP[8] is
     # 0x1a, and so on. Note that the EXP[255] entry is present only as a

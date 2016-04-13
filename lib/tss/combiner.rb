@@ -88,18 +88,9 @@ module TSS
     #     The output string is returned.
     #
     def combine
-      # unwrap 'human' share format
-      if shares.first.start_with?('tss~')
-        shares.collect! do |s|
-          matcher = /^tss~v1~*[a-zA-Z0-9\.\-\_]{0,16}~[0-9]{1,3}~([a-zA-Z0-9\-\_]+\={0,2})$/
-          s_b64 = s.match(matcher)
-          if s_b64.present?
-            # puts s_b64.to_a[1].inspect
-            Base64.urlsafe_decode64(s_b64.to_a[1])
-          else
-            raise TSS::ArgumentError, 'invalid shares, human format shares do not match expected pattern'
-          end
-        end
+      # unwrap 'human' shares into binary shares
+      if all_shares_appear_human?(shares)
+        @shares = convert_shares_human_to_binary(shares)
       end
 
       validate_all_shares(shares)
@@ -211,6 +202,30 @@ module TSS
     # strip off leading padding chars ("\u001F", decimal 31)
     def strip_left_pad(secret)
       secret.shift while secret.first == 31
+    end
+
+    def all_shares_appear_human?(shares)
+      shares.all? do |s|
+        # test for starting with 'tss' since regex match against
+        # binary data sometimes throws exceptions.
+        s.start_with?('tss~') && s.match(Util::HUMAN_SHARE_RE)
+      end
+    end
+
+    def convert_shares_human_to_binary(shares)
+      shares.collect do |s|
+        s_b64 = s.match(Util::HUMAN_SHARE_RE)
+        if s_b64.present? && s_b64.to_a[1].present?
+          begin
+            # the [1] capture group contains the Base64 encoded bin share
+            Base64.urlsafe_decode64(s_b64.to_a[1])
+          rescue ArgumentError
+            raise TSS::ArgumentError, 'invalid shares, some human format shares have invalid Base64 data'
+          end
+        else
+          raise TSS::ArgumentError, 'invalid shares, some human format shares do not match expected pattern'
+        end
+      end
     end
 
     def valid_header?(header)
