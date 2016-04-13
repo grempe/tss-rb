@@ -44,6 +44,112 @@ hash for the secret is not available to shareholders prior to recombining shares
 The specification also addresses the optional implementation of a `MAGIC_NUMBER` and
 advanced error correction schemes. These extras are not currently implemented.
 
+## TL;DR
+
+No time for docs? Here is how to get going in 10 seconds or less with the
+CLI or in Ruby. The CLI defaults to using `human` shares, and Ruby defaults
+to a binary octet string representation. The default is `3 out of 5` threshold
+sharing.
+
+### CLI (Human Shares)
+
+```text
+~/src$ gem install tss
+Successfully installed tss-0.1.0
+1 gem installed
+~/src$ tss split
+Enter your secret:
+secret >  my deep dark secret
+tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQBDoW7GJ66g6nQHQZVM_iUxMVEO7NHlwDaEM5FYsVwhBSfio-WF-w2gqSKRjBp6YyqTQKR
+tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQCxKBLxPsXuW4e7xE0zKiso49aEyuMKNIhjISe7ga865KDnBBpE1iZ6ESUkaWojKE3yNbc
+tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQDp1zQuADISueqk2UK3yNdBDh7XGlyoD2R6X9y-BCoI7iwAE02A8aj8vKO9ticeJpQMvDi
+tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQEgzj1RJXwKbu0pa5Z5qssmoX0cz22gVg8UCc6tasiqbDNi7bq_xKUczpYuc7utwDyPxV1
+tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQF4MRuOG4v2jIA2dpn9SDdPTLVPH9ICbeMNdzWo702YZr-F-u174yuaYxC3rPaQzuVxTNL
+~/src$ tss combine
+Enter shares, one per line, blank line or dot (.) to finish:
+share>  tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQBDoW7GJ66g6nQHQZVM_iUxMVEO7NHlwDaEM5FYsVwhBSfio-WF-w2gqSKRjBp6YyqTQKR
+share>  tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQCxKBLxPsXuW4e7xE0zKiso49aEyuMKNIhjISe7ga865KDnBBpE1iZ6ESUkaWojKE3yNbc
+share>  tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQDp1zQuADISueqk2UK3yNdBDh7XGlyoD2R6X9y-BCoI7iwAE02A8aj8vKO9ticeJpQMvDi
+share>  .
+
+Secret Recovered and Verified!
+
+identifier : 4a993275528d5ec7
+threshold : 3
+processing time (ms) : 0.64
+secret :
+**************************************************
+my deep dark secret
+**************************************************
+```
+
+### Ruby (Binary Octet Shares)
+
+```text
+~/src$ irb
+irb(main):001:0> require 'tss'
+=> true
+irb(main):002:0> shares = TSS.split(secret: 'my deep dark secret')
+=> ["ab87eb60ae14dd87\x02\x03\x004\x01\xC6+\xC8\x9F\xE4\x7F\x85\x17\xBD\xF6\xE6\xE3m\xB9\xFF\x8CGoS\x90\xB0{\xAB\x04N\xE2\x8F\xA0\xDC\x06\xC7Y\xBE\xCD?\xBDe9\xF3\xDF\xEA\xC9s\x105\xA4\xD8TZw\x9E", "ab87eb60ae14dd87\x02\x03\x004\x02T\xBB\xEF\x12\x81\xE2\xD2\x8Et\x95\x8Eg\xE6x=HD8\xAD\xE5\xF2'OdBO4vL\xF90\xA5c\x82\xE8\x11\x94\x8E\xEEV\xB3\xAFh\xB7\x80Ac\x15\xD9\xC7\x93", "ab87eb60ae14dd87\x02\x03\x004\x03\xFF\xE9\a\xE9\x00\xF8'\xB9\xAD\x02\x1A\xEF\xAB\xB2\xA7\xA7q2\x8A\x84\xFBC\v\ny\x98\x12\xA2C\x9B\xBB\xC2qY\x05e\xF6\xC5\x11\x11K\xF6:\xEA\xE8\xF8\f\x8C4\x94\xA2", "ab87eb60ae14dd87\x02\x03\x004\x04\xD4e\xB5\xD2o\x8AxJ\x96\xBB\x80o\xDCC\x12\xA0u\xE0\xB7\xACP\x82\x14\x13\x04\xD0\xE1\x82\xC4:k\\\xA8\xC1g\xA2}\"\xCF\x04x\xEC*\xB9\xC8q,\x8F\xE1\xF6\xB4", "ab87eb60ae14dd87\x02\x03\x004\x05\x7F7])\xEE\x90\x8D}O,\x14\xE7\x91\x89\x88O@\xEA\x90\xCDY\xE6P}?\a\xC7V\xCBX\xE0;\xBA\x1A\x8A\xD6\x1Fi0C\x80\xB5x\xE4\xA0\xC8C\x16\f\xA5\x85"]
+irb(main):003:0> secret = TSS.combine(shares: shares)
+=> {:hash_alg=>"SHA256", :identifier=>"ab87eb60ae14dd87", :num_shares_provided=>5, :num_shares_used=>3, :processing_started_at=>"2016-04-13T19:37:14Z", :processing_finished_at=>"2016-04-13T19:37:14Z", :processing_time_ms=>0.63, :secret=>"my deep dark secret", :shares_select_by=>"first", :combinations=>nil, :threshold=>3}
+irb(main):004:0> puts secret[:secret]
+my deep dark secret
+=> nil
+```
+
+## Is it any good?
+
+While this implementation has not had a formal security review, the cryptographic
+underpinnings were carefully specified in an IETF draft document authored by a
+noted cryptographer. I have reached out to individuals respected in the field
+for their work in implementing cryptographic solutions to help review this code.
+
+> I've read draft-mcgrew-tss-03 and then took a look at your code.
+> Impressive! Nice docs, clean easy-to-read code. I'd use constant-time
+> comparison for hashes [[resolved : 254ecab](https://github.com/grempe/tss-rb/commit/254ecab24a338872a5b05c7446213ef1ddabf4cb)],
+> but apart from that I have nothing to add. Good job!
+>
+> -- Dmitry Chestnykh ([@dchest](https://github.com/dchest))
+>
+> [v0.1.0 : 4/13/2016]
+
+All that being said, if your threat model includes a **N**ation **S**tate **A**ctor
+the security of this particular code should probably not be your primary concern.
+
+## Suggestions for Use
+
+* Don't split large texts. Instead, split the much smaller encryption
+keys that protect encrypted large texts. Supply the encrypted
+files and the shares separately to recipients. Threshold secret sharing can be
+very slow at splitting and recombining very large bodies of text, especially
+when combined with a large number of shares. Every byte of the secret must
+be processed `num_shares` times.
+
+* Don't treat shares like encrypted data, but instead like the encryption keys
+that unlock the data. Shares are keys, and need to be protected as such. There is
+nothing to slow down an attacker if they have access to enough shares.
+
+* If you send keys by email, or some other insecure channel, then your email
+provider, or any entity with access to their data, now also has the keys to
+your data. They just need to collect enough keys to meet the threshold.
+
+* Use public key cryptography to encrypt secret shares with the public key of
+each individual recipient. This can protect the share data from unwanted use while
+in transit or at rest. Excellent choices might be
+[RbNaCl](https://github.com/cryptosphere/rbnacl)
+or [TweetNaCl.js](https://github.com/dchest/tweetnacl-js).
+
+* Put careful thought into how you want to distribute shares. It often makes
+sense to give individuals more than one share.
+
+## Supported Platforms
+
+TSS is continuously integration tested on the following Ruby VMs:
+
+* MRI 2.1, 2.2, 2.3
+
+It may work on others as well.
 
 ## Installation
 
@@ -112,30 +218,6 @@ for additional information.
 You can also clone the repository and verify the signatures locally using your
 own GnuPG installation. You can find my certificates and read about how to conduct
 this verification at [https://www.rempe.us/keys/](https://www.rempe.us/keys/).
-
-## TSS : Suggestions for Use
-
-* Don't split large texts. Instead, split the much smaller encryption
-keys that protect encrypted large texts. Supply the encrypted
-files and the shares separately to recipients. Threshold secret sharing can be
-very slow at splitting and recombining very large bodies of text, especially
-when combined with a large number of shares. Every byte of the secret must
-be processed `num_shares` times.
-
-* Don't treat shares like encrypted data, but instead like the encryption keys
-that unlock the data. Shares are keys, and need to be protected as such. There is
-nothing to slow down an attacker if they have access to enough shares.
-
-* If you send keys by email, or some other insecure channel, then your email
-provider, or any entity with access to their data, now also has the keys to
-your data. They just need to collect enough keys to meet the threshold.
-
-* Use public key cryptography to encrypt secret shares with the public key of
-each individual recipient. This can protect the share data from unwanted use while
-in transit or at rest.
-
-* Put careful thought into how you want to distribute shares. It often makes
-sense to give individuals more than one share.
 
 ## Command Line Interface
 
@@ -547,6 +629,9 @@ release a new version, update the version number in `version.rb`, and then
 run `bundle exec rake release`, which will create a git tag for the version,
 push git commits and tags, and push the `.gem` file
 to [rubygems.org](https://rubygems.org).
+
+You can run the Command Line Interface (CLI) in development
+with `bundle exec bin/tss`.
 
 ### Contributing
 
