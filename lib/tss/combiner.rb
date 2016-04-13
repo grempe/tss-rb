@@ -120,8 +120,8 @@ module TSS
         when 'sample'
           @shares = shares.sample(threshold)
         when 'combinations'
-          share_combinations_mode_allowed?(hash_id)
-          share_combinations_out_of_bounds?(shares, threshold)
+          share_combinations_mode_allowed!(hash_id)
+          share_combinations_out_of_bounds!(shares, threshold)
         end
       end
 
@@ -132,7 +132,7 @@ module TSS
         bytestring.unpack('C*') unless bytestring.nil?
       end.compact
 
-      shares_bytes_have_valid_indexes?(shares_bytes)
+      shares_bytes_have_valid_indexes!(shares_bytes)
 
       if select_by == 'combinations'
         # Build an Array of all possible `threshold` size combinations.
@@ -222,7 +222,7 @@ module TSS
         header[:share_len].is_a?(Integer)
     end
 
-    def shares_have_same_bytesize?(shares)
+    def shares_have_same_bytesize!(shares)
       shares.each do |s|
         unless s.bytesize == shares.first.bytesize
           raise TSS::ArgumentError, 'invalid shares, different byte lengths'
@@ -230,7 +230,7 @@ module TSS
       end
     end
 
-    def shares_have_valid_headers?(shares)
+    def shares_have_valid_headers!(shares)
       fh = Util.extract_share_header(shares.first)
       shares.each do |s|
         h = Util.extract_share_header(s)
@@ -240,7 +240,7 @@ module TSS
       end
     end
 
-    def shares_have_expected_length?(shares)
+    def shares_have_expected_length!(shares)
       shares.each do |s|
         unless s.bytesize > Splitter::SHARE_HEADER_STRUCT.size + 1
           raise TSS::ArgumentError, 'invalid shares, too short'
@@ -248,7 +248,7 @@ module TSS
       end
     end
 
-    def shares_meet_threshold_min?(shares)
+    def shares_meet_threshold_min!(shares)
       fh = Util.extract_share_header(shares.first)
       unless shares.size >= fh[:threshold]
         raise TSS::ArgumentError, 'invalid shares, fewer than threshold'
@@ -256,13 +256,13 @@ module TSS
     end
 
     def validate_all_shares(shares)
-      shares_have_valid_headers?(shares)
-      shares_have_same_bytesize?(shares)
-      shares_have_expected_length?(shares)
-      shares_meet_threshold_min?(shares)
+      shares_have_valid_headers!(shares)
+      shares_have_same_bytesize!(shares)
+      shares_have_expected_length!(shares)
+      shares_meet_threshold_min!(shares)
     end
 
-    def shares_bytes_have_valid_indexes?(shares_bytes)
+    def shares_bytes_have_valid_indexes!(shares_bytes)
       u = shares_bytes.collect do |s|
         raise TSS::ArgumentError, 'invalid shares, no index' if s[0].blank?
         raise TSS::ArgumentError, 'invalid shares, zero index' if s[0] == 0
@@ -274,13 +274,13 @@ module TSS
       end
     end
 
-    def share_combinations_mode_allowed?(hash_id)
+    def share_combinations_mode_allowed!(hash_id)
       unless Hasher.codes_without_none.include?(hash_id)
         raise TSS::ArgumentError, 'invalid options, combinations mode can only be used with hashed shares.'
       end
     end
 
-    def share_combinations_out_of_bounds?(shares, threshold, max_combinations = 1_000_000)
+    def share_combinations_out_of_bounds!(shares, threshold, max_combinations = 1_000_000)
       # Raise if the number of combinations is too high.
       # If this is not checked, the number of combinations can quickly grow into
       # numbers that cannot be calculated before the end of the universe.

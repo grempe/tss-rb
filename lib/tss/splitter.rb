@@ -90,9 +90,9 @@ module TSS
     # `TSS::Error` or `TSS::ArgumentError` exceptions if anything has gone wrong.
     #
     def split
-      secret_has_acceptable_encoding(secret)
-      secret_does_not_begin_with_padding_char(secret)
-      num_shares_not_less_than_threshold(threshold, num_shares)
+      secret_has_acceptable_encoding!(secret)
+      secret_does_not_begin_with_padding_char!(secret)
+      num_shares_not_less_than_threshold!(threshold, num_shares)
 
       # RTSS : Combine the secret with a hash digest before splitting. On recombine
       # the two will be separated again and the hash used to validate the
@@ -102,7 +102,7 @@ module TSS
       hashed_secret = Hasher.byte_array(hash_alg, secret)
       secret_bytes = Util.utf8_to_bytes(padded_secret) + hashed_secret
 
-      secret_bytes_is_smaller_than_max_size(secret_bytes)
+      secret_bytes_is_smaller_than_max_size!(secret_bytes)
 
       # For each share, a distinct Share Index is generated. Each Share
       # Index is an octet other than the all-zero octet. All of the Share
@@ -156,25 +156,25 @@ module TSS
 
     private
 
-    def secret_has_acceptable_encoding(secret)
+    def secret_has_acceptable_encoding!(secret)
       unless secret.encoding.name == 'UTF-8' || secret.encoding.name == 'US-ASCII'
         raise TSS::ArgumentError, "invalid secret, must be a UTF-8 or US-ASCII encoded String not '#{secret.encoding.name}'"
       end
     end
 
-    def secret_does_not_begin_with_padding_char(secret)
+    def secret_does_not_begin_with_padding_char!(secret)
       if secret.slice(0) == "\u001F"
         raise TSS::ArgumentError, 'invalid secret, first byte of secret is the reserved left-pad character (\u001F)'
       end
     end
 
-    def num_shares_not_less_than_threshold(threshold, num_shares)
+    def num_shares_not_less_than_threshold!(threshold, num_shares)
       if num_shares < threshold
         raise TSS::ArgumentError, "invalid num_shares, must be >= threshold (#{threshold})"
       end
     end
 
-    def secret_bytes_is_smaller_than_max_size(secret_bytes)
+    def secret_bytes_is_smaller_than_max_size!(secret_bytes)
       if secret_bytes.size >= 65_535
         raise TSS::ArgumentError, 'invalid secret, combined padded secret and hash are too large'
       end
