@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/grempe/tss-rb.svg?branch=master)](https://travis-ci.org/grempe/tss-rb)
 [![Coverage Status](https://coveralls.io/repos/github/grempe/tss-rb/badge.svg?branch=master)](https://coveralls.io/github/grempe/tss-rb?branch=master)
 [![Code Climate](https://codeclimate.com/github/grempe/tss-rb/badges/gpa.svg)](https://codeclimate.com/github/grempe/tss-rb)
+[![Inline docs](http://inch-ci.org/github/grempe/tss-rb.svg?branch=master)](http://inch-ci.org/github/grempe/tss-rb)
 
 ## WARNING : BETA CODE
 
