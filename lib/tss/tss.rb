@@ -15,19 +15,61 @@ require 'tss/combiner'
 #
 # @author Glenn Rempe <glenn@rempe.us>
 module TSS
+  # An unexpected error has occurred.
   class Error < StandardError; end
+
+  # An argument provided is of the wrong type, or has an invalid value.
   class ArgumentError < TSS::Error; end
+
+  # A secret was attmepted to be recovered, but failed due to invalid shares.
   class NoSecretError < TSS::Error; end
+
+  # A secret was attempted to be recovered, but failed due to an invalid verifier hash.
   class InvalidSecretHashError < TSS::Error; end
 
+  # The `split` method takes a Hash of options. The following hash key args
+  # may be passed. Only `secret:` is required and the rest will be set to
+  # reasonable and secure defaults if unset. All args will be validated for
+  # correct type and values.
+  #
   # @param [Hash] opts the options to create a message with.
-  # @option opts [String] :secret the secret to be split into shares
-  # @option opts [String] :threshold (3) how many shares are required to recreate the secret
-  # @option opts [String] :num_shares (5) how many total shares will be created
-  # @option opts [String] :identifier (SecureRandom.hex(8)) a 16 Byte String to uniquely idenitfy this set of secret shares
-  # @option opts [String] :hash_alg ('SHA256') the hash algorithm used to verify a secret
+  # @option opts [String] :secret takes a String (UTF-8 or US-ASCII encoding) with a length between 1..65_534
+  # @option opts [String] :threshold (3) The number of shares (M) that will be required to recombine the
+  #   secret. Must be a value between 1..255 inclusive. Defaults to a threshold of 3 shares.
+  # @option opts [String] :num_shares (5) The total number of shares (N) that will be created. Must be
+  #   a value between the `threshold` value (M) and 255 inclusive.
+  #   The upper limit is particular to the TSS algorithm used.
+  # @option opts [String] :identifier (SecureRandom.hex(8)) A 0-16 bytes String limited to the characters 0-9, a-z, A-Z,
+  #   the dash (-), the underscore (_), and the period (.). The identifier will
+  #   be embedded in each the binary header of each share and should not reveal
+  #   anything about the secret.
+  #
+  #   It defaults to the value of `SecureRandom.hex(8)`
+  #   which returns a random 16 Byte string which represents a Base10 decimal
+  #   between 1 and 18446744073709552000.
+  # @option opts [String] :hash_alg ('SHA256') The one-way hash algorithm that will be used to verify the
+  #   secret returned by a later recombine operation is identical to what was
+  #   split. This value will be concatenated with the secret prior to splitting.
+  #
+  #   The valid hash algorithm values are `NONE`, `SHA1`, and `SHA256`. Defaults
+  #   to `SHA256`. The use of `NONE` is discouraged as it does not allow those
+  #   who are recombining the shares to verify if they have in fact recovered
+  #   the correct secret.
   # @option opts [String] :format ('binary') the format of the String share output, 'binary' or 'human'
-  # @option opts [String] :pad_blocksize (0) the multiple of Bytes to use when left-padding a secret
+  # @option opts [String] :pad_blocksize (0) An integer representing the nearest multiple of Bytes
+  #   to left pad the secret to. Defaults to not adding any padding (0). Padding
+  #   is done with the "\u001F" character (decimal 31 in a Byte Array).
+  #
+  #   Since TSS share data (minus the header) is essentially the same size as the
+  #   original secret, padding smaller secrets may help mask the size of the
+  #   contents from an attacker. Padding is not part of the RTSS spec so other
+  #   TSS clients won't strip off the padding and may not validate correctly.
+  #
+  #   If you need this interoperability you should probably pad the secret
+  #   yourself prior to splitting it and leave the default zero-length pad in
+  #   place. You would also need to manually remove the padding you added after
+  #   the share is recombined, or instruct recipients to ignore it.
+  #
   # @return [Array<String>] an Array of String shares
   # @raise [TSS::ArgumentError] if the options Types or Values are invalid
   def self.split(opts)

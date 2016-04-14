@@ -42,52 +42,28 @@ module TSS
       .constrained(lteq: 255)
       .default(0)
 
-    # The `split` method takes a Hash of arguments. The following hash key args
-    # may be passed. Only `secret:` is required and the rest will be set to
-    # reasonable and secure defaults if unset. All args will be validated for
-    # correct type and values on object instantiation.
+    # To split a secret into a set of shares, the following
+    # procedure, or any equivalent method, is used:
     #
-    # `secret:` (required) takes a String (UTF-8 or US-ASCII encoding) with a
-    #           length between 1..65_534
+    #   This operation takes an octet string S, whose length is L octets, and
+    #   a threshold parameter M, and generates a set of N shares, any M of
+    #   which can be used to reconstruct the secret.
     #
-    # `threshold:` The number of shares (M) that will be required to recombine the
-    #              secret. Must be a value between 1..255 inclusive. Defaults to
-    #              a threshold of 3 shares.
+    #   The secret S is treated as an unstructured sequence of octets.  It is
+    #   not expected to be null-terminated.  The number of octets in the
+    #   secret may be anywhere from zero up to 65,534 (that is, two less than
+    #   2^16).
     #
-    # `num_shares:` The total number of shares (N) that will be created. Must be
-    #               a value between the `threshold` value (M) and 255 inclusive.
-    #               The upper limit is particular to the TSS algorithm used.
-    #               Defaults to generating 5 total shares.
+    #   The threshold parameter M is the number of shares that will be needed
+    #   to reconstruct the secret.  This value may be any number between one
+    #   and 255, inclusive.
     #
-    # `identifier:` A 0-16 bytes String limited to the characters 0-9, a-z, A-Z,
-    # the dash (-), the underscore (_), and the period (.). The identifier will
-    # be embedded in each the binary header of each share and should not reveal
-    # anything about the secret. It defaults to the value of `SecureRandom.hex(8)`
-    # which returns a random 16 Byte string which represents a Base10 decimal
-    # between 1 and 18446744073709552000.
+    #   The number of shares N that will be generated MUST be between the
+    #   threshold value M and 255, inclusive.  The upper limit is particular
+    #   to the TSS algorithm specified in this document.
     #
-    # `hash_alg:` The one-way hash algorithm that will be used to verify the
-    # secret returned by a later recombine operation is identical to what was
-    # split. This value will be concatenated with the secret prior to splitting.
-    # The valid hash algorithm values are `NONE`, `SHA1`, and `SHA256`. Defaults
-    # to `SHA256`. The use of `NONE` is discouraged as it does not allow those
-    # who are recombining the shares to verify if they have in fact recovered
-    # the correct secret.
-    #
-    # `pad_blocksize:` An integer representing the nearest multiple of Bytes
-    # to left pad the secret to. Defaults to not adding any padding (0). Padding
-    # is done with the "\u001F" character (decimal 31 in a Byte Array).
-    # Since TSS share data (minus the header) is essentially the same size as the
-    # original secret, padding smaller secrets may help mask the size of the
-    # contents from an attacker. Padding is not part of the RTSS spec so other
-    # TSS clients won't strip off the padding and may not validate correctly.
-    # If you need this interoperability you should probably pad the secret
-    # yourself prior to splitting it and leave the default zero-length pad in
-    # place. You would also need to manually remove the padding you added after
-    # the share is recombined.
-    #
-    # Calling `split` *must* return an Array of formatted shares or raise one of
-    # `TSS::Error` or `TSS::ArgumentError` exceptions if anything has gone wrong.
+    #   If the operation can not be completed successfully, then an error
+    #   code should be returned.
     #
     def split
       secret_has_acceptable_encoding!(secret)
@@ -145,7 +121,7 @@ module TSS
       # build up a common binary struct header for all shares
       header = share_header(identifier, hash_alg, threshold, shares.first.length)
 
-      # create each binary share and return it.
+      # create each binary or human share and return it.
       shares.map! do |s|
         binary = (header + s.pack('C*')).force_encoding('ASCII-8BIT')
         # join with URL safe '~'
