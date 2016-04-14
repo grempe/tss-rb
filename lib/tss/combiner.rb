@@ -162,11 +162,18 @@ module TSS
       end
     end
 
-    # strip off leading padding chars ("\u001F", decimal 31)
+    # Strip off leading padding chars ("\u001F", decimal 31)
+    #
+    # @param secret [String] the secret to be stripped
+    # @return [String] returns the secret, stripped of the leading padding char
     def strip_left_pad(secret)
       secret.shift while secret.first == 31
     end
 
+    # Do all of the shares match the pattern expected of human style shares?
+    #
+    # @param shares [Array<String>] the shares to be evaluated
+    # @return [true,false] returns true if all shares match the patterns, false if not
     def all_shares_appear_human?(shares)
       shares.all? do |s|
         # test for starting with 'tss' since regex match against
@@ -175,6 +182,11 @@ module TSS
       end
     end
 
+    # Convert an Array of human style shares to binary style
+    #
+    # @param shares [Array<String>] the shares to be converted
+    # @return [Array<String>] returns an Array of String shares in binary octet String format
+    # @raise [TSS::ArgumentError] if shares appear invalid
     def convert_shares_human_to_binary(shares)
       shares.collect do |s|
         s_b64 = s.match(Util::HUMAN_SHARE_RE)
@@ -191,6 +203,10 @@ module TSS
       end
     end
 
+    # Does the header Hash provided have all expected attributes?
+    #
+    # @param header [Hash] the header Hash to be evaluated
+    # @return [true, false] returns true if all expected keys exist, false if not
     def valid_header?(header)
       header.is_a?(Hash) &&
         header.key?(:identifier) &&
@@ -203,14 +219,25 @@ module TSS
         header[:share_len].is_a?(Integer)
     end
 
+    # Do all shares have a common Byte size? They are invalid if not.
+    #
+    # @param shares [Array<String>] the shares to be evaluated
+    # @return [true] returns true if all shares have the same Byte size
+    # @raise [TSS::ArgumentError] if shares appear invalid
     def shares_have_same_bytesize!(shares)
       shares.each do |s|
         unless s.bytesize == shares.first.bytesize
           raise TSS::ArgumentError, 'invalid shares, different byte lengths'
         end
       end
+      return true
     end
 
+    # Do all shares have a valid header and match each other? They are invalid if not.
+    #
+    # @param shares [Array<String>] the shares to be evaluated
+    # @return [true] returns true if all shares have the same header
+    # @raise [TSS::ArgumentError] if shares appear invalid
     def shares_have_valid_headers!(shares)
       fh = Util.extract_share_header(shares.first)
       shares.each do |s|
@@ -219,30 +246,57 @@ module TSS
           raise TSS::ArgumentError, 'invalid shares, bad headers'
         end
       end
+      return true
     end
 
+    # Do all shares have a the expected length? They are invalid if not.
+    #
+    # @param shares [Array<String>] the shares to be evaluated
+    # @return [true] returns true if all shares have the same header
+    # @raise [TSS::ArgumentError] if shares appear invalid
     def shares_have_expected_length!(shares)
       shares.each do |s|
         unless s.bytesize > Splitter::SHARE_HEADER_STRUCT.size + 1
           raise TSS::ArgumentError, 'invalid shares, too short'
         end
       end
+      return true
     end
 
+    # Were enough shares provided to meet the threshold? They are invalid if not.
+    #
+    # @param shares [Array<String>] the shares to be evaluated
+    # @return [true] returns true if there are enough shares
+    # @raise [TSS::ArgumentError] if shares appear invalid
     def shares_meet_threshold_min!(shares)
       fh = Util.extract_share_header(shares.first)
       unless shares.size >= fh[:threshold]
         raise TSS::ArgumentError, 'invalid shares, fewer than threshold'
+      else
+        return true
       end
     end
 
+    # Were enough shares provided to meet the threshold? They are invalid if not.
+    #
+    # @param shares [Array<String>] the shares to be evaluated
+    # @return [true] returns true if all tests pass
     def validate_all_shares(shares)
-      shares_have_valid_headers!(shares)
-      shares_have_same_bytesize!(shares)
-      shares_have_expected_length!(shares)
-      shares_meet_threshold_min!(shares)
+      if shares_have_valid_headers!(shares) &&
+          shares_have_same_bytesize!(shares) &&
+          shares_have_expected_length!(shares) &&
+          shares_meet_threshold_min!(shares)
+        return true
+      else
+        return false
+      end
     end
 
+    # Do all the shares have a valid first-byte index? They are invalid if not.
+    #
+    # @param shares_bytes [Array<Array>] the shares as Byte Arrays to be evaluated
+    # @return [true] returns true if there are enough shares
+    # @raise [TSS::ArgumentError] if shares appear invalid
     def shares_bytes_have_valid_indexes!(shares_bytes)
       u = shares_bytes.collect do |s|
         raise TSS::ArgumentError, 'invalid shares, no index' if s[0].blank?
@@ -252,25 +306,44 @@ module TSS
 
       unless u.uniq.size == shares_bytes.size
         raise TSS::ArgumentError, 'invalid shares, duplicate indexes'
+      else
+        return true
       end
     end
 
+    # Is it valid to use combinations mode? Only when there is an embedded non-zero
+    # hash_id Integer to test the results against. Invalid if not.
+    #
+    # @param hash_id [Integer] the shares as Byte Arrays to be evaluated
+    # @return [true] returns true if OK to use combinations mode
+    # @raise [TSS::ArgumentError] if hash_id represents a non hashing type
     def share_combinations_mode_allowed!(hash_id)
       unless Hasher.codes_without_none.include?(hash_id)
         raise TSS::ArgumentError, 'invalid options, combinations mode can only be used with hashed shares.'
+      else
+        return true
       end
     end
 
+    # Calculate the number of possible combinations when combinations mode is
+    # selected. Raise an exception if the possible combinations are too large.
+    #
+    # If this is not tested, the number of combinations can quickly grow into
+    # numbers that cannot be calculated before the end of the universe.
+    # e.g. 255 total shares, with threshold of 128, results in # combinations of:
+    # 2884329411724603169044874178931143443870105850987581016304218283632259375395
+    #
+    # @param shares [Array<String>] the shares to be evaluated
+    # @param threshold [Integer] the threshold value set in the shares
+    # @param max_combinations [Integer] the max (1_000_000) number of combinations allowed
+    # @return [true] returns true if a reasonable number of combinations
+    # @raise [TSS::ArgumentError] if the number of possible combinations is unreasonably high
     def share_combinations_out_of_bounds!(shares, threshold, max_combinations = 1_000_000)
-      # Raise if the number of combinations is too high.
-      # If this is not checked, the number of combinations can quickly grow into
-      # numbers that cannot be calculated before the end of the universe.
-      # e.g. 255 total shares, with threshold of 128, results in # combinations of:
-      # 2884329411724603169044874178931143443870105850987581016304218283632259375395
-      #
       combinations = Util.calc_combinations(shares.size, threshold)
       if combinations > max_combinations
         raise TSS::ArgumentError, "invalid options, too many combinations (#{Util.int_commas(combinations)})"
+      else
+        return true
       end
     end
   end
