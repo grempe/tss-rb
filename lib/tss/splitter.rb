@@ -1,4 +1,5 @@
 module TSS
+  # Splitter has responsibility for splitting a secret into an Array of String shares.
   class Splitter < Dry::Types::Struct
     include Util
 
@@ -132,30 +133,67 @@ module TSS
 
     private
 
+    # The secret must be encoded with UTF-8 of US-ASCII or it is invalid.
+    #
+    # @param secret [String] a secret String
+    # @return [true] returns true if acceptable encoding
+    # @raise [TSS::ArgumentError] if invalid
     def secret_has_acceptable_encoding!(secret)
       unless secret.encoding.name == 'UTF-8' || secret.encoding.name == 'US-ASCII'
         raise TSS::ArgumentError, "invalid secret, must be a UTF-8 or US-ASCII encoded String not '#{secret.encoding.name}'"
+      else
+        return true
       end
     end
 
+    # The secret must not being with the padding character or it is invalid.
+    #
+    # @param secret [String] a secret String
+    # @return [true] returns true if String does not begin with padding character
+    # @raise [TSS::ArgumentError] if invalid
     def secret_does_not_begin_with_padding_char!(secret)
       if secret.slice(0) == "\u001F"
         raise TSS::ArgumentError, 'invalid secret, first byte of secret is the reserved left-pad character (\u001F)'
+      else
+        return true
       end
     end
 
+    # The num_shares must be greater than or equal to the threshold or it is invalid.
+    #
+    # @param threshold [Integer] the threshold value
+    # @param num_shares [Integer] the num_shares value
+    # @return [true] returns true if num_shares is >= threshold
+    # @raise [TSS::ArgumentError] if invalid
     def num_shares_not_less_than_threshold!(threshold, num_shares)
       if num_shares < threshold
         raise TSS::ArgumentError, "invalid num_shares, must be >= threshold (#{threshold})"
+      else
+        return true
       end
     end
 
+    # The total Byte size of the secret, including padding and hash, must be
+    # less than the max allowed Byte size or it is invalid.
+    #
+    # @param secret_bytes [Array<Intger>] the Byte Array containing the secret
+    # @return [true] returns true if num_shares is >= threshold
+    # @raise [TSS::ArgumentError] if invalid
     def secret_bytes_is_smaller_than_max_size!(secret_bytes)
       if secret_bytes.size >= 65_535
         raise TSS::ArgumentError, 'invalid secret, combined padded secret and hash are too large'
+      else
+        return true
       end
     end
 
+    # Construct a binary share header from its constituent parts.
+    #
+    # @param identifier [String] the unique identifier String
+    # @param hash_alg [String] the hash algorithm String
+    # @param threshold [Integer] the threshold value
+    # @param share_len [Integer] the length of the share in Bytes
+    # @return [String] returns an octet String of Bytes containing the binary header
     def share_header(identifier, hash_alg, threshold, share_len)
       SHARE_HEADER_STRUCT.encode(identifier: identifier,
                                  hash_id: Hasher.code(hash_alg),

@@ -1,4 +1,6 @@
 module TSS
+  # Hasher is responsible for managing access to the various one-way hash
+  # functions that can be used to validate a secret.
   class Hasher
     HASHES = { NONE: { code: 0, bytesize: 0, hasher: nil },
                SHA1: { code: 1, bytesize: 20, hasher: Digest::SHA1 },

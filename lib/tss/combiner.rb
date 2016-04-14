@@ -1,4 +1,8 @@
 module TSS
+  # Combiner has responsibility for combining an Array of String shares back
+  # into the original secret the shares were split from. It is also responsible
+  # for doing extensive validation of user provided shares and ensuring
+  # that any recovered secret matches the hash of the original secret..
   class Combiner  < Dry::Types::Struct
     include Util
 
