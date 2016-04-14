@@ -1,7 +1,7 @@
-# Common utility and math functions
 module TSS
+  # Common utility, math, and conversion functions.
   module Util
-    # The regex to match human style shares
+    # The regex to match against human style shares
     HUMAN_SHARE_RE = /^tss~v1~*[a-zA-Z0-9\.\-\_]{0,16}~[0-9]{1,3}~([a-zA-Z0-9\-\_]+\={0,2})$/
 
     # The EXP table.  The elements are to be read from top to
@@ -78,14 +78,23 @@ module TSS
          103,  74,  237,  222,  197,   49,  254,   24,
          13,   99,  140,  128,  192,  247,  112,    7].freeze
 
+    # GF(256) Addition
     # The addition operation returns the Bitwise
     # Exclusive OR (XOR) of its operands.
+    #
+    # @param a [Integer] a single Integer
+    # @param b [Integer] a single Integer
+    # @return [Integer] a GF(256) SUM of a and b
     def self.gf256_add(a, b)
       a ^ b
     end
 
-    # The subtraction operation is identical, because the field has
-    # characteristic two.
+    # The subtraction operation is identical to GF(256) addition, because the
+    # field has characteristic two.
+    #
+    # @param a [Integer] a single Integer
+    # @param b [Integer] a single Integer
+    # @return [Integer] a GF(256) subtraction of a and b
     def self.gf256_sub(a, b)
       gf256_add(a, b)
     end
@@ -94,6 +103,10 @@ module TSS
     # proceeds as follows.  If either X or Y is equal to 0x00, then the
     # operation returns 0x00.  Otherwise, the value EXP[ (LOG[X] + LOG[Y])
     # modulo 255] is returned.
+    #
+    # @param x [Integer] a single Integer
+    # @param y [Integer] a single Integer
+    # @return [Integer] a GF(256) multiplication of x and y
     def self.gf256_mul(x, y)
       return 0 if x == 0 || y == 0
       EXP[(LOG[x] + LOG[y]) % 255]
@@ -104,16 +117,18 @@ module TSS
     # the operation returns 0x00.  If Y is equal to 0x00, then the input is
     # invalid, and an error condition occurs.  Otherwise, the value
     # EXP[(LOG[X] - LOG[Y]) modulo 255] is returned.
+    #
+    # @param x [Integer] a single Integer
+    # @param y [Integer] a single Integer
+    # @return [Integer] a GF(256) division of x divided by y
+    # @raise [TSS::Error] if an attempt to divide by zero is tried
     def self.gf256_div(x, y)
       return 0 if x == 0
       raise TSS::Error, 'divide by zero' if y == 0
       EXP[(LOG[x] - LOG[y]) % 255]
     end
 
-    # Share generation Functions
-    ############################
-
-    # We first define how to share a single octet.
+    # Share generation Function
     #
     # The function f takes as input a single octet X that is not equal to
     # 0x00, and an array A of M octets, and returns a single octet.  It is
@@ -127,6 +142,11 @@ module TSS
     # the successive values of X^i used in the computation of the function
     # f can be computed by multiplying a value by X once for each term in
     # the summation.
+    #
+    # @param x [Integer] a single Integer
+    # @param bytes [Array<Integer>] an Array of Integers
+    # @return [Integer] a single Integer
+    # @raise [TSS::Error] if the index value for the share is zero
     def self.f(x, bytes)
       raise TSS::Error, 'invalid share index value, cannot be 0' if x == 0
       y = 0
@@ -140,9 +160,8 @@ module TSS
       y
     end
 
-    # Secret Reconstruction Functions
-    # ###############################
-
+    # Secret Reconstruction Function
+    #
     # We define the function L_i (for i from 0 to M-1, inclusive) that
     # takes as input an array U of M pairwise distinct octets, and is
     # defined as
@@ -157,6 +176,9 @@ module TSS
     # expression is never equal to zero because U[i] is not equal to U[j]
     # whenever i is not equal to j.
     #
+    # @param i [Integer] a single Integer
+    # @param u [Array<Integer>] an Array of Integers
+    # @return [Integer] a single Integer
     def self.basis_poly(i, u)
       prod = 1
 
@@ -168,6 +190,8 @@ module TSS
       prod
     end
 
+    # Secret Reconstruction Function
+    #
     # We denote the interpolation function as I. This function takes as
     # input two arrays U and V, each consisting of M octets, and returns a
     # single octet; it is defined as:
@@ -175,6 +199,9 @@ module TSS
     #   I(U, V) =  GF_SUM  L_i(U) (*) V[i].
     #              i=0,M-1
     #
+    # @param u [Array<Integer>] an Array of Integers
+    # @param v [Array<Integer>] an Array of Integers
+    # @return [Integer] a single Integer
     def self.lagrange_interpolation(u, v)
       sum = 0
 
@@ -185,25 +212,37 @@ module TSS
       sum
     end
 
-    # Conversion Functions
-    ######################
-
-    # String to Byte Array
+    # Convert a UTF-8 String to an Array of Bytes
+    #
+    # @param str [String] a UTF-8 String to convert
+    # @return [Array<Integer>] an Array of Integer Bytes
     def self.utf8_to_bytes(str)
       str.bytes.to_a
     end
 
-    # Byte Array to String
+    # Convert an Array of Bytes to a UTF-8 String
+    #
+    # @param bytes [Array<Integer>] an Array of Bytes to convert
+    # @return [String] a UTF-8 String
     def self.bytes_to_utf8(bytes)
       bytes.pack('C*').force_encoding('utf-8')
     end
 
+    # Convert an Array of Bytes to a hex String
+    #
+    # @param bytes [Array<Integer>] an Array of Bytes to convert
+    # @return [String] a hex String
     def self.bytes_to_hex(bytes)
       hex = ''
       bytes.each { |b| hex += sprintf('%02x', b).upcase }
       hex
     end
 
+    # Convert a hex String to an Array of Bytes
+    #
+    # @param str [String] a hex String to convert
+    # @return [Array<Integer>] an Array of Integer Bytes
+    # @raise [TSS::Error] if the hex value is not an even length
     def self.hex_to_bytes(str)
       # clone so we don't destroy the original string passed in by slicing it.
       strc = str.clone
@@ -215,16 +254,28 @@ module TSS
       bytes
     end
 
+    # Convert a hex String to a UTF-8 String
+    #
+    # @param hex [String] a hex String to convert
+    # @return [String] a UTF-8 String
     def self.hex_to_utf8(hex)
       bytes_to_utf8(hex_to_bytes(hex))
     end
 
+    # Convert a UTF-8 String to a hex String
+    #
+    # @param str [String] a UTF-8 String to convert
+    # @return [String] a hex String
     def self.utf8_to_hex(str)
       bytes_to_hex(utf8_to_bytes(str))
     end
 
-    # String Helpers
-
+    # Left pad a String with pad_char in multiples of byte_multiple
+    #
+    # @param byte_multiple [Integer] pad in blocks of this size
+    # @param input_string [String] the String to pad
+    # @param pad_char [String] the String to pad with
+    # @return [String] a padded String
     def self.left_pad(byte_multiple, input_string, pad_char = "\u001F")
       return input_string if byte_multiple == 0
       pad_length = byte_multiple - (input_string.length % byte_multiple)
@@ -233,13 +284,18 @@ module TSS
     end
 
     # Constant time string comparison.
-    # Extracted from Rack::Utils
-    # https://github.com/rack/rack/blob/master/lib/rack/utils.rb
+    #   Extracted from Rack::Utils
+    #   https://github.com/rack/rack/blob/master/lib/rack/utils.rb
     #
-    # NOTE: the values compared should be of fixed length, such as strings
-    # that have already been processed by HMAC. This should not be used
-    # on variable length plaintext strings because it could leak length info
-    # via timing attacks.
+    #   NOTE: the values compared should be of fixed length, such as strings
+    #   that have already been processed by HMAC. This should not be used
+    #   on variable length plaintext strings because it could leak length info
+    #   via timing attacks. The user provided value should always be passed
+    #   in as the second parameter so as not to leak info about the secret.
+    #
+    # @param a [String] the private value
+    # @param b [String] the user provided value
+    # @return [true, false] whether the strings match or not
     def self.secure_compare(a, b)
       return false unless a.bytesize == b.bytesize
 
@@ -250,16 +306,21 @@ module TSS
       r == 0
     end
 
-    # Binary Header Helpers
-
+    # Extract the header data from a binary share.
+    # Extra "\x00" padding in the identifier will be removed.
+    #
+    # @param share [String] a binary octet share
+    # @return [Hash] header attributes
     def self.extract_share_header(share)
       h = Splitter::SHARE_HEADER_STRUCT.decode(share)
       h[:identifier] = h[:identifier].delete("\x00")
       return h
     end
 
-    # Math Helpers
-
+    # Calculate the factorial for an Integer.
+    #
+    # @param n [Integer] the Integer to calculate for
+    # @return [Integer] the factorial of n
     def self.factorial(n)
       (1..n).reduce(:*) || 1
     end
@@ -267,19 +328,25 @@ module TSS
     # Calculate the number of combinations possible
     # for a given number of shares and threshold.
     #
-    # See : http://www.wolframalpha.com/input/?i=20+choose+5
-    # See : http://www.mathsisfun.com/combinatorics/combinations-permutations-calculator.html (Set balls, 20, 5, no, no) == 15504
-    # See : http://www.mathsisfun.com/combinatorics/combinations-permutations.html
-    # See : https://jdanger.com/calculating-factorials-in-ruby.html
-    # See : http://chriscontinanza.com/2010/10/29/Array.html
-    # See : http://stackoverflow.com/questions/2434503/ruby-factorial-function
+    # * http://www.wolframalpha.com/input/?i=20+choose+5
+    # * http://www.mathsisfun.com/combinatorics/combinations-permutations-calculator.html (Set balls, 20, 5, no, no) == 15504
+    # * http://www.mathsisfun.com/combinatorics/combinations-permutations.html
+    # * https://jdanger.com/calculating-factorials-in-ruby.html
+    # * http://chriscontinanza.com/2010/10/29/Array.html
+    # * http://stackoverflow.com/questions/2434503/ruby-factorial-function
     #
-    # n is the total number of shares
-    # r is the threshold number of shares
+    # @param n [Integer] the total number of shares
+    # @param r [Integer] the threshold number of shares
+    # @return [Integer] the number of possible combinations
     def self.calc_combinations(n, r)
       factorial(n) / (factorial(r) * factorial(n - r))
     end
 
+    # Converts an Integer into a delimiter separated String.
+    #
+    # @param n [Integer] an Integer to convert
+    # @param delimiter [String] the String to delimit n in three Integer groups
+    # @return [String] the object converted into a comma separated String.
     def self.int_commas(n, delimiter = ',')
       n.to_s.reverse.gsub(%r{([0-9]{3}(?=([0-9])))}, "\\1#{delimiter}").reverse
     end

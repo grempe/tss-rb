@@ -11,6 +11,9 @@ require 'tss/hasher'
 require 'tss/splitter'
 require 'tss/combiner'
 
+# Threshold Secret Sharing
+#
+# @author Glenn Rempe <glenn@rempe.us>
 module TSS
   class Error < RuntimeError; end
   class ArgumentError < TSS::Error; end
