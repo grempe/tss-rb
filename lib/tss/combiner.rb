@@ -120,6 +120,15 @@ module TSS
 
     private
 
+    # Given a hash ID and an Array of Arrays of Share Bytes, extract a secret
+    # and validate it against any one-way hash that was embedded in the shares
+    # along with the secret.
+    #
+    # @param hash_id [Integer] the ID of the one-way hash function to test with
+    # @param shares_bytes [Array<Array>] the shares as Byte Arrays to be evaluated
+    # @return [Array<Integer>] returns the secret as an Array of Bytes if it was recovered from the shares and validated
+    # @raise [TSS::NoSecretError] if the secret was not able to be recovered (with no hash)
+    # @raise [TSS::InvalidSecretHashError] if the secret was able to be recovered but the hash test failed
     def extract_secret_from_shares!(hash_id, shares_bytes)
       secret = []
 
