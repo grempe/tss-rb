@@ -176,7 +176,7 @@ module TSS
     # The total Byte size of the secret, including padding and hash, must be
     # less than the max allowed Byte size or it is invalid.
     #
-    # @param secret_bytes [Array<Intger>] the Byte Array containing the secret
+    # @param secret_bytes [Array<Integer>] the Byte Array containing the secret
     # @return [true] returns true if num_shares is >= threshold
     # @raise [TSS::ArgumentError] if invalid
     def secret_bytes_is_smaller_than_max_size!(secret_bytes)
