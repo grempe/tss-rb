@@ -14,78 +14,37 @@ module TSS
       .enum('first', 'sample', 'combinations')
       .default('first')
 
-    # The reconstruction, or combining, operation reconstructs the secret from a
-    # set of valid shares where the number of shares is >= the threshold when the
-    # secret was initially split. All arguments are provided in a single Hash:
+    # To reconstruct a secret from a set of shares, the following
+    # procedure, or any equivalent method, is used:
     #
-    # `shares` : The shares parameter is an Array of String shares.
+    #   If the number of shares provided as input to the secret
+    #   reconstruction operation is greater than the threshold M, then M
+    #   of those shares are selected for use in the operation.  The method
+    #   used to select the shares can be arbitrary.
     #
-    # If the number of shares provided as input to the secret
-    # reconstruction operation is greater than the threshold M, then M
-    # of those shares are selected for use in the operation.  The method
-    # used to select the shares can be chosen with the `select_by:` argument
-    # which takes the following values:
+    #   If the shares are not equal length, then the input is
+    #   inconsistent.  An error should be reported, and processing must
+    #   halt.
     #
-    # `first` : If X shares are required by the threshold and more than X
-    # shares are provided, then the first X shares in the Array of shares provided
-    # will be used. All others will be discarded and the operation will fail if
-    # those selected shares cannot recreate the secret.
+    #   The output string is initialized to the empty (zero-length) octet
+    #   string.
     #
-    # `sample` : If X shares are required by the threshold and more than X
-    # shares are provided, then X shares will be randomly selected from the Array
-    # of shares provided.  All others will be discarded and the operation will
-    # fail if those selected shares cannot recreate the secret.
+    #   The octet array U is formed by setting U[i] equal to the first
+    #   octet of the ith share.  (Note that the ordering of the shares is
+    #   arbitrary, but must be consistent throughout this algorithm.)
     #
-    # `combinations` : If X shares are required, and more than X shares are
-    # provided, then all possible combinations of the threshold number of shares
-    # will be tried to see if the secret can be recreated.
-    # This flexibility comes with a cost. All combinations of `threshold` shares
-    # must be generated. Due to the math associated with combinations it is possible
-    # that the system would try to generate a number of combinations that could never
-    # be generated or processed in many times the life of the Universe. This option
-    # can only be used if the possible combinations for the number of shares and the
-    # threshold needed to reconstruct a secret result in a number of combinations
-    # that is small enough to have a chance at being processed. If the number
-    # of combinations will be too large then the an Exception will be raised before
-    # processing has started.
+    #   The initial octet is stripped from each share.
     #
-    # If the combine operation does not result in a secret being successfully
-    # extracted, then a `TSS::Error` exception will be raised.
+    #   If any two elements of the array U have the same value, then an
+    #   error condition has occurred; this fact should be reported, then
+    #   the procedure must halt.
     #
+    #   For each octet of the shares, the following steps are performed.
+    #   An array V of M octets is created, in which the array element V[i]
+    #   contains the octet from the ith share.  The value of I(U, V) is
+    #   computed, then appended to the output string.
     #
-    # How it works:
-    #
-    #  To reconstruct a secret from a set of shares, the following
-    #  procedure, or any equivalent method, is used:
-    #
-    #     If the number of shares provided as input to the secret
-    #     reconstruction operation is greater than the threshold M, then M
-    #     of those shares are selected for use in the operation.  The method
-    #     used to select the shares can be arbitrary.
-    #
-    #     If the shares are not equal length, then the input is
-    #     inconsistent.  An error should be reported, and processing must
-    #     halt.
-    #
-    #     The output string is initialized to the empty (zero-length) octet
-    #     string.
-    #
-    #     The octet array U is formed by setting U[i] equal to the first
-    #     octet of the ith share.  (Note that the ordering of the shares is
-    #     arbitrary, but must be consistent throughout this algorithm.)
-    #
-    #     The initial octet is stripped from each share.
-    #
-    #     If any two elements of the array U have the same value, then an
-    #     error condition has occurred; this fact should be reported, then
-    #     the procedure must halt.
-    #
-    #     For each octet of the shares, the following steps are performed.
-    #     An array V of M octets is created, in which the array element V[i]
-    #     contains the octet from the ith share.  The value of I(U, V) is
-    #     computed, then appended to the output string.
-    #
-    #     The output string is returned.
+    #   The output string is returned.
     #
     def combine
       # unwrap 'human' shares into binary shares
@@ -132,36 +91,32 @@ module TSS
         secret = nil
         while secret.nil? && share_combos.present?
           # Check a combination and shift it off the Array
-          result = extract_secret_from_shares(hash_id, share_combos.shift)
+          result = extract_secret_from_shares!(hash_id, share_combos.shift)
           next if result.nil?
           secret = result
         end
       else
-        secret = extract_secret_from_shares(hash_id, shares_bytes)
+        secret = extract_secret_from_shares!(hash_id, shares_bytes)
       end
 
-      if secret.present?
-        {
-          hash_alg: Hasher.key_from_code(hash_id).to_s,
-          identifier: identifier,
-          num_shares_provided: orig_shares_size,
-          num_shares_used: share_combos.present? ? share_combos.first.size : shares.size,
-          processing_started_at: start_processing_time.utc.iso8601,
-          processing_finished_at: Time.now.utc.iso8601,
-          processing_time_ms: ((Time.now - start_processing_time)*1000).round(2),
-          secret: Util.bytes_to_utf8(secret),
-          shares_select_by: select_by,
-          combinations: share_combos.present? ? share_combos.size : nil,
-          threshold: threshold
-        }
-      else
-        raise TSS::Error, 'unable to recombine shares into a verifiable secret'
-      end
+      {
+        hash_alg: Hasher.key_from_code(hash_id).to_s,
+        identifier: identifier,
+        num_shares_provided: orig_shares_size,
+        num_shares_used: share_combos.present? ? share_combos.first.size : shares.size,
+        processing_started_at: start_processing_time.utc.iso8601,
+        processing_finished_at: Time.now.utc.iso8601,
+        processing_time_ms: ((Time.now - start_processing_time)*1000).round(2),
+        secret: Util.bytes_to_utf8(secret),
+        shares_select_by: select_by,
+        combinations: share_combos.present? ? share_combos.size : nil,
+        threshold: threshold
+      }
     end
 
     private
 
-    def extract_secret_from_shares(hash_id, shares_bytes)
+    def extract_secret_from_shares!(hash_id, shares_bytes)
       secret = []
 
       # build up an Array of index values from each share
@@ -192,10 +147,14 @@ module TSS
         if Util.secure_compare(Util.bytes_to_hex(orig_hash_bytes), Util.bytes_to_hex(new_hash_bytes))
           return secret
         else
-          return nil
+          raise TSS::InvalidSecretHashError, 'invalid shares, hash of secret does not equal embedded hash'
         end
       else
-        return secret
+        if secret.present?
+          return secret
+        else
+          raise TSS::NoSecretError, 'invalid shares, unable to recombine into a verifiable secret'
+        end
       end
     end
 
