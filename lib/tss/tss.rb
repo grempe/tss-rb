@@ -27,10 +27,12 @@ module TSS
   # A secret was attempted to be recovered, but failed due to an invalid verifier hash.
   class InvalidSecretHashError < TSS::Error; end
 
-  # The `split` method takes a Hash of options. The following hash key args
-  # may be passed. Only `secret:` is required and the rest will be set to
-  # reasonable and secure defaults if unset. All args will be validated for
-  # correct type and values.
+  # Threshold Secret Sharing (TSS) provides a way to generate N shares
+  # from a value, so that any M of those shares can be used to
+  # reconstruct the original value, but any M-1 shares provide no
+  # information about that value.  This method can provide shared access
+  # control on key material and other secrets that must be strongly
+  # protected.
   #
   # @param [Hash] opts the options to create a message with.
   # @option opts [String] :secret takes a String (UTF-8 or US-ASCII encoding) with a length between 1..65_534
