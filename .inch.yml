@@ -1,0 +1,9 @@
+files:
+  # define files included in the analysis (defaults to ["{app,lib}/**/*.rb"])
+  # included:
+  #   - plugins/**/*.rb
+  # define files excluded from the analysis (defaults to [])
+  excluded:
+    - lib/tss/blank.rb
+    - lib/tss/types.rb
+    - lib/tss/cli.rb
