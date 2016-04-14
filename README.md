@@ -6,6 +6,9 @@
 [![Code Climate](https://codeclimate.com/github/grempe/tss-rb/badges/gpa.svg)](https://codeclimate.com/github/grempe/tss-rb)
 [![Inline docs](http://inch-ci.org/github/grempe/tss-rb.svg?branch=master)](http://inch-ci.org/github/grempe/tss-rb)
 
+Ruby Docs : [http://www.rubydoc.info/gems/tss](http://www.rubydoc.info/gems/tss)
+
+
 ## WARNING : BETA CODE
 
 This code is new and has not yet been tested in production. Use at your own risk.
@@ -143,6 +146,14 @@ or [TweetNaCl.js](https://github.com/dchest/tweetnacl-js).
 
 * Put careful thought into how you want to distribute shares. It often makes
 sense to give individuals more than one share.
+
+## Documentation
+
+There is pretty extensive inline documentation. You can view the latest
+auto-generated docs at [http://www.rubydoc.info/gems/tss](http://www.rubydoc.info/gems/tss)
+
+You can check my documentation quality score at
+[http://inch-ci.org/github/grempe/tss-rb](http://inch-ci.org/github/grempe/tss-rb?branch=master)
 
 ## Supported Platforms
 
