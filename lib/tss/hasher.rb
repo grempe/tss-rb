@@ -5,6 +5,10 @@ module TSS
                SHA256: { code: 2, bytesize: 32, hasher: Digest::SHA256 }
            }.freeze
 
+   # Lookup the Symbol key for a Hash with the code.
+   #
+   # @param code [Integer] the hash code to convert to a Symbol key
+   # @return [Symbol] the hash key Symbol
     def self.key_from_code(code)
       return nil unless Hasher.codes.include?(code)
       HASHES.each do |k, v|
@@ -12,40 +16,70 @@ module TSS
       end
     end
 
+    # Lookup the hash code for the hash matching hash_key.
+    #
+    # @param hash_key [Symbol, String] the hash key to convert to an Integer code
+    # @return [Integer] the hash key code
     def self.code(hash_key)
       HASHES[hash_key.upcase.to_sym][:code]
     end
 
-    # All valid hash codes, including NONE
+    # Lookup all valid hash codes, including NONE.
+    #
+    # @return [Array<Integer>] all hash codes including NONE
     def self.codes
       HASHES.collect do |_k, v|
         v[:code]
       end
     end
 
-    # All valid hash codes that actually do hashing
+    # All valid hash codes that actually do hashing, excluding NONE.
+    #
+    # @return [Array<Integer>] all hash codes excluding NONE
     def self.codes_without_none
       HASHES.collect do |_k, v|
         v[:code] if v[:code] > 0
       end.compact
     end
 
+    # Lookup the size in Bytes for a specific hash_key.
+    #
+    # @param hash_key [Symbol, String] the hash key to lookup
+    # @return [Integer] the size in Bytes for a specific hash_key
     def self.bytesize(hash_key)
       HASHES[hash_key.upcase.to_sym][:bytesize]
     end
 
+    # Return a hexdigest hash for a String using hash_key hash algorithm.
+    # Returns '' if hash_key == :NONE
+    #
+    # @param hash_key [Symbol, String] the hash key to use to hash a String
+    # @param str [String] the String to hash
+    # @return [String] the hex digest for str
     def self.hex_string(hash_key, str)
       hash_key = hash_key.upcase.to_sym
       return '' if hash_key == :NONE
       HASHES[hash_key][:hasher].send(:hexdigest, str)
     end
 
+    # Return a Byte String hash for a String using hash_key hash algorithm.
+    # Returns '' if hash_key == :NONE
+    #
+    # @param hash_key [Symbol, String] the hash key to use to hash a String
+    # @param str [String] the String to hash
+    # @return [String] the Byte String digest for str
     def self.byte_string(hash_key, str)
       hash_key = hash_key.upcase.to_sym
       return '' if hash_key == :NONE
       HASHES[hash_key][:hasher].send(:digest, str)
     end
 
+    # Return a Byte Array hash for a String using hash_key hash algorithm.
+    # Returns [] if hash_key == :NONE
+    #
+    # @param hash_key [Symbol, String] the hash key to use to hash a String
+    # @param str [String] the String to hash
+    # @return [Array<Integer>] the Byte Array digest for str
     def self.byte_array(hash_key, str)
       hash_key = hash_key.upcase.to_sym
       return [] if hash_key == :NONE
