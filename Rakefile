@@ -20,4 +20,6 @@ Rake::TestTask.new(:burn) do |t|
   t.test_files = FileList['test/**/*_brute.rb']
 end
 
+task :test_all => [:test, :bench, :burn]
+
 task default: :test
