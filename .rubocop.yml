@@ -1,5 +1,10 @@
 AllCops:
-  DisabledByDefault: true
+  Exclude:
+    - 'vendor/**/*'
+    - 'db/schema.rb'
+    - 'test/**/*'
+  UseCache: false
+  # DisabledByDefault: true
 
 #################### Lint ################################
 
@@ -17,9 +22,10 @@ Lint/AmbiguousRegexpLiteral:
   Enabled: true
 
 Lint/AssignmentInCondition:
-  Description: "Don't use assignment in conditions."
-  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#safe-assignment-in-condition'
+  Description: Don't use assignment in conditions.
+  StyleGuide: https://github.com/bbatsov/ruby-style-guide#safe-assignment-in-condition
   Enabled: true
+  AllowSafeAssignment: true
 
 Lint/BlockAlignment:
   Description: 'Align block ends correctly.'
@@ -206,12 +212,9 @@ Lint/Void:
 ###################### Metrics ####################################
 
 Metrics/AbcSize:
-  Description: >-
-                 A calculated magnitude based on number of assignments,
-                 branches, and conditions.
-  Reference: 'http://c2.com/cgi/wiki?AbcMetric'
+  Description: 'A calculated magnitude based on number of assignments, branches, and conditions.'
   Enabled: false
-  Max: 20
+  Max: 15
 
 Metrics/BlockNesting:
   Description: 'Avoid excessive block nesting'
@@ -220,15 +223,16 @@ Metrics/BlockNesting:
   Max: 4
 
 Metrics/ClassLength:
-  Description: 'Avoid classes longer than 250 lines of code.'
-  Enabled: true
-  Max: 250
+  Description: Avoid classes longer than 100 lines of code.
+  Enabled: false
+  CountComments: false
+  Max: 100
 
 Metrics/CyclomaticComplexity:
-  Description: >-
-                 A complexity metric that is strongly correlated to the number
-                 of test cases needed to validate a method.
+  Description: A complexity metric that is strongly correlated to the number of test
+    cases needed to validate a method.
   Enabled: true
+  Max: 8
 
 Metrics/LineLength:
   Description: 'Limit lines to 80 characters.'
@@ -236,10 +240,11 @@ Metrics/LineLength:
   Enabled: false
 
 Metrics/MethodLength:
-  Description: 'Avoid methods longer than 30 lines of code.'
-  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#short-methods'
-  Enabled: true
-  Max: 30
+  Description: Avoid methods longer than 10 lines of code.
+  StyleGuide: https://github.com/bbatsov/ruby-style-guide#short-methods
+  Enabled: false
+  CountComments: false
+  Max: 10
 
 Metrics/ModuleLength:
   Description: 'Avoid modules longer than 250 lines of code.'
@@ -250,12 +255,14 @@ Metrics/ParameterLists:
   Description: 'Avoid parameter lists longer than three or four parameters.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#too-many-params'
   Enabled: true
+  Max: 5
+  CountKeywordArgs: true
 
 Metrics/PerceivedComplexity:
-  Description: >-
-                 A complexity metric geared towards measuring complexity for a
-                 human reader.
+  Description: A complexity metric geared towards measuring complexity for a human
+    reader.
   Enabled: false
+  Max: 7
 
 ##################### Performance #############################
 
@@ -499,6 +506,17 @@ Style/ClosingParenthesisIndentation:
   Description: 'Checks the indentation of hanging closing parentheses.'
   Enabled: false
 
+Style/CollectionMethods:
+  Description: Preferred collection methods.
+  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#map-find-select-reduce-size'
+  Enabled: true
+  PreferredMethods:
+    collect: map
+    collect!: map!
+    find: detect
+    find_all: select
+    reduce: inject
+
 Style/ColonMethodCall:
   Description: 'Do not use :: for method call.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#double-colons'
@@ -538,9 +556,13 @@ Style/Documentation:
   Enabled: false
 
 Style/DotPosition:
-  Description: 'Checks the position of the dot in multi-line method calls.'
+  Description: Checks the position of the dot in multi-line method calls.
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#consistent-multi-line-chains'
-  Enabled: false
+  Enabled: true
+  EnforcedStyle: leading
+  SupportedStyles:
+    - leading
+    - trailing
 
 Style/DoubleNegation:
   Description: 'Checks for uses of double negation (!!).'
@@ -613,9 +635,10 @@ Style/ExtraSpacing:
   Enabled: false
 
 Style/FileName:
-  Description: 'Use snake_case for source file names.'
+  Description: Use snake_case for source file names.
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#snake-case-files'
   Enabled: false
+  Exclude: []
 
 Style/InitialIndentation:
   Description: >-
@@ -651,6 +674,7 @@ Style/GuardClause:
   Description: 'Check for conditionals that can be replaced with guard clauses'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#no-nested-conditionals'
   Enabled: false
+  MinBodyLength: 1
 
 Style/HashSyntax:
   Description: >-
@@ -660,11 +684,10 @@ Style/HashSyntax:
   Enabled: false
 
 Style/IfUnlessModifier:
-  Description: >-
-                 Favor modifier if/unless usage when you have a
-                 single-line body.
+  Description: 'Favor modifier if/unless usage when you have a single-line body.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#if-as-a-modifier'
   Enabled: false
+  MaxLineLength: 80
 
 Style/IfWithSemicolon:
   Description: 'Do not use if x; .... Use the ternary operator instead.'
@@ -693,6 +716,10 @@ Style/IndentHash:
 Style/InfiniteLoop:
   Description: 'Use Kernel#loop for infinite loops.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#infinite-loop'
+  Enabled: false
+
+Style/InlineComment:
+  Description: Avoid inline comments.
   Enabled: false
 
 Style/Lambda:
@@ -821,6 +848,10 @@ Style/OpMethod:
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#other-arg'
   Enabled: false
 
+Style/OptionHash:
+  Description: "Don't use option hashes when you can use keyword arguments."
+  Enabled: false
+
 Style/OptionalArguments:
   Description: >-
                  Checks for optional arguments that do not appear at the end
@@ -848,6 +879,16 @@ Style/PercentLiteralDelimiters:
   Description: 'Use `%`-literal delimiters consistently'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#percent-literal-braces'
   Enabled: false
+  PreferredDelimiters:
+    "%": "()"
+    "%i": "()"
+    "%q": "()"
+    "%Q": "()"
+    "%r": "{}"
+    "%s": "()"
+    "%w": "()"
+    "%W": "()"
+    "%x": "()"
 
 Style/PercentQLiterals:
   Description: 'Checks if uses of %Q/%q match the configured preference.'
@@ -861,7 +902,15 @@ Style/PerlBackrefs:
 Style/PredicateName:
   Description: 'Check the names of predicate methods.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#bool-methods-qmark'
-  Enabled: false
+  Enabled: true
+  NamePrefix:
+  - is_
+  - has_
+  - have_
+  NamePrefixBlacklist:
+  - is_
+  Exclude:
+  - spec/**/*
 
 Style/Proc:
   Description: 'Use proc instead of Proc.new.'
@@ -869,9 +918,13 @@ Style/Proc:
   Enabled: false
 
 Style/RaiseArgs:
-  Description: 'Checks the arguments passed to raise/fail.'
-  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#exception-class-messages'
+  Description: Checks the arguments passed to raise/fail.
+  StyleGuide: https://github.com/bbatsov/ruby-style-guide#exception-class-messages
   Enabled: false
+  EnforcedStyle: exploded
+  SupportedStyles:
+  - compact
+  - exploded
 
 Style/RedundantBegin:
   Description: "Don't use begin blocks when they are not needed."
@@ -919,20 +972,39 @@ Style/Semicolon:
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#no-semicolon'
   Enabled: false
 
+Style/Send:
+  Description: Prefer `Object#__send__` or `Object#public_send` to `send`, as `send`
+    may overlap with existing methods.
+  StyleGuide: https://github.com/bbatsov/ruby-style-guide#prefer-public-send
+  Enabled: false
+
 Style/SignalException:
   Description: 'Checks for proper usage of fail and raise.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#fail-method'
   Enabled: false
+  EnforcedStyle: semantic
+  SupportedStyles:
+  - only_raise
+  - only_fail
+  - semantic
 
 Style/SingleLineBlockParams:
   Description: 'Enforces the names of some block params.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#reduce-blocks'
   Enabled: false
+  Methods:
+  - reduce:
+    - a
+    - e
+  - inject:
+    - a
+    - e
 
 Style/SingleLineMethods:
   Description: 'Avoid single-line methods.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#no-single-line-methods'
   Enabled: false
+  AllowIfMethodIsEmpty: true
 
 Style/SpaceBeforeFirstArg:
   Description: >-
@@ -1046,15 +1118,22 @@ Style/SpecialGlobalVars:
   Enabled: false
 
 Style/StringLiterals:
-  Description: 'Checks if uses of quotes match the configured preference.'
-  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#consistent-string-literals'
-  Enabled: false
+  Description: Checks if uses of quotes match the configured preference.
+  StyleGuide: https://github.com/bbatsov/ruby-style-guide#consistent-string-literals
+  Enabled: true
+  EnforcedStyle: single_quotes
+  SupportedStyles:
+  - single_quotes
+  - double_quotes
 
 Style/StringLiteralsInInterpolation:
-  Description: >-
-                 Checks if uses of quotes inside expressions in interpolated
-                 strings match the configured preference.
-  Enabled: false
+  Description: Checks if uses of quotes inside expressions in interpolated strings
+    match the configured preference.
+  Enabled: true
+  EnforcedStyle: single_quotes
+  SupportedStyles:
+  - single_quotes
+  - double_quotes
 
 Style/StructInheritance:
   Description: 'Checks for inheritance from Struct.new.'
@@ -1080,14 +1159,24 @@ Style/TrailingBlankLines:
   Enabled: false
 
 Style/TrailingCommaInArguments:
-  Description: 'Checks for trailing comma in parameter lists.'
-  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#no-trailing-params-comma'
-  Enabled: false
-
-Style/TrailingCommaInLiteral:
-  Description: 'Checks for trailing comma in literals.'
+  Description: 'Checks for trailing comma in argument lists.'
   StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#no-trailing-array-commas'
   Enabled: false
+  EnforcedStyleForMultiline: no_comma
+  SupportedStyles:
+  - comma
+  - consistent_comma
+  - no_comma
+
+Style/TrailingCommaInLiteral:
+  Description: 'Checks for trailing comma in array and hash literals.'
+  StyleGuide: 'https://github.com/bbatsov/ruby-style-guide#no-trailing-array-commas'
+  Enabled: false
+  EnforcedStyleForMultiline: no_comma
+  SupportedStyles:
+  - comma
+  - consistent_comma
+  - no_comma
 
 Style/TrailingWhitespace:
   Description: 'Avoid trailing whitespace.'

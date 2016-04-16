@@ -65,23 +65,21 @@ module TSS
       identifier = h[:identifier]
       hash_id    = h[:hash_id]
 
-      # If there are more shares than the threshold would require
-      # then choose a subset of the shares based on preference.
-      if shares.size > threshold
-        case select_by
-        when 'first'
-          @shares = shares.shift(threshold)
-        when 'sample'
-          @shares = shares.sample(threshold)
-        when 'combinations'
-          share_combinations_mode_allowed!(hash_id)
-          share_combinations_out_of_bounds!(shares, threshold)
-        end
+      # Select a subset of the shares. If there are exactly the right
+      # amount of shares this is a no-op.
+      case select_by
+      when 'first'
+        @shares = shares.shift(threshold)
+      when 'sample'
+        @shares = shares.sample(threshold)
+      when 'combinations'
+        share_combinations_mode_allowed!(hash_id)
+        share_combinations_out_of_bounds!(shares, threshold)
       end
 
       # slice out the data after the header bytes in each share
       # and unpack the byte string into an Array of Byte Arrays
-      shares_bytes = shares.collect do |s|
+      shares_bytes = shares.map do |s|
         bytestring = s.byteslice(Splitter::SHARE_HEADER_STRUCT.size..s.bytesize)
         bytestring.unpack('C*') unless bytestring.nil?
       end.compact
@@ -103,7 +101,9 @@ module TSS
         secret = extract_secret_from_shares!(hash_id, shares_bytes)
       end
 
+      # return a Hash with the secret and metadata
       {
+        combinations: share_combos.present? ? share_combos.size : nil,
         hash_alg: Hasher.key_from_code(hash_id).to_s,
         identifier: identifier,
         num_shares_provided: orig_shares_size,
@@ -113,7 +113,6 @@ module TSS
         processing_time_ms: ((Time.now - start_processing_time)*1000).round(2),
         secret: Util.bytes_to_utf8(secret),
         shares_select_by: select_by,
-        combinations: share_combos.present? ? share_combos.size : nil,
         threshold: threshold
       }
     end
@@ -134,12 +133,12 @@ module TSS
 
       # build up an Array of index values from each share
       # u[i] equal to the first octet of the ith share
-      u = shares_bytes.collect { |s| s[0] }
+      u = shares_bytes.map { |s| s[0] }
 
       # loop through each byte in all the shares
       # start at Array index 1 in each share's Byte Array to skip the index
       (1..(shares_bytes.first.length - 1)).each do |i|
-        v = shares_bytes.collect { |share| share[i] }
+        v = shares_bytes.map { |share| share[i] }
         secret << Util.lagrange_interpolation(u, v)
       end
 
@@ -157,17 +156,15 @@ module TSS
         # digest now as when it was originally created.
         new_hash_bytes = Hasher.byte_array(hash_alg, Util.bytes_to_utf8(secret))
 
-        if Util.secure_compare(Util.bytes_to_hex(orig_hash_bytes), Util.bytes_to_hex(new_hash_bytes))
-          return secret
-        else
+        unless Util.secure_compare(Util.bytes_to_hex(orig_hash_bytes), Util.bytes_to_hex(new_hash_bytes))
           raise TSS::InvalidSecretHashError, 'invalid shares, hash of secret does not equal embedded hash'
         end
+      end
+
+      if secret.present?
+        return secret
       else
-        if secret.present?
-          return secret
-        else
-          raise TSS::NoSecretError, 'invalid shares, unable to recombine into a verifiable secret'
-        end
+        raise TSS::NoSecretError, 'invalid shares, unable to recombine into a verifiable secret'
       end
     end
 
@@ -197,7 +194,7 @@ module TSS
     # @return [Array<String>] returns an Array of String shares in binary octet String format
     # @raise [TSS::ArgumentError] if shares appear invalid
     def convert_shares_human_to_binary(shares)
-      shares.collect do |s|
+      shares.map do |s|
         s_b64 = s.match(Util::HUMAN_SHARE_RE)
         if s_b64.present? && s_b64.to_a[1].present?
           begin
@@ -212,19 +209,27 @@ module TSS
       end
     end
 
-    # Does the header Hash provided have all expected attributes?
+    # Does the header Hash have all expected keys?
     #
     # @param header [Hash] the header Hash to be evaluated
     # @return [true, false] returns true if all expected keys exist, false if not
-    def valid_header?(header)
+    def header_has_valid_keys?(header)
       header.is_a?(Hash) &&
         header.key?(:identifier) &&
-        header[:identifier].is_a?(String) &&
         header.key?(:hash_id) &&
-        header[:hash_id].is_a?(Integer) &&
         header.key?(:threshold) &&
+        header.key?(:share_len)
+    end
+
+    # Does the header Hash provided have all expected attribute types?
+    #
+    # @param header [Hash] the header Hash to be evaluated
+    # @return [true, false] returns true if all keys have expected value types, false if not
+    def header_has_valid_values?(header)
+      header.is_a?(Hash) &&
+        header[:identifier].is_a?(String) &&
+        header[:hash_id].is_a?(Integer) &&
         header[:threshold].is_a?(Integer) &&
-        header.key?(:share_len) &&
         header[:share_len].is_a?(Integer)
     end
 
@@ -249,12 +254,17 @@ module TSS
     # @raise [TSS::ArgumentError] if shares appear invalid
     def shares_have_valid_headers!(shares)
       fh = Util.extract_share_header(shares.first)
+
+      unless header_has_valid_keys?(fh) && header_has_valid_values?(fh)
+        raise TSS::ArgumentError, 'invalid shares, headers have invalid structure'
+      end
+
       shares.each do |s|
-        h = Util.extract_share_header(s)
-        unless valid_header?(h) && h == fh
-          raise TSS::ArgumentError, 'invalid shares, bad headers'
+        unless Util.extract_share_header(s) == fh
+          raise TSS::ArgumentError, 'invalid shares, headers do not match'
         end
       end
+
       return true
     end
 
@@ -307,7 +317,7 @@ module TSS
     # @return [true] returns true if there are enough shares
     # @raise [TSS::ArgumentError] if shares appear invalid
     def shares_bytes_have_valid_indexes!(shares_bytes)
-      u = shares_bytes.collect do |s|
+      u = shares_bytes.map do |s|
         raise TSS::ArgumentError, 'invalid shares, no index' if s[0].blank?
         raise TSS::ArgumentError, 'invalid shares, zero index' if s[0] == 0
         s[0]

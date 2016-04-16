@@ -1,0 +1,10 @@
+scss:
+  enabled: false
+
+ruby:
+  config_file: .rubocop.yml
+
+javascript:
+  ignore_file: .javascript_ignore
+
+fail_on_violations: true

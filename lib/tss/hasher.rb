@@ -30,7 +30,7 @@ module TSS
     #
     # @return [Array<Integer>] all hash codes including NONE
     def self.codes
-      HASHES.collect do |_k, v|
+      HASHES.map do |_k, v|
         v[:code]
       end
     end
@@ -39,7 +39,7 @@ module TSS
     #
     # @return [Array<Integer>] all hash codes excluding NONE
     def self.codes_without_none
-      HASHES.collect do |_k, v|
+      HASHES.map do |_k, v|
         v[:code] if v[:code] > 0
       end.compact
     end

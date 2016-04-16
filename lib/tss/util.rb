@@ -299,7 +299,7 @@ module TSS
     def self.secure_compare(a, b)
       return false unless a.bytesize == b.bytesize
 
-      l = a.unpack("C*")
+      l = a.unpack('C*')
 
       r, i = 0, -1
       b.each_byte { |v| r |= v ^ l[i+=1] }
