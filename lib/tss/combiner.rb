@@ -65,16 +65,12 @@ module TSS
       identifier = h[:identifier]
       hash_id    = h[:hash_id]
 
-      # Select a subset of the shares. If there are exactly the right
-      # amount of shares this is a no-op.
-      case select_by
-      when 'first'
+      # Select a subset of the shares provided using the chosen selection
+      # method. If there are exactly the right amount of shares this is a no-op.
+      if select_by == 'first'
         @shares = shares.shift(threshold)
-      when 'sample'
+      elsif select_by == 'sample'
         @shares = shares.sample(threshold)
-      when 'combinations'
-        share_combinations_mode_allowed!(hash_id)
-        share_combinations_out_of_bounds!(shares, threshold)
       end
 
       # slice out the data after the header bytes in each share
@@ -87,6 +83,9 @@ module TSS
       shares_bytes_have_valid_indexes!(shares_bytes)
 
       if select_by == 'combinations'
+        share_combinations_mode_allowed!(hash_id)
+        share_combinations_out_of_bounds!(shares, threshold)
+
         # Build an Array of all possible `threshold` size combinations.
         share_combos = shares_bytes.combination(threshold).to_a
 
