@@ -12,7 +12,7 @@ module TSS
     method_option :hash_alg, :aliases => '-h', :banner => 'hash_alg', :type => :string, :desc => 'A hash type for verification, NONE, SHA1, SHA256'
     method_option :format, :aliases => '-f', :banner => 'format', :type => :string, :default => 'human', :desc => 'Share output format, binary or human'
     method_option :pad_blocksize, :aliases => '-p', :banner => 'pad_blocksize', :type => :numeric, :desc => 'Block size # secrets will be left-padded to, 0-255'
-    desc 'split SECRET', 'split a SECRET String into shares'
+    desc 'split', 'split a secret into shares'
     long_desc <<-LONGDESC
       `tss split` will generate a set of Threshold Secret
       Sharing shares from the SECRET provided. To protect
@@ -78,7 +78,7 @@ module TSS
       end
     end
 
-    desc 'combine SHARES', 'Enter min threshold # of SHARES, one at a time, to reconstruct a split secret'
+    desc 'combine', 'Enter min threshold # of shares, one at a time, to reconstruct a split secret'
     def combine
       shares = []
       last_ans = nil
