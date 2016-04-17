@@ -74,7 +74,6 @@ describe TSS::Splitter do
       secret = TSS::Combiner.new(shares: s.sample(1)).combine
       assert_kind_of String, secret[:secret]
       secret[:threshold].must_equal 1
-      secret[:num_shares_provided].must_equal 1
     end
 
     it 'must return an Array of default threshold (3) shares with no threshold' do
@@ -84,7 +83,6 @@ describe TSS::Splitter do
       secret = TSS::Combiner.new(shares: s.sample(3)).combine
       assert_kind_of String, secret[:secret]
       secret[:threshold].must_equal 3
-      secret[:num_shares_provided].must_equal 3
     end
 
     it 'must return an Array of default shares with a max size threshold' do
@@ -94,7 +92,6 @@ describe TSS::Splitter do
       secret = TSS::Combiner.new(shares: s.sample(255)).combine
       assert_kind_of String, secret[:secret]
       secret[:threshold].must_equal 255
-      secret[:num_shares_provided].must_equal 255
     end
   end
 
@@ -124,7 +121,6 @@ describe TSS::Splitter do
       secret = TSS::Combiner.new(shares: s.sample(1)).combine
       assert_kind_of String, secret[:secret]
       secret[:threshold].must_equal 1
-      secret[:num_shares_provided].must_equal 1
     end
 
     it 'must return an Array of threshold (5) shares with no num_shares' do
@@ -134,7 +130,6 @@ describe TSS::Splitter do
       secret = TSS::Combiner.new(shares: s).combine
       assert_kind_of String, secret[:secret]
       secret[:threshold].must_equal 3
-      secret[:num_shares_provided].must_equal 5
     end
 
     it 'must return an Array of shares with a max size' do
@@ -144,7 +139,6 @@ describe TSS::Splitter do
       secret = TSS::Combiner.new(shares: s.sample(255)).combine
       assert_kind_of String, secret[:secret]
       secret[:threshold].must_equal 255
-      secret[:num_shares_provided].must_equal 255
     end
   end
 

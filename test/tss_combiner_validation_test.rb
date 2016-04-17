@@ -62,7 +62,6 @@ describe TSS::Combiner do
     describe 'when share_selection arg is unset' do
       it 'must return a secret and default to first' do
         secret = TSS::Combiner.new(shares: @shares).combine
-        secret[:shares_select_by].must_equal 'first'
         secret[:secret].must_equal @secret
       end
     end
@@ -70,7 +69,6 @@ describe TSS::Combiner do
     describe 'when share_selection arg is set to first' do
       it 'must return a secret' do
         secret = TSS::Combiner.new(shares: @shares, select_by: 'first').combine
-        secret[:shares_select_by].must_equal 'first'
         secret[:secret].must_equal @secret
       end
     end
@@ -78,7 +76,6 @@ describe TSS::Combiner do
     describe 'when share_selection arg is set to sample' do
       it 'must return a secret' do
         secret = TSS::Combiner.new(shares: @shares, select_by: 'sample').combine
-        secret[:shares_select_by].must_equal 'sample'
         secret[:secret].must_equal @secret
       end
     end
@@ -86,7 +83,6 @@ describe TSS::Combiner do
     describe 'when share_selection arg is set to combinations' do
       it 'must return a secret' do
         secret = TSS::Combiner.new(shares: @shares, select_by: 'combinations').combine
-        secret[:shares_select_by].must_equal 'combinations'
         secret[:secret].must_equal @secret
       end
     end

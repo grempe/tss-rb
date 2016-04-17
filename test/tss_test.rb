@@ -34,8 +34,13 @@ describe TSS do
       shares = TSS.split(secret: secret, hash_alg: 'NONE')
       shares.first.encoding.name.must_equal 'ASCII-8BIT'
       recovered_secret = TSS.combine(shares: shares.sample(3))
+      recovered_secret[:hash].must_equal nil
+      recovered_secret[:hash_alg].must_equal 'NONE'
+      recovered_secret[:identifier].length.must_equal 16
+      recovered_secret[:process_time].must_be :>, 0.01
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+      recovered_secret[:threshold].must_equal 3
     end
   end
 
@@ -45,8 +50,13 @@ describe TSS do
       shares = TSS.split(secret: secret, hash_alg: 'SHA1')
       shares.first.encoding.name.must_equal 'ASCII-8BIT'
       recovered_secret = TSS.combine(shares: shares.sample(3))
+      recovered_secret[:hash].must_equal Digest::SHA1.hexdigest(secret)
+      recovered_secret[:hash_alg].must_equal 'SHA1'
+      recovered_secret[:identifier].length.must_equal 16
+      recovered_secret[:process_time].must_be :>, 0.01
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+      recovered_secret[:threshold].must_equal 3
     end
   end
 
@@ -56,8 +66,13 @@ describe TSS do
       shares = TSS.split(secret: secret, hash_alg: 'SHA256')
       shares.first.encoding.name.must_equal 'ASCII-8BIT'
       recovered_secret = TSS.combine(shares: shares.sample(3))
+      recovered_secret[:hash].must_equal Digest::SHA256.hexdigest(secret)
+      recovered_secret[:hash_alg].must_equal 'SHA256'
+      recovered_secret[:identifier].length.must_equal 16
+      recovered_secret[:process_time].must_be :>, 0.01
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+      recovered_secret[:threshold].must_equal 3
     end
   end
 
@@ -67,8 +82,13 @@ describe TSS do
       shares = TSS.split(secret: secret, hash_alg: 'SHA256')
       shares.first.encoding.name.must_equal 'ASCII-8BIT'
       recovered_secret = TSS.combine(shares: shares.sample(3))
+      recovered_secret[:hash].must_equal Digest::SHA256.hexdigest(secret)
+      recovered_secret[:hash_alg].must_equal 'SHA256'
+      recovered_secret[:identifier].length.must_equal 16
+      recovered_secret[:process_time].must_be :>, 0.01
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+      recovered_secret[:threshold].must_equal 3
     end
   end
 
@@ -78,8 +98,13 @@ describe TSS do
       shares = TSS.split(secret: secret, format: 'human')
       shares.first.encoding.name.must_equal 'UTF-8'
       recovered_secret = TSS.combine(shares: shares.sample(3))
+      recovered_secret[:hash].must_equal Digest::SHA256.hexdigest(secret)
+      recovered_secret[:hash_alg].must_equal 'SHA256'
+      recovered_secret[:identifier].length.must_equal 16
+      recovered_secret[:process_time].must_be :>, 0.01
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+      recovered_secret[:threshold].must_equal 3
     end
   end
 
@@ -89,8 +114,13 @@ describe TSS do
       shares = TSS.split(secret: secret, hash_alg: 'NONE')
       shares.first.encoding.name.must_equal 'ASCII-8BIT'
       recovered_secret = TSS.combine(shares: shares.sample(3))
+      recovered_secret[:hash].must_equal nil
+      recovered_secret[:hash_alg].must_equal 'NONE'
+      recovered_secret[:identifier].length.must_equal 16
+      recovered_secret[:process_time].must_be :>, 0.01
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+      recovered_secret[:threshold].must_equal 3
     end
   end
 
@@ -100,8 +130,13 @@ describe TSS do
       shares = TSS.split(secret: secret, threshold: 64, num_shares: 64, identifier: SecureRandom.hex(8), hash_alg: 'SHA256', select_by: 'first')
       shares.first.encoding.name.must_equal 'ASCII-8BIT'
       recovered_secret = TSS.combine(shares: shares)
+      recovered_secret[:hash].must_equal Digest::SHA256.hexdigest(secret)
+      recovered_secret[:hash_alg].must_equal 'SHA256'
+      recovered_secret[:identifier].length.must_equal 16
+      recovered_secret[:process_time].must_be :>, 0.01
       recovered_secret[:secret].must_equal secret
       recovered_secret[:secret].encoding.name.must_equal 'UTF-8'
+      recovered_secret[:threshold].must_equal 64
     end
   end
 end

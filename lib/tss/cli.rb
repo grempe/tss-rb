@@ -41,7 +41,7 @@ module TSS
       An Integer, 0-255, that represents a multiple to which the secret will be padded. For example if pad_blocksize is set to 8, the secret 'abc' would be left-padded to '00000abc' (the padding char is not zero, that is just for illustration).
 
       format :
-      Whether to output the shares as a binary octet string (RTSS), or the same encoded as more human friendly Base 64 text with some metadata prefixed.
+      Whether to output the shares as a binary octet string (RTSS), or as more human friendly URL safe Base 64 encoded text with some metadata.
 
       Example using all options:
 
@@ -61,7 +61,7 @@ module TSS
     def split
       args = {}
 
-      say('Enter your secret:')
+      say('Enter your (single line) secret :')
       args[:secret]        = ask('secret > ')
       args[:threshold]     = options[:threshold]     if options[:threshold]
       args[:num_shares]    = options[:num_shares]    if options[:num_shares]
@@ -72,9 +72,9 @@ module TSS
 
       begin
         shares = TSS.split(args)
-        shares.each {|s| say(s) }
-      rescue => e
-        say('TSS ERROR : ' + e.message)
+        shares.each { |s| say(s) }
+      rescue TSS::Error => e
+        say("ERROR : #{e.class} : #{e.message}")
       end
     end
 
@@ -83,7 +83,7 @@ module TSS
       shares = []
       last_ans = nil
 
-      say('Enter shares, one per line, blank line or dot (.) to finish:')
+      say('Enter shares, one per line, enter a blank line or dot (.) to finish:')
       until last_ans == '.' || last_ans == ''
         last_ans = ask('share> ')
         shares << last_ans unless last_ans.blank? || last_ans == '.'
@@ -93,14 +93,16 @@ module TSS
         sec = TSS.combine(shares: shares)
 
         say('')
-        say('Secret Recovered and Verified!')
-        say('')
-        say('identifier : ' + sec[:identifier]) if sec[:identifier].present?
-        say('threshold : ' + sec[:threshold].to_s) if sec[:threshold].present?
-        say('processing time (ms) : ' + sec[:processing_time_ms].to_s) if sec[:processing_time_ms].present?
-        say("secret :\n" + '*'*50 + "\n" + sec[:secret] + "\n" + '*'*50 + "\n") if sec[:secret].present?
-      rescue => e
-        say('TSS ERROR : ' + e.message)
+        say('SECRET RECOVERED')
+        say('****************')
+        say("hash : #{sec[:hash]}")
+        say("hash_alg : #{sec[:hash_alg]}")
+        say("identifier : #{sec[:identifier]}")
+        say("process_time : #{sec[:process_time]}ms")
+        say("threshold : #{sec[:threshold]}")
+        say("secret : #{sec[:secret]}")
+      rescue TSS::Error => e
+        say("ERROR : #{e.class} : #{e.message}")
       end
     end
   end

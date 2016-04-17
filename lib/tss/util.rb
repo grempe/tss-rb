@@ -235,7 +235,7 @@ module TSS
     def self.bytes_to_hex(bytes)
       hex = ''
       bytes.each { |b| hex += sprintf('%02x', b).upcase }
-      hex
+      hex.downcase
     end
 
     # Convert a hex String to an Array of Bytes

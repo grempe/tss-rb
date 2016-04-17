@@ -142,7 +142,7 @@ describe TSS::Util do
     it 'must present a correct result' do
       test_str = 'I ½ ♥ 💩'
       bytes = test_str.bytes.to_a
-      TSS::Util.bytes_to_hex(bytes).must_equal '4920C2BD20E299A520F09F92A9'
+      TSS::Util.bytes_to_hex(bytes).must_equal '4920c2bd20e299a520f09f92a9'
     end
   end
 
@@ -150,7 +150,7 @@ describe TSS::Util do
     it 'must present a correct result' do
       test_str = 'I ½ ♥ 💩'
       bytes = test_str.bytes.to_a
-      TSS::Util.hex_to_bytes('4920C2BD20E299A520F09F92A9').must_equal bytes
+      TSS::Util.hex_to_bytes('4920c2bd20e299a520f09f92a9').must_equal bytes
     end
   end
 
@@ -166,7 +166,7 @@ describe TSS::Util do
   describe 'utf8_to_hex' do
     it 'must present a correct result' do
       test_str = 'I ½ ♥ 💩'
-      TSS::Util.utf8_to_hex(test_str).must_equal '4920C2BD20E299A520F09F92A9'
+      TSS::Util.utf8_to_hex(test_str).must_equal '4920c2bd20e299a520f09f92a9'
     end
   end
 

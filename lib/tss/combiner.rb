@@ -48,7 +48,7 @@ module TSS
     #   contains the octet from the ith share.  The value of I(U, V) is
     #   computed, then appended to the output string.
     #
-    #   The output string is returned.
+    #   The output string is returned (along with some metadata).
     #
     def combine
       # unwrap 'human' shares into binary shares
@@ -57,7 +57,6 @@ module TSS
       end
 
       validate_all_shares(shares)
-      orig_shares_size = shares.size
       start_processing_time = Time.now
 
       h          = Util.extract_share_header(shares.sample)
@@ -89,6 +88,7 @@ module TSS
         # Build an Array of all possible `threshold` size combinations.
         share_combos = shares_bytes.combination(threshold).to_a
 
+        # Try each combination until one works.
         secret = nil
         while secret.nil? && share_combos.present?
           # Check a combination and shift it off the Array
@@ -100,18 +100,13 @@ module TSS
         secret = extract_secret_from_shares!(hash_id, shares_bytes)
       end
 
-      # return a Hash with the secret and metadata
+      # Return a Hash with the secret and metadata
       {
-        combinations: share_combos.present? ? share_combos.size : nil,
-        hash_alg: Hasher.key_from_code(hash_id).to_s,
+        hash: secret[:hash],
+        hash_alg: secret[:hash_alg].to_s,
         identifier: identifier,
-        num_shares_provided: orig_shares_size,
-        num_shares_used: share_combos.present? ? share_combos.first.size : shares.size,
-        processing_started_at: start_processing_time.utc.iso8601,
-        processing_finished_at: Time.now.utc.iso8601,
-        processing_time_ms: ((Time.now - start_processing_time)*1000).round(2),
-        secret: Util.bytes_to_utf8(secret),
-        shares_select_by: select_by,
+        process_time: ((Time.now - start_processing_time)*1000).round(2),
+        secret: Util.bytes_to_utf8(secret[:secret]),
         threshold: threshold
       }
     end
@@ -150,18 +145,20 @@ module TSS
         # RTSS : pop off the hash digest bytes from the tail of the secret. This
         # leaves `secret` with only the secret bytes remaining.
         orig_hash_bytes = secret.pop(Hasher.bytesize(hash_alg))
+        orig_hash_hex = Util.bytes_to_hex(orig_hash_bytes)
 
         # RTSS : verify that the recombined secret computes the same hash
         # digest now as when it was originally created.
         new_hash_bytes = Hasher.byte_array(hash_alg, Util.bytes_to_utf8(secret))
+        new_hash_hex = Util.bytes_to_hex(new_hash_bytes)
 
-        unless Util.secure_compare(Util.bytes_to_hex(orig_hash_bytes), Util.bytes_to_hex(new_hash_bytes))
+        unless Util.secure_compare(orig_hash_hex, new_hash_hex)
           raise TSS::InvalidSecretHashError, 'invalid shares, hash of secret does not equal embedded hash'
         end
       end
 
       if secret.present?
-        return secret
+        return { secret: secret, hash: orig_hash_hex, hash_alg: hash_alg }
       else
         raise TSS::NoSecretError, 'invalid shares, unable to recombine into a verifiable secret'
       end
