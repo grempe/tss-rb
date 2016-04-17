@@ -1,0 +1,7 @@
+:include:
+- lib
+:exclude:
+- test
+:theme: dark
+:show_link_in_terminal: true
+
