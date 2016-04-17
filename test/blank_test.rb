@@ -12,8 +12,8 @@ class EmptyFalse
   end
 end
 
-BLANK = [ EmptyTrue.new, nil, false, '', '   ', "  \n\t  \r ", '　', "\u00a0", [], {} ]
-NOT   = [ EmptyFalse.new, Object.new, true, 0, 1, 'a', [nil], { nil => 0 }, Time.now ]
+BLANK = [ EmptyTrue.new, nil, false, '', '   ', "  \n\t  \r ", '　', "\u00a0", [], {} ].freeze
+NOT   = [ EmptyFalse.new, Object.new, true, 0, 1, 'a', [nil], { nil => 0 }, Time.now ].freeze
 
 # extracted tests from rails/activesupport
 # See : https://github.com/rails/rails/blob/52ce6ece8c8f74064bb64e0a0b1ddd83092718e1/activesupport/test/core_ext/object/blank_test.rb

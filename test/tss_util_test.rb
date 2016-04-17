@@ -36,7 +36,7 @@ describe TSS::Util do
               0x12, 0x36, 0x5a, 0xee, 0x29, 0x7b, 0x8d, 0x8c,
               0x8f, 0x8a, 0x85, 0x94, 0xa7, 0xf2, 0x0d, 0x17,
               0x39, 0x4b, 0xdd, 0x7c, 0x84, 0x97, 0xa2, 0xfd,
-              0x1c, 0x24, 0x6c, 0xb4, 0xc7, 0x52, 0xf6, 0x00]
+              0x1c, 0x24, 0x6c, 0xb4, 0xc7, 0x52, 0xf6, 0x00].freeze
 
       TSS::Util::EXP.must_equal DOC_EXP
     end
@@ -76,7 +76,7 @@ describe TSS::Util do
               68,   17,  146,  217,   35,   32,   46,  137,
               180, 124,  184,   38,  119,  153,  227,  165,
               103,  74,  237,  222,  197,   49,  254,   24,
-              13,   99,  140,  128,  192,  247,  112,    7]
+              13,   99,  140,  128,  192,  247,  112,    7].freeze
 
       TSS::Util::LOG.must_equal DOC_LOG
     end
@@ -181,7 +181,7 @@ describe TSS::Util do
     it 'must maintain the length of a string the same size as the byte_multiple' do
       mult = 8
       res = TSS::Util.left_pad(mult, 'a'*8)
-      res.must_equal "aaaaaaaa"
+      res.must_equal 'aaaaaaaa'
       res.length.must_equal 8
     end
 
@@ -195,14 +195,14 @@ describe TSS::Util do
     it 'must not change the string if the byte_multiple is 0 (no padding)' do
       mult = 0
       res = TSS::Util.left_pad(mult, 'a'*9)
-      res.must_equal "aaaaaaaaa"
+      res.must_equal 'aaaaaaaaa'
       res.length.must_equal 9
     end
 
     it 'must pad with the specified padding character' do
       mult = 8
       res = TSS::Util.left_pad(mult, 'a', '0')
-      res.must_equal "0000000a"
+      res.must_equal '0000000a'
       res.length.must_equal 8
     end
   end

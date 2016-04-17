@@ -1,5 +1,5 @@
 # coveralls.io and coco are incompatible. Run each in their own env.
-if ENV['TRAVIS'] || ENV["CI"] || ENV["JENKINS_URL"] || ENV['TDDIUM'] || ENV["COVERALLS_RUN_LOCALLY"]
+if ENV['TRAVIS'] || ENV['CI'] || ENV['JENKINS_URL'] || ENV['TDDIUM'] || ENV['COVERALLS_RUN_LOCALLY']
   # coveralls.io : web based code coverage
   require 'coveralls'
   Coveralls.wear!

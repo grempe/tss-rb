@@ -1,8 +1,8 @@
 AllCops:
-  Exclude:
-    - 'vendor/**/*'
-    - 'db/schema.rb'
-    - 'test/**/*'
+  # Exclude:
+    # - 'vendor/**/*'
+    # - 'db/schema.rb'
+    # - 'test/**/*'
   UseCache: false
   # DisabledByDefault: true
 

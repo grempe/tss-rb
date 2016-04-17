@@ -89,13 +89,13 @@ describe TSS::Hasher do
 
   describe 'hash SHA1 to hex_string' do
     it 'must return a correct result' do
-      TSS::Hasher.hex_string('sha1', 'a string to hash').must_equal "8632b08226eb79cf5c827bb4708a2615b059a201"
+      TSS::Hasher.hex_string('sha1', 'a string to hash').must_equal '8632b08226eb79cf5c827bb4708a2615b059a201'
     end
   end
 
   describe 'hash SHA256 to hex_string' do
     it 'must return a correct result' do
-      TSS::Hasher.hex_string('sha256', 'a string to hash').must_equal "187c7a6cd902bc520f03015550d735a8e24f00f888c0328c9b6bcbd2d7c90cf7"
+      TSS::Hasher.hex_string('sha256', 'a string to hash').must_equal '187c7a6cd902bc520f03015550d735a8e24f00f888c0328c9b6bcbd2d7c90cf7'
     end
   end
 
@@ -109,7 +109,7 @@ describe TSS::Hasher do
     it 'must return a correct result' do
       # use .unpack('H*') to convert from bytestring to Hex since tests
       # sometimes return different formatted bytestrings
-      TSS::Hasher.byte_string('sha1', 'a string to hash').unpack('H*').must_equal ["8632b08226eb79cf5c827bb4708a2615b059a201"]
+      TSS::Hasher.byte_string('sha1', 'a string to hash').unpack('H*').must_equal ['8632b08226eb79cf5c827bb4708a2615b059a201']
     end
   end
 
@@ -117,7 +117,7 @@ describe TSS::Hasher do
     it 'must return a correct result' do
       # use .unpack('H*') to convert from bytestring to Hex since tests
       # sometimes return different formatted bytestrings
-      TSS::Hasher.byte_string('sha256', 'a string to hash').unpack('H*').must_equal ["187c7a6cd902bc520f03015550d735a8e24f00f888c0328c9b6bcbd2d7c90cf7"]
+      TSS::Hasher.byte_string('sha256', 'a string to hash').unpack('H*').must_equal ['187c7a6cd902bc520f03015550d735a8e24f00f888c0328c9b6bcbd2d7c90cf7']
     end
   end
 

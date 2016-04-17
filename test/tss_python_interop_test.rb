@@ -18,7 +18,7 @@ describe TSS do
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x1b\x03\xaa\x1f2\x90\xd4\x1e\x0fR\r\x84:\xb4jw\xbfJ\xf6\xf2\xe4\x03\x1b\xf8V\xe7\xc2\x98"]
 
       header = TSS::Util.extract_share_header(shares.first)
-      header[:identifier].must_equal "id"
+      header[:identifier].must_equal 'id'
       header[:hash_id].must_equal 0
       header[:threshold].must_equal 2
       header[:share_len].must_equal 27
@@ -43,7 +43,7 @@ describe TSS do
             ]
 
       header = TSS::Util.extract_share_header(shares.first)
-      header[:identifier].must_equal "id"
+      header[:identifier].must_equal 'id'
       header[:hash_id].must_equal 1
       header[:threshold].must_equal 2
       header[:share_len].must_equal 47
@@ -68,7 +68,7 @@ describe TSS do
               "id\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x02\x00;\x03\xf6jP\x99\xcdSK\x98o.\x87\xde\x84&\x8c\xb9\xd5\xf9\x15\x13\x0f|\xcd8Q\x99P&\xc8\xee^\xbd\xaa\xfc\xea$\x97@\xcb\x99/\xc4\x15r\x83\x1a\xd4z\xcav\xfbd[\xa3\xe4L\xe4\xfb"
             ]
       header = TSS::Util.extract_share_header(shares.first)
-      header[:identifier].must_equal "id"
+      header[:identifier].must_equal 'id'
       header[:hash_id].must_equal 2
       header[:threshold].must_equal 2
       header[:share_len].must_equal 59
@@ -94,7 +94,7 @@ describe TSS do
             ]
 
       header = TSS::Util.extract_share_header(shares.first)
-      header[:identifier].must_equal "id"
+      header[:identifier].must_equal 'id'
       header[:hash_id].must_equal 2
       header[:threshold].must_equal 2
       header[:share_len].must_equal 94
