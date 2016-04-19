@@ -15,7 +15,7 @@ module TSS
     method_option :input_file, :aliases => '-I', :banner => 'input_file', :type => :string, :desc => 'A filename to read the secret from'
     method_option :output_file, :aliases => '-O', :banner => 'output_file', :type => :string, :desc => 'A filename to write the shares to'
 
-    desc 'split', 'split a secret into shares'
+    desc 'split', 'Split a secret into shares'
 
     long_desc <<-LONGDESC
       `tss split` will generate a set of Threshold Secret Sharing shares from

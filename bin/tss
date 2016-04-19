@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 require 'tss'
+require 'tss/cli_version'
 require 'tss/cli_split'
 require 'tss/cli_combine'
 
