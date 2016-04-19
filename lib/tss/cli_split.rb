@@ -15,14 +15,15 @@ module TSS
     method_option :input_file, :aliases => '-I', :banner => 'input_file', :type => :string, :desc => 'A filename to read the secret from'
     method_option :output_file, :aliases => '-O', :banner => 'output_file', :type => :string, :desc => 'A filename to write the shares to'
 
-    desc 'split', 'Split a secret into shares'
+    desc 'split', 'Split a secret into shares that can be used to re-create the secret'
 
     long_desc <<-LONGDESC
       `tss split` will generate a set of Threshold Secret Sharing shares from
-      the SECRET provided. To protect your secret from being saved in your
-      shell history you will be prompted for it unless you are providing
-      the secret from an external file. You can enter as many lines
-      as you like within the limits of the max size for a secret.
+      a SECRET provided. A secret to be split can be provided using one of three
+      different input methods; STDIN, a path to a file, or when prompted
+      for it interactively. In all cases the secret should be UTF-8 or
+      US-ASCII encoded text and be no larger than 65,535 Bytes (including header
+      and hash verification bytes).
 
       Optional Params:
 
@@ -71,18 +72,37 @@ module TSS
     LONGDESC
 
     def split
+      log('Starting split')
+      log('options : ' + options.inspect)
       args = {}
 
-      # read and process a secret from a file
-      if options[:input_file].present?
+      # There are three ways to pass in the secret. STDIN, by specifying
+      # `--input-file`, and after being prompted and entering your secret
+      # line by line.
+
+      # STDIN
+      # Usage : echo 'foo bar baz' | bundle exec bin/tss split
+      unless STDIN.tty?
+        secret = $stdin.read
+        exit_if_binary!(secret)
+      end
+
+      # Read from an Input File
+      if STDIN.tty? && options[:input_file].present?
+        log("Input file specified : #{options[:input_file]}")
+
         if File.exist?(options[:input_file])
+          log("Input file found : #{options[:input_file]}")
           secret = File.open(options[:input_file], 'r'){ |file| file.read }
+          exit_if_binary!(secret)
         else
-          say("ERROR : Filename '#{options[:input_file]}' does not exist.")
+          err("Filename '#{options[:input_file]}' does not exist.")
           exit(1)
         end
-      else
-        # read and process a secret, line by line, ending with a (.)
+      end
+
+      # Enter a secret in response to a prompt.
+      if STDIN.tty? && options[:input_file].blank?
         say('Enter your secret, enter a dot (.) on a line by itself to finish :')
         last_ans = nil
         secret = []
@@ -92,14 +112,12 @@ module TSS
           secret << last_ans unless last_ans == '.'
         end
 
-        # Strip whitespace from the leading and trailing edge
-        # of the secret.
-        #
-        # Separate each line of the secret with newline, and
-        # also add a trailing newline so the hashes of the secret
-        # when split and then joined and placed in a file will
-        # also match.
+        # Strip whitespace from the leading and trailing edge of the secret.
+        # Separate each line of the secret with newline, and add a trailing
+        # newline so the hash of a secret when it is created will match
+        # the hash of a file output when recombinging shares.
         secret = secret.join("\n").strip + "\n"
+        exit_if_binary!(secret)
       end
 
       args[:secret]        = secret
@@ -111,16 +129,25 @@ module TSS
       args[:format]        = options[:format]        if options[:format]
 
       begin
+        log("Calling : TSS.split(#{args.inspect})")
         shares = TSS.split(args)
 
-        # write the shares to a file or STDOUT
         if options[:output_file].present?
-          File.open(options[:output_file], 'w'){ |somefile| somefile.puts shares.join("\n") }
+          file_header  = "# THRESHOLD SECRET SHARING SHARES\n"
+          file_header << "# #{Time.now.utc.iso8601}\n"
+          file_header << "# https://github.com/grempe/tss-rb\n"
+          file_header << "\n\n"
+
+          File.open(options[:output_file], 'w') do |somefile|
+            somefile.puts file_header + shares.join("\n")
+          end
+          log("Process complete : Output file written : #{options[:output_file]}")
         else
-          say(shares.join("\n"))
+          $stdout.puts shares.join("\n")
+          log('Process complete')
         end
       rescue TSS::Error => e
-        say("ERROR : #{e.class} : #{e.message}")
+        err("#{e.class} : #{e.message}")
       end
     end
   end

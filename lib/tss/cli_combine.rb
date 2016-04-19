@@ -12,7 +12,10 @@ module TSS
     desc 'combine', 'Enter shares to recover a split secret'
 
     long_desc <<-LONGDESC
-      `tss combine` will take as input a number of shares that were generated using the `tss split` command.
+      `tss combine` will take as input a number of shares that were generated
+      using the `tss split` command. Shares can be provided
+      using one of three different input methods; STDIN, a path to a file,
+      or when prompted for them interactively.
 
       You can enter shares one by one, or from a text file of shares. If the
       shares are successfully combined to recover a secret, the secret and
@@ -40,32 +43,62 @@ module TSS
     LONGDESC
 
     def combine
+      log('Starting combine')
+      log("options : #{options.inspect}")
       shares = []
 
-      # read and process shares from a file
-      if options[:input_file].present?
+      # There are three ways to pass in shares. STDIN, by specifying
+      # `--input-file`, and in response to being prompted and entering shares
+      # line by line.
+
+      # STDIN
+      # Usage : echo 'foo bar baz' | bundle exec bin/tss split | bundle exec bin/tss combine
+      unless STDIN.tty?
+        $stdin.each_line do |line|
+          line = line.strip
+          exit_if_binary!(line)
+
+          if line.start_with?('tss~') && line.match(Util::HUMAN_SHARE_RE)
+            shares << line
+          else
+            log("Skipping invalid share file line : #{line}")
+          end
+        end
+      end
+
+      # Read from an Input File
+      if STDIN.tty? && options[:input_file]
+        log("Input file specified : #{options[:input_file]}")
+
         if File.exist?(options[:input_file])
+          log("Input file found : #{options[:input_file]}")
+
           file = File.open(options[:input_file], 'r')
           while !file.eof?
              line = file.readline.strip
+             exit_if_binary!(line)
 
-             if line.present? && line.start_with?('tss~') && line.match(Util::HUMAN_SHARE_RE)
+             if line.start_with?('tss~') && line.match(Util::HUMAN_SHARE_RE)
                shares << line
+             else
+               log("Skipping invalid share file line : #{line}")
              end
           end
         else
-          say("ERROR : Filename '#{options[:input_file]}' does not exist.")
+          err("Filename '#{options[:input_file]}' does not exist.")
           exit(1)
         end
       end
 
-      if options[:input_file].blank?
+      # Enter shares in response to a prompt.
+      if STDIN.tty? && options[:input_file].blank?
         say('Enter shares, one per line, and a dot (.) on a line by itself to finish :')
         last_ans = nil
         until last_ans == '.'
           last_ans = ask('share> ').strip
+          exit_if_binary!(last_ans)
 
-          if last_ans.present? && last_ans != '.' && last_ans.start_with?('tss~') && last_ans.match(Util::HUMAN_SHARE_RE)
+          if last_ans != '.' && last_ans.start_with?('tss~') && last_ans.match(Util::HUMAN_SHARE_RE)
             shares << last_ans
           end
         end
@@ -94,7 +127,7 @@ module TSS
           say(sec[:secret])
         end
       rescue TSS::Error => e
-        say("ERROR : #{e.class} : #{e.message}")
+        err("#{e.class} : #{e.message}")
       end
     end
   end
