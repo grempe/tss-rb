@@ -50,6 +50,7 @@ module TSS
     #
     #   The output string is returned (along with some metadata).
     #
+    # rubocop:disable CyclomaticComplexity
     def combine
       # unwrap 'human' shares into binary shares
       if all_shares_appear_human?(shares)
@@ -110,6 +111,7 @@ module TSS
         threshold: threshold
       }
     end
+    # rubocop:enable CyclomaticComplexity
 
     private
 

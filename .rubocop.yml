@@ -232,7 +232,7 @@ Metrics/CyclomaticComplexity:
   Description: A complexity metric that is strongly correlated to the number of test
     cases needed to validate a method.
   Enabled: true
-  Max: 9
+  Max: 6
 
 Metrics/LineLength:
   Description: 'Limit lines to 80 characters.'

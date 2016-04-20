@@ -42,6 +42,7 @@ module TSS
       $ tss combine -I shares.txt -O secret.txt
     LONGDESC
 
+    # rubocop:disable CyclomaticComplexity
     def combine
       log('Starting combine')
       log("options : #{options.inspect}")
@@ -130,5 +131,6 @@ module TSS
         err("#{e.class} : #{e.message}")
       end
     end
+    # rubocop:enable CyclomaticComplexity
   end
 end

@@ -71,6 +71,7 @@ module TSS
       tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEGDSmh74Ng8WTziMGZXAm5XcpFLqDl2oP4MH24XhYf33IIg1WsPIyMAznI0DJUeLpN
     LONGDESC
 
+    # rubocop:disable CyclomaticComplexity
     def split
       log('Starting split')
       log('options : ' + options.inspect)
@@ -150,5 +151,6 @@ module TSS
         err("#{e.class} : #{e.message}")
       end
     end
+    # rubocop:enable CyclomaticComplexity
   end
 end
