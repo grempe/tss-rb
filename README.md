@@ -217,12 +217,12 @@ You can also clone the repository and verify the signatures locally using your
 own GnuPG installation. You can find my certificates and read about how to conduct
 this verification at [https://www.rempe.us/keys/](https://www.rempe.us/keys/).
 
-## Command Line Interface
+## Command Line Interface (CLI)
 
 When you install the gem a simple `tss` command-line interface (CLI)
 is also installed and should be available on your `$PATH`.
 
-The CLI is a simple interface for splitting and combining secrets. You can
+The CLI is a user interface for splitting and combining secrets. You can
 see the full set of options available with `tss help`, `tss help split`,
 or `tss help combine`.
 
@@ -545,7 +545,15 @@ in many times the life of the Universe. This option can only be used if the
 possible combinations for the number of shares and the threshold needed to
 reconstruct a secret result in a number of combinations that is small enough
 to have a chance at being processed. If the number of combinations will be too
-large then the an Exception will be raised before processing has started.
+large an Exception will be raised before processing has even started. The default
+maximum number of combinations that will be tried is 1,000,000.
+
+**Fun Fact**
+
+If 255 total shares are available, and the threshold value is 128, it would result in
+`2884329411724603169044874178931143443870105850987581016304218283632259375395`
+possible combinations of 128 shares that could be tried. That is *almost* as
+many combinations (`2.88 * 10^75`) as there are Atoms in the Universe (`10^80`).
 
 If the combine operation does not result in a secret being successfully
 extracted, then a `TSS::Error` exception will be raised.
@@ -554,13 +562,16 @@ extracted, then a `TSS::Error` exception will be raised.
 
 Initial validation of options is done when the `TSS.split` or `TSS.combine`
 methods are called. If the arguments passed are of the wrong Type or value
-a `Dry::Types::ConstraintError` Exception will be raised.
+a `TSS::ArgumentError` Exception will be raised.
 
-The splitting and combining operations may also raise `TSS::ArgumentError`
-or `TSS::Error` exceptions as they are run.
+The splitting and combining operations may also raise the following
+exception types:
 
-All Exception messages should include hints as to what went wrong in the
-`ex.messages` attribute.
+`TSS::NoSecretError`, `TSS::InvalidSecretHashError`,
+`TSS::ArgumentError`, `TSS::Error`
+
+All Exceptions should include hints as to what went wrong in the
+`#message` attribute.
 
 ## Share Data Formats
 
