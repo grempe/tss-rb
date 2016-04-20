@@ -59,33 +59,18 @@ sharing.
 ### CLI (Human Shares)
 
 ```text
-~/src$ gem install tss
-Successfully installed tss-0.1.0
-1 gem installed
-~/src$ tss split
-Enter your secret:
-secret >  my deep dark secret
-tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQBDoW7GJ66g6nQHQZVM_iUxMVEO7NHlwDaEM5FYsVwhBSfio-WF-w2gqSKRjBp6YyqTQKR
-tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQCxKBLxPsXuW4e7xE0zKiso49aEyuMKNIhjISe7ga865KDnBBpE1iZ6ESUkaWojKE3yNbc
-tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQDp1zQuADISueqk2UK3yNdBDh7XGlyoD2R6X9y-BCoI7iwAE02A8aj8vKO9ticeJpQMvDi
-tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQEgzj1RJXwKbu0pa5Z5qssmoX0cz22gVg8UCc6tasiqbDNi7bq_xKUczpYuc7utwDyPxV1
-tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQF4MRuOG4v2jIA2dpn9SDdPTLVPH9ICbeMNdzWo702YZr-F-u174yuaYxC3rPaQzuVxTNL
-~/src$ tss combine
-Enter shares, one per line, blank line or dot (.) to finish:
-share>  tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQBDoW7GJ66g6nQHQZVM_iUxMVEO7NHlwDaEM5FYsVwhBSfio-WF-w2gqSKRjBp6YyqTQKR
-share>  tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQCxKBLxPsXuW4e7xE0zKiso49aEyuMKNIhjISe7ga865KDnBBpE1iZ6ESUkaWojKE3yNbc
-share>  tss~v1~4a993275528d5ec7~3~NGE5OTMyNzU1MjhkNWVjNwIDADQDp1zQuADISueqk2UK3yNdBDh7XGlyoD2R6X9y-BCoI7iwAE02A8aj8vKO9ticeJpQMvDi
-share>  .
+$ echo 'secret unicode characters ½ ♥ 💩' | bundle exec bin/tss split -O /tmp/shares.txt
+$ bundle exec bin/tss combine -I /tmp/shares.txt
 
-Secret Recovered and Verified!
-
-identifier : 4a993275528d5ec7
+RECOVERED SECRET METADATA
+*************************
+hash : 6d1bc4242998bc170d35d374ebdf39295b271db900de25d249563a4622f113e0
+hash_alg : SHA256
+identifier : 6b02cfcfc24a2b50
+process_time : 0.55ms
 threshold : 3
-processing time (ms) : 0.64
 secret :
-**************************************************
-my deep dark secret
-**************************************************
+secret unicode characters ½ ♥ 💩
 ```
 
 ### Ruby (Binary Octet Shares)
@@ -235,105 +220,146 @@ this verification at [https://www.rempe.us/keys/](https://www.rempe.us/keys/).
 ## Command Line Interface
 
 When you install the gem a simple `tss` command-line interface (CLI)
-is also installed and should be available on your PATH.
+is also installed and should be available on your `$PATH`.
 
 The CLI is a simple interface for splitting and combining secrets. You can
-see the options available with `tss help`, `tss help split`, or `tss help combine`.
+see the full set of options available with `tss help`, `tss help split`,
+or `tss help combine`.
 
 ### CLI Secret Splitting
 
-```
-$ tss help split
-Usage:
-  tss split SECRET
+A secret to be split can be provided using one of three
+different input methods; `STDIN`, a path to a file, or when prompted
+interactively. In all cases the secret should be `UTF-8` or
+`US-ASCII` encoded text and be no larger than 65,535 Bytes
+(including header and hash verification bytes).
 
-Options:
-  -t, [--threshold=threshold]          # # of shares, of total, required to reconstruct a secret
-  -n, [--num-shares=num_shares]        # # of shares total that will be generated
-  -i, [--identifier=identifier]        # A unique identifier string, 0-16 Bytes, [a-zA-Z0-9.-_]
-  -h, [--hash-alg=hash_alg]            # A hash type for verification, NONE, SHA1, SHA256
-  -f, [--format=format]                # Share output format, binary or human
-                                       # Default: human
-  -p, [--pad-blocksize=pad_blocksize]  # Block size # secrets will be left-padded to, 0-255
+Each method for entering a secret may have pros and cons from a security
+perspective. You need to understand what threat model you want to protect
+against in order to choose wisely. Here are a few examples for how to
+split a secret.
 
-Description:
-  `tss split` will generate a set of Threshold Secret Sharing shares from the SECRET provided. To protect your secret from being saved in
-  your shell history you will be prompted for the single-line secret.
+**Example : `STDIN`**
 
-  Optional Params:
+Can read the secret from `STDIN` and write the split shares to a file. Be
+cautioned that this method may leave command history which may contain your
+secret.
 
-  num_shares : The number of total shares that will be generated.
-
-  threshold : The threshold is the number of shares required to recreate a secret. This is always a subset of the total shares.
-
-  identifier : A unique identifier string that will be attached to each share. It can be 0-16 Bytes long and use the characters
-  [a-zA-Z0-9.-_]
-
-  hash_alg : One of NONE, SHA1, SHA256. The algorithm to use for a one-way hash of the secret that will be split along with the secret.
-
-  pad_blocksize : An Integer, 0-255, that represents a multiple to which the secret will be padded. For example if pad_blocksize is set to
-  8, the secret 'abc' would be left-padded to '00000abc' (the padding char is not zero, that is just for illustration).
-
-  format : Whether to output the shares as a binary octet string (RTSS), or the same encoded as more human friendly Base 64 text with some
-  metadata prefixed.
-
-  Example using all options:
-
-  $ tss split -t 3 -n 6 -i abc123 -h SHA256 -p 8 -f human
-
-  Enter your secret:
-
-  secret > my secret
-
-  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEBQ-AQG3PuU4oT4qHOh2oJmu-vQwGE6O5hsGRBNtdAYauTIi7VoIdi5imWSrswDdRy
-  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADECM0OK5TSamH3nubH3FJ2EGZ4Yux4eQC-mvcYY85oOe6ae3kpvVXjuRUDU1m6sX20X
-  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEDb7yF4Vhr1JqNe2Nc8IXo98hmKAxsqC3c_Mn3r3t60NxQMC22ate51StDOM-BImch
-  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEEIXU0FajldnRtEQMLK-ZYMO2MRa0NmkBFfNAOx7olbgXLkVbP9txXMDsdokblVwke
-  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEFfYo7EcQUOpMH09Ggz_403rvy1r9_ckI_Pd_hm1tRxX8FfzEWyXMAoFCKTOfIKgMo
-  tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEGDSmh74Ng8WTziMGZXAm5XcpFLqDl2oP4MH24XhYf33IIg1WsPIyMAznI0DJUeLpN
-
+```text
+echo 'a secret' | bundle exec bin/tss split -O /tmp/shares.txt
 ```
 
-**Example CLI Split Usage**
+**Example : `--input-file`**
 
-For security purposes you will be prompted for your secret and cannot enter it
-on the command line.
+Can read the secret from a file and write the split shares to `STDOUT`. Be
+cautioned that storing the secret on a filesystem may expose you to certain
+attacks since it can be hard to fully erase files once written.
 
+```text
+$ bundle exec bin/tss split -I /tmp/secret.txt
+tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsBvAVAo1dH3QrsYl0S30j2VVTu6dZLRe9EEk6zLtPTwZNYk-t1e4SAA41D
+tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsCMfy6YlI-CQrd-l93Xtw8YqOWSP5ToolKTaZyO2fPYzceaaVmB30ycdVr
+tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsD4IDasmAapmVFkuYPMvuavCtXiJgPZsaBHglGm4FU_U2rGZzfapRk-ZNN
+tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsEbId8z1yNfEkDcezJpstkYenGLhJCMRglx2c0arPDS-YuXyiiNQQ-jYlq
+tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsFvfscH26p0yabGVWxyuzCv2EH7nQe9VfulMgAylVY1ZybLxEbWO1oBc9M
 ```
-$ tss split -i abc
-Enter your secret:
-secret >  abc
-tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQB4zjuAvBL1P2AJciAHdicf6I2qxMkLGo2Hhr4dhI_v1CSKrE=
-tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQCNAFhHSQd8nDgihYUrdM_IsMJqYZicLuk8jBS06kUJLZTU2g=
-tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQDtlvspaxAmQJhYDTV8Ut9AM8dISVFPXIE-1A2EavU-hTBbHQ=
-tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQE-NVr8ofyfwYVW9_2yauIT7t4Hmt9WeFNN_ADt7vpThYNeeU=
-tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQFeo_mSg-vFHSUsf03lTPKbbdslshaFCjtPpBndbkpkLSfRvk=
+
+**Example : `interactive`**
+
+Can read the secret interactively from a terminal and write the split shares
+to `STDOUT`. This method is more secure since the secret will not be stored
+in the command shell history or in a file on a filesystem that is hard to
+erase securely. It does not protect you from simple keylogger attacks though.
+
+```text
+$ bundle exec bin/tss split
+Enter your secret, enter a dot (.) on a line by itself to finish :
+secret >  the vault password is:
+secret >  V0ulT!
+secret >  .
+tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8BK-9qlyxRFFQypFLwzM_tLWOv-NRziwnc6blqFP8eh8wLro4qiQwBKfI0KuuvM0u1C6th1vxsyW8vyolXQ-4=
+tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8CEjeK01kAwE1wb7-wvLLlHoe6FGzhl7Hg9TCz_Npw7u0b31OpijFIKdxELfbnhvius7vGqn6KqQKqq69s4Co=
+tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8DTbCFZAMwoXU2650hAw5_XJZxzNHhJrJqLPy1vARk8APzWkgP7K79AtbVn1C49HpBSP2OL-BLumaZZWbU7YI=
+tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8E9eVJ83Knw3Fq1e9VaFSKdPKUAugyBqXzCsqov6etQIfEYe8Vt-ZVu3Ax7L1MWBNt-AQLN7YtczAG4QZ_7wI=
+tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8FqmJGRCiXokksUc3E1-gQNuNf2lUyt6Z50wau_3m5Xmks5PSz0XngkHqgXhsTKpGCA0JDsijsYFQ1L8_H4qo=
 ```
 
 ### CLI Share Combining
 
-**Example CLI Combine Usage**
+You can use the CLI to enter shares in order to recover a secret. Of course
+you will need at least the number of shares necessary as determined
+by the threshold when your shares were created. The `threshold` is visible
+as the third field in every `human` formatted share.
 
-For security purposes you will be prompted for your shares and cannot them
-on the command line.
+As with splitting a secret, there are also three methods of getting the shares
+into the CLI. `STDIN`, a path to a file containing shares, or interactively.
 
-```sh
-tss combine
-Enter shares, one per line, blank line or dot (.) to finish:
-share> tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQB4zjuAvBL1P2AJciAHdicf6I2qxMkLGo2Hhr4dhI_v1CSKrE=
-share> tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQCNAFhHSQd8nDgihYUrdM_IsMJqYZicLuk8jBS06kUJLZTU2g=
-share> tss~v1~abc~3~YWJjAAAAAAAAAAAAAAAAAAIDACQDtlvspaxAmQJhYDTV8Ut9AM8dISVFPXIE-1A2EavU-hTBbHQ=
-share>
+Here are some simple examples of using each:
 
-Secret Recovered and Verified!
+**Example : `STDIN`**
 
-identifier : abc
+```text
+$ echo 'a secret' | bundle exec bin/tss split | bundle exec bin/tss combine
+
+RECOVERED SECRET METADATA
+*************************
+hash : d4ea4551e9ff2cf56303875b1901fb8608a6164260c3b20c0976c7b606a4efc0
+hash_alg : SHA256
+identifier : fff58c38b14734f3
+process_time : 0.34ms
 threshold : 3
-processing time (ms) : 0.48
 secret :
-**************************************************
-abc
-**************************************************
+a secret
+```
+
+**Example : `--input-file`**
+
+```text
+$ echo 'a secret' | bundle exec bin/tss split -O /tmp/shares.txt
+$ bundle exec bin/tss combine -I /tmp/shares.txt
+
+RECOVERED SECRET METADATA
+*************************
+hash : d4ea4551e9ff2cf56303875b1901fb8608a6164260c3b20c0976c7b606a4efc0
+hash_alg : SHA256
+identifier : ae2983e30e0471fe
+process_time : 0.47ms
+threshold : 3
+secret :
+a secret
+```
+
+**Example : `interactive`**
+
+```text
+$ cat /tmp/shares.txt
+# THRESHOLD SECRET SHARING SHARES
+# 2016-04-19T23:57:17Z
+# https://github.com/grempe/tss-rb
+
+
+tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoBRjAH7wA0ncxJr3GliBqKxedf3bGaQH6AscuLqxtrKxxtxuC7A7a5Sqk=
+tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoClWVu75w-XHhoUgkbV5XaJ11stZCB5Z8HTArpv4QsIYDBpNO9DHQTbQ4=
+tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoDsnUaZf94pMArKZL7jmavzk9Qa6ZAvOB8e8nEAt0nyS6ga0XBucQOyGc=
+tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoETCWwSGLHcutzGCLb1yOkH7i6MF7j2b0wr0ZsUh6LuBmx6FkN2MbTkTc=
+tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoFazXEwgGBilMwY7k7DtDR9qqG7mgigMJLmIVB70eAULfQJ89xbXbONF4=
+
+$ bundle exec bin/tss combine
+Enter shares, one per line, and a dot (.) on a line by itself to finish :
+share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoBRjAH7wA0ncxJr3GliBqKxedf3bGaQH6AscuLqxtrKxxtxuC7A7a5Sqk=
+share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoClWVu75w-XHhoUgkbV5XaJ11stZCB5Z8HTArpv4QsIYDBpNO9DHQTbQ4=
+share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoDsnUaZf94pMArKZL7jmavzk9Qa6ZAvOB8e8nEAt0nyS6ga0XBucQOyGc=
+share>  .
+
+RECOVERED SECRET METADATA
+*************************
+hash : d4ea4551e9ff2cf56303875b1901fb8608a6164260c3b20c0976c7b606a4efc0
+hash_alg : SHA256
+identifier : ae2983e30e0471fe
+process_time : 0.7ms
+threshold : 3
+secret :
+a secret
 ```
 
 ## Ruby : Splitting a Secret
