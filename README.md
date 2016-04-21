@@ -51,14 +51,12 @@ advanced error correction schemes. These extras are not currently implemented.
 
 ## TL;DR
 
-No time for docs? Here is how to get going in 10 seconds or less with the
-CLI or in Ruby. The CLI defaults to using `human` shares, and Ruby defaults
-to a binary octet string representation. The default is `3 out of 5` threshold
-sharing.
+No time for docs? Here is how to get going in a minute, using the
+command line or Ruby, with the default `3 out of 5` secret sharing.
 
-### CLI (Human Shares)
+### Command Line Interface (CLI)
 
-```text
+```sh
 $ echo 'secret unicode characters ½ ♥ 💩' | bundle exec bin/tss split -O /tmp/shares.txt
 $ bundle exec bin/tss combine -I /tmp/shares.txt
 
@@ -73,17 +71,26 @@ secret :
 secret unicode characters ½ ♥ 💩
 ```
 
-### Ruby (Binary Octet Shares)
+### Ruby
 
-```text
-~/src$ irb
-irb(main):001:0> require 'tss'
-=> true
-irb(main):002:0> shares = TSS.split(secret: 'my deep dark secret')
-=> ["ab87eb60ae14dd87\x02\x03\x004\x01\xC6+\xC8\x9F\xE4\x7F\x85\x17\xBD\xF6\xE6\xE3m\xB9\xFF\x8CGoS\x90\xB0{\xAB\x04N\xE2\x8F\xA0\xDC\x06\xC7Y\xBE\xCD?\xBDe9\xF3\xDF\xEA\xC9s\x105\xA4\xD8TZw\x9E", "ab87eb60ae14dd87\x02\x03\x004\x02T\xBB\xEF\x12\x81\xE2\xD2\x8Et\x95\x8Eg\xE6x=HD8\xAD\xE5\xF2'OdBO4vL\xF90\xA5c\x82\xE8\x11\x94\x8E\xEEV\xB3\xAFh\xB7\x80Ac\x15\xD9\xC7\x93", "ab87eb60ae14dd87\x02\x03\x004\x03\xFF\xE9\a\xE9\x00\xF8'\xB9\xAD\x02\x1A\xEF\xAB\xB2\xA7\xA7q2\x8A\x84\xFBC\v\ny\x98\x12\xA2C\x9B\xBB\xC2qY\x05e\xF6\xC5\x11\x11K\xF6:\xEA\xE8\xF8\f\x8C4\x94\xA2", "ab87eb60ae14dd87\x02\x03\x004\x04\xD4e\xB5\xD2o\x8AxJ\x96\xBB\x80o\xDCC\x12\xA0u\xE0\xB7\xACP\x82\x14\x13\x04\xD0\xE1\x82\xC4:k\\\xA8\xC1g\xA2}\"\xCF\x04x\xEC*\xB9\xC8q,\x8F\xE1\xF6\xB4", "ab87eb60ae14dd87\x02\x03\x004\x05\x7F7])\xEE\x90\x8D}O,\x14\xE7\x91\x89\x88O@\xEA\x90\xCDY\xE6P}?\a\xC7V\xCBX\xE0;\xBA\x1A\x8A\xD6\x1Fi0C\x80\xB5x\xE4\xA0\xC8C\x16\f\xA5\x85"]
-irb(main):003:0> secret = TSS.combine(shares: shares)
-=> {:hash_alg=>"SHA256", :identifier=>"ab87eb60ae14dd87", :num_shares_provided=>5, :num_shares_used=>3, :processing_started_at=>"2016-04-13T19:37:14Z", :processing_finished_at=>"2016-04-13T19:37:14Z", :processing_time_ms=>0.63, :secret=>"my deep dark secret", :shares_select_by=>"first", :combinations=>nil, :threshold=>3}
-irb(main):004:0> puts secret[:secret]
+```ruby
+$ bundle exec bin/console
+[1] pry(main)> require 'tss'
+=> false
+[2] pry(main)> shares = TSS.split(secret: 'my deep dark secret')
+=> ["tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQBVLUhLlOvz_VWjEge2gH7PtqTsnSCpbfmMSFX98XUp0BmQAeeOTGDL0GVeGATWjbBZvOm",
+ "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQCmlZ_CZSBPk6m2-0WMEmcdzCsB8lH1oDalELd9VhlFPqby08kjm9tZBtONqXucgcnuFlQ",
+ "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQDo5p-Q6JLgZuUNtdjyjsCKphawUx8bNhW0FYjdk7V_4RRnZpzsCzi00hLb4igNYYraY5Z",
+ "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQEuqHxd94BQK1V-db70VLZxdIULyVIOGDrE7w7K3SVnk0UaEMf9xJFaYpKrXical7nR9PT",
+ "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQFg23wPejL_3hnFOyOKyBHmHri6aBzgjhnV6jFqGIldTPePpZIyVHK3tlP9FXSLd_rlgTa"]
+[3] pry(main)> secret = TSS.combine(shares: shares)
+=> {:hash=>"f1b91fef6a7535a974d3644c3eac16d2c907720c981290214d5d1db7cdb724af",
+ :hash_alg=>"SHA256",
+ :identifier=>"72e84cd688bf24fc",
+ :process_time=>0.58,
+ :secret=>"my deep dark secret",
+ :threshold=>3}
+[4] pry(main)> puts secret[:secret]
 my deep dark secret
 => nil
 ```
@@ -414,15 +421,14 @@ and then combined with it prior to secret splitting. This means that the hash
 is protected the same way as the secret. The algorithm used is
 `secret || hash(secret)`. You can use one of `NONE`, `SHA1`, or `SHA256`.
 
-The `format` arg takes a String Enum with either `'binary'` or `'human'` values.
-This instructs the output of a split to either provide an array of binary octet
-strings (standard RTSS format for interoperability), or a human friendly
-URL Safe Base 64 encoded version of that same binary output. The `human` format
-can be easily shared in a tweet, email, or even a URL. The `human` format is
-prefixed with `tss-VERSION-IDENTIFIER-THRESHOLD-` to make it easier to visually
-compare shares and see if they have matching identifiers and if you have
-enough shares to reach the threshold. Note, this prefix is not parsed
-or used by the `tss` combiner code at all. It is only for user convenience.
+The `format` arg takes a String Enum with either `'human'` (default) or
+`'binary'` values. This instructs the output of a split to either provide an
+array of binary octet strings (a standard RTSS format for interoperability), or
+a human friendly URL Safe Base 64 encoded version of that same binary output.
+The `human` format can be easily shared in a tweet, email, or even a URL. The
+`human` format is prefixed with `tss-VERSION-IDENTIFIER-THRESHOLD-` to make it
+easier to visually compare shares and see if they have matching identifiers and
+if you have enough shares to reach the threshold.
 
 The `pad_blocksize` arg takes an Integer between 0..255 inclusive. Your secret
 **MUST NOT** *begin* with this character (which was chosen to make less likely).
@@ -471,27 +477,25 @@ threshold  = 3
 num_shares = 5
 identifier = SecureRandom.hex(8)
 hash_alg   = 'SHA256'
+format     = 'human'
 
-s = TSS.split(secret: secret, threshold: threshold, num_shares: num_shares, identifier: identifier, hash_alg: 'SHA256', pad_blocksize: 16)
+s = TSS.split(secret: secret, threshold: threshold, num_shares: num_shares, identifier: identifier, hash_alg: 'SHA256', pad_blocksize: 16, format: format)
 
-=> ["c70963b2e20fccfd\x02\x03\x001\x01\x1Fg4\xDC\xAA\x96\x9D3\xCB\xFB\xF7\xB0\x91}\xCA\xB7\x0E\xB0\xF3.}O\xD0&Z\x11\xB0\xAB\xF48f#*\xBA\xB7)l\x05\xAF4\xFA\x95\x9C\xF2\x8E\xA6\xB9=",
- "c70963b2e20fccfd\x02\x03\x001\x02Y|\x1F\x1Co\x8BW\f^\xFE\xA5\x92G\xA4\xD0K\xC6@G\xDC\x02\xBF\xF1\xAE\xE7\vP\xF1*\x9C\xA5$\edM#\xB0\xEBy\a}\xA18\rBZ\x8A\xEE",
- "c70963b2e20fccfd\x02\x03\x001\x03Y\x044\xDF\xDA{\xA5P\xB5g3P\xF6\xBB{\x86\x13#\xAC3\xBB\x92\x8F`\xCF\xEE\xF1Sz{\x10\x03\xB9\xAFZ71>(=\xF2HI\xA8\x16*\xC1\x04",
- "c70963b2e20fccfd\x02\x03\x001\x04\x90\xA3\\W\xFB\xFF.\xE8&\xA3\x13N\x968\xC5\xEEg\xA1\xD8\xB6\xD9\xE9\xAAMz\xA9\xF3H\e7#\xE7\xA8\r@\xD9\\\xB8\x7F\xF3Q\x8D\x80\xCF1~\x97P",
- "c70963b2e20fccfd\x02\x03\x001\x05\x90\xDBw\x94N\x0F\xDC\xB4\xCD:\x85\x8C''n#\xB2\xC23Y`\xC4\xD4\x83RLR\xEAK\xD0\x96\xC0\n\xC6W\xCD\xDDm.\xC9\xDEd\xF1je\x0E\xDC\xBA"]
+=> ["tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEBe1METAFZDbpq7yHIFRvxr1PjBOLRnHzDyzDGrnDvYp90jMKPLWwo3eiWiuafRaYJ",
+ "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADECOeQaLXYx99N2SDKutj0_smSonMdMMzeJc_CWPRT8nppHkdsUc7hW6cSw_RDcaKMF",
+ "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEDXagBfmgOlQY8xXIUg0SvZ-yYgORZzeWiyjRBmsDMLwG7bLmmswSAOllamqGZ-_fb",
+ "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEExmXZHYJsLzipmqYryl5SDlhJzdZxLh_2y5bM_tOOmdm9rpws3izJqHrzmCHQi5mn",
+ "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEFoinCTpxTTe3jF-aR_yfC29B50fVk0M3dclIbWQe-KEJBU_6eHpAfe-cZ_5CVGM15"]
 
  secret = TSS.combine(shares: s)
- => {:identifier=>"c70963b2e20fccfd",
-  :num_shares_provided=>5,
-  :num_shares_used=>3,
-  :processing_started_at=>"2016-04-10T00:58:04Z",
-  :processing_finished_at=>"2016-04-10T00:58:04Z",
-  :processing_time_ms=>0.37,
-  :secret=>"foo bar baz",
-  :shares_select_by=>"first",
-  :combinations=>nil,
-  :threshold=>3}
-  ```
+
+ => {:hash=>"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7",
+ :hash_alg=>"SHA256",
+ :identifier=>"9fdfe2516240737e",
+ :process_time=>0.77,
+ :secret=>"foo bar baz",
+ :threshold=>3}
+ ```
 
 ## Ruby : Combining Shares to Recreate a Secret
 
@@ -577,7 +581,8 @@ All Exceptions should include hints as to what went wrong in the
 
 ### RTSS Binary
 
-TSS provides shares in a binary data format with the following fields:
+TSS provides shares in a binary data format with the following fields, and
+by default this binary data is wrapped in a `'human'` text format:
 
 `Identifier`. This field contains 16 octets. It identifies the secret
 with which a share is associated.  All of the shares associated
@@ -624,20 +629,21 @@ octets. It contains the actual share data.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-This code has been tested for binary compatibility with the
+This data format has been tested for binary compatibility with the
 [seb-m/tss](https://github.com/seb-m/tss) Python implementation of TSS. There
 are test cases to ensure it remains compatible.
 
 ### RTSS Human Friendly Wrapper
 
-To make `tss` more friendly to use when sending shares to others an enhanced
-version of the RTSS binary data format is provided that is more human friendly.
+To make `tss` friendlier to use when sending shares to others, an enhanced
+text wrapper around the RTSS binary data format is provided.
 
-Shares formatted this way can easily be shared via any communication channel.
+Shares formatted this way can easily be shared via most any communication channel.
 
 The `human` data format is simply the same RTSS binary data, URL Safe Base64
-encoded, and prefixed with a String thet contains the following tilde `~`
-separated elements. The `~` is used to ensure the share remains URL Safe.
+encoded, and prefixed with a String thet contains tilde `~` separated elements.
+The `~` is used as it is compatible with the URL Safe data and the allowed
+characters in the rest of the human format string.
 
 ```text
 tss~VERSION~IDENTIFIER~THRESHOLD~BASE64_ENCODED_BINARY_SHARE

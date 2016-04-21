@@ -36,7 +36,7 @@ module TSS
       .default('SHA256')
 
     attribute :format, Types::Strict::String.enum('binary', 'human')
-      .default('binary')
+      .default('human')
 
     attribute :pad_blocksize, Types::Coercible::Int
       .constrained(gteq: 0)

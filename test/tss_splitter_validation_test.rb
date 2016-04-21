@@ -211,13 +211,13 @@ describe TSS::Splitter do
 
     describe 'when padding arg is set' do
       it 'must return a correctly sized share' do
-        share_0 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 0).split
+        share_0 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 0, format: 'binary').split
         share_0.first.length.must_equal 22
 
-        share_8 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 8).split
+        share_8 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 8, format: 'binary').split
         share_8.first.length.must_equal 29
 
-        share_16 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 16).split
+        share_16 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 16, format: 'binary').split
         share_16.first.length.must_equal 37
       end
     end
