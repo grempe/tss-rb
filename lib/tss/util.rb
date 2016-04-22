@@ -234,7 +234,7 @@ module TSS
     # @return [String] a hex String
     def self.bytes_to_hex(bytes)
       hex = ''
-      bytes.each { |b| hex += sprintf('%02x', b).upcase }
+      bytes.each { |b| hex += sprintf('%02x', b) }
       hex.downcase
     end
 
