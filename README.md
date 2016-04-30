@@ -562,6 +562,9 @@ many combinations (`2.88 * 10^75`) as there are Atoms in the Universe (`10^80`).
 If the combine operation does not result in a secret being successfully
 extracted, then a `TSS::Error` exception will be raised.
 
+A great short read on this is
+[On the (Small) Number of Atoms in the Universe](http://norvig.com/atoms.html)
+
 ### Exception Handling
 
 Initial validation of options is done when the `TSS.split` or `TSS.combine`
