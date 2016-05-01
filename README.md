@@ -195,7 +195,7 @@ if any signed gem does not match its signature.
 
 ```
 # All dependent gems must be signed and verified.
-gem install tss -P MediumSecurity
+gem install tss -P HighSecurity
 ```
 
 ```
