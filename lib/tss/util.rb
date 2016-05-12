@@ -242,16 +242,8 @@ module TSS
     #
     # @param str [String] a hex String to convert
     # @return [Array<Integer>] an Array of Integer Bytes
-    # @raise [TSS::Error] if the hex value is not an even length
     def self.hex_to_bytes(str)
-      # clone so we don't destroy the original string passed in by slicing it.
-      strc = str.clone
-      bytes = []
-      len = strc.length
-      raise TSS::Error, 'invalid hex value, cannot be an odd length' if len.odd?
-      # slice off two hex chars at a time and convert them to an Integer Byte.
-      (len / 2).times { bytes << strc.slice!(0, 2).hex }
-      bytes
+      [str].pack('H*').unpack('C*')
     end
 
     # Convert a hex String to a UTF-8 String
