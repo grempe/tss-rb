@@ -426,7 +426,7 @@ The `format` arg takes a String Enum with either `'human'` (default) or
 array of binary octet strings (a standard RTSS format for interoperability), or
 a human friendly URL Safe Base 64 encoded version of that same binary output.
 The `human` format can be easily shared in a tweet, email, or even a URL. The
-`human` format is prefixed with `tss-VERSION-IDENTIFIER-THRESHOLD-` to make it
+`human` format is prefixed with `tss~VERSION~IDENTIFIER~THRESHOLD~` to make it
 easier to visually compare shares and see if they have matching identifiers and
 if you have enough shares to reach the threshold.
 
