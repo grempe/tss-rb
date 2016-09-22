@@ -398,10 +398,9 @@ of Bytes. e.g. `'foo'.bytes.to_a`
 The `num_shares` and `threshold` values are Integers representing the total
 number of shares desired, and how many of those shares are required to
 re-create a `secret`. Both arguments must be Integers with a value
-between `1-255` inclusive. They can be Strings if directly coercible to Ints.
-The `num_shares` value must be greater-than-or-equal-to the `threshold` value.
-If you don't pass in these options they will be set to `threshold = 3` and
-`num_shares = 5` by default.
+between `1-255` inclusive. The `num_shares` value must be
+greater-than-or-equal-to the `threshold` value. If you don't pass in
+these options they will be set to `threshold = 3` and `num_shares = 5` by default.
 
 The `identifier` is a `0-16` Byte String that will be embedded in
 each output share and should uniquely identify a secret. All shares output
