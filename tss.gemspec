@@ -48,7 +48,8 @@ Gem::Specification.new do |spec|
   spec.executables   << 'tss'
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'dry-types', '~> 0.7'
+  spec.add_dependency 'dry-types', '0.7.0'
+  spec.add_dependency 'dry-logic', '0.2.2'
   spec.add_dependency 'binary_struct', '~> 2.1'
   spec.add_dependency 'thor', '~> 0.19'
 
