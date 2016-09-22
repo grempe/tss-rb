@@ -1,7 +1,34 @@
 module TSS
   # Splitter has responsibility for splitting a secret into an Array of String shares.
-  class Splitter < Dry::Types::Struct
+  class Splitter
+    include Contracts::Core
     include Util
+
+    C = Contracts
+
+    attr_reader :secret, :threshold, :num_shares, :identifier, :hash_alg, :format, :pad_blocksize
+
+    Contract ({ :secret => String, :threshold => C::Maybe[C::Int], :num_shares => C::Maybe[C::Int], :identifier => C::Maybe[String], :hash_alg => C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], :format => C::Maybe[C::Enum['binary', 'human']], :pad_blocksize => C::Maybe[C::Int] }) => C::Any
+    def initialize(opts = {})
+      @secret = opts.fetch(:secret)
+      raise TSS::ArgumentError, 'Invalid secret length. Must be between 1 and 65502' unless @secret.size.between?(1,65502)
+
+      @threshold = opts.fetch(:threshold, 3)
+      raise TSS::ArgumentError, 'Invalid threshold size. Must be between 1 and 255' unless @threshold.between?(1,255)
+
+      @num_shares = opts.fetch(:num_shares, 5)
+      raise TSS::ArgumentError, 'Invalid num_shares size. Must be between 1 and 255' unless @num_shares.between?(1,255)
+
+      @identifier = opts.fetch(:identifier, SecureRandom.hex(8))
+      raise TSS::ArgumentError, 'Invalid identifier characters' unless @identifier =~ /^[a-zA-Z0-9\-\_\.]*$/i
+      raise TSS::ArgumentError, 'Invalid identifier size. Must be between 0 and 16' unless @identifier.size.between?(0,16)
+
+      @hash_alg = opts.fetch(:hash_alg, 'SHA256')
+      @format = opts.fetch(:format, 'human')
+
+      @pad_blocksize = opts.fetch(:pad_blocksize, 0)
+      raise TSS::ArgumentError, 'Invalid pad_blocksize size. Must be between 0 and 255' unless @pad_blocksize.between?(0,255)
+    end
 
     SHARE_HEADER_STRUCT = BinaryStruct.new([
                      'a16', :identifier,  # String, 16 Bytes, arbitrary binary string (null padded, count is width)
@@ -9,39 +36,6 @@ module TSS
                      'C', :threshold,
                      'n', :share_len
                     ])
-
-    # dry-types
-    constructor_type(:schema)
-
-    attribute :secret, Types::Strict::String
-      .constrained(min_size: 1)
-
-    attribute :threshold, Types::Coercible::Int
-      .constrained(gteq: 1)
-      .constrained(lteq: 255)
-      .default(3)
-
-    attribute :num_shares, Types::Coercible::Int
-      .constrained(gteq: 1)
-      .constrained(lteq: 255)
-      .default(5)
-
-    attribute :identifier, Types::Strict::String
-      .constrained(min_size: 0)
-      .constrained(max_size: 16)
-      .default { SecureRandom.hex(8) }
-      .constrained(format: /^[a-zA-Z0-9\-\_\.]*$/i) # 0 or more of these chars
-
-    attribute :hash_alg, Types::Strict::String.enum('NONE', 'SHA1', 'SHA256')
-      .default('SHA256')
-
-    attribute :format, Types::Strict::String.enum('binary', 'human')
-      .default('human')
-
-    attribute :pad_blocksize, Types::Coercible::Int
-      .constrained(gteq: 0)
-      .constrained(lteq: 255)
-      .default(0)
 
     # To split a secret into a set of shares, the following
     # procedure, or any equivalent method, is used:

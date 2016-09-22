@@ -2,10 +2,9 @@ require 'digest'
 require 'base64'
 require 'securerandom'
 require 'binary_struct'
-require 'dry-types'
+require 'contracts'
 require 'tss/blank'
 require 'tss/version'
-require 'tss/types'
 require 'tss/util'
 require 'tss/hasher'
 require 'tss/splitter'
@@ -81,7 +80,7 @@ module TSS
 
     begin
       TSS::Splitter.new(opts).split
-    rescue Dry::Types::ConstraintError => e
+    rescue ParamContractError => e
       raise TSS::ArgumentError, e.message
     end
   end
@@ -135,7 +134,7 @@ module TSS
 
     begin
       TSS::Combiner.new(opts).combine
-    rescue Dry::Types::ConstraintError => e
+    rescue ParamContractError => e
       raise TSS::ArgumentError, e.message
     end
   end

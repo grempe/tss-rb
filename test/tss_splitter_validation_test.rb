@@ -7,15 +7,15 @@ describe TSS::Splitter do
 
   describe 'secret' do
     it 'must raise an error if nil' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: nil).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: nil).split }
     end
 
     it 'must raise an error if not a string' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 123).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 123).split }
     end
 
     it 'must raise an error if size < 1' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: '').split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: '').split }
     end
 
     it 'must raise an error if size > 65_534' do
@@ -54,17 +54,11 @@ describe TSS::Splitter do
 
   describe 'threshold' do
     it 'must raise an error if size < 1' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', threshold: 0).split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', threshold: 0).split }
     end
 
     it 'must raise an error if size > 255' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', threshold: 256).split }
-    end
-
-    it 'must accept String Coercible to Integer' do
-      s = TSS::Splitter.new(secret: 'a', threshold: '1').split
-      secret = TSS::Combiner.new(shares: s.sample(1)).combine
-      secret[:threshold].must_equal 1
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', threshold: 256).split }
     end
 
     it 'must return an Array of default shares with a min size threshold' do
@@ -97,21 +91,15 @@ describe TSS::Splitter do
 
   describe 'num_shares' do
     it 'must raise an error if size < 1' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', num_shares: 0).split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', num_shares: 0).split }
     end
 
     it 'must raise an error if size > 255' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', num_shares: 256).split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', num_shares: 256).split }
     end
 
     it 'must raise an error if num_shares < threshold' do
       assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', threshold: 3, num_shares: 2).split }
-    end
-
-    it 'must accept String Coercible to Integer' do
-      s = TSS::Splitter.new(secret: 'a', threshold: 1, num_shares: '1').split
-      secret = TSS::Combiner.new(shares: s.sample(1)).combine
-      secret[:threshold].must_equal 1
     end
 
     it 'must return an Array of shares with a min size' do
@@ -144,11 +132,11 @@ describe TSS::Splitter do
 
   describe 'identifier' do
     it 'must raise an error if size > 16' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', identifier: 'a'*17).split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', identifier: 'a'*17).split }
     end
 
     it 'must raise an error if non-whitelisted characters' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', identifier: '&').split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', identifier: '&').split }
     end
 
     it 'must accept an empty String' do
@@ -174,11 +162,11 @@ describe TSS::Splitter do
 
   describe 'hash_alg' do
     it 'must raise an error if empty' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', hash_alg: '').split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', hash_alg: '').split }
     end
 
     it 'must raise an error if value is not in the Enum' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', hash_alg: 'foo').split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', hash_alg: 'foo').split }
     end
 
     it 'must accept an NONE String' do
@@ -202,11 +190,11 @@ describe TSS::Splitter do
 
   describe 'pad_blocksize' do
     it 'must raise an error if a an invalid negative value is passed' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', pad_blocksize: -1).split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', pad_blocksize: -1).split }
     end
 
     it 'must raise an error if a an invalid too high value is passed' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Splitter.new(secret: 'a', pad_blocksize: 256).split }
+      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', pad_blocksize: 256).split }
     end
 
     describe 'when padding arg is set' do

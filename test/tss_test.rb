@@ -11,7 +11,7 @@ describe TSS do
     end
 
     describe 'split' do
-      it 'must raise an TSS::ArgumentError if a Dry::Types::ConstraintError was raised by Splitter' do
+      it 'must raise an TSS::ArgumentError if a ParamContractError was raised by Splitter' do
         assert_raises(TSS::ArgumentError) { TSS.split(secret: '') }
         assert_raises(TSS::ArgumentError) { TSS.split(secret: 'foo', threshold: 0) }
       end
@@ -25,7 +25,7 @@ describe TSS do
     end
 
     describe 'combine' do
-      it 'must raise an TSS::ArgumentError if a Dry::Types::ConstraintError was raised by Combiner' do
+      it 'must raise an TSS::ArgumentError if a ParamContractError was raised by Combiner' do
         assert_raises(TSS::ArgumentError) { TSS.combine(shares: '') }
       end
     end

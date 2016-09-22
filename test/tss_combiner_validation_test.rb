@@ -10,25 +10,25 @@ describe TSS::Combiner do
 
   describe 'shares argument' do
     it 'must raise an error if a nil is passed' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Combiner.new(shares: nil).combine }
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: nil).combine }
     end
 
     it 'must raise an error if a non-Array is passed' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Combiner.new(shares: 'foo').combine }
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: 'foo').combine }
     end
 
     it 'must raise an error if an too small empty Array is passed' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Combiner.new(shares: []).combine }
+      assert_raises(TSS::ArgumentError) { TSS::Combiner.new(shares: []).combine }
     end
 
     it 'must raise an error if a too large Array is passed' do
       arr = []
       256.times { arr << 'foo' }
-      assert_raises(Dry::Types::ConstraintError) { TSS::Combiner.new(shares: arr).combine }
+      assert_raises(TSS::ArgumentError) { TSS::Combiner.new(shares: arr).combine }
     end
 
     it 'must raise an error if Array with members that are not Strings is passed' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Combiner.new(shares: ['foo', :bar, 123]).combine }
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: ['foo', :bar, 123]).combine }
     end
 
     it 'must raise an error if an invalid share is passed' do
@@ -56,7 +56,7 @@ describe TSS::Combiner do
 
   describe 'share selection args' do
     it 'must raise an error if a an invalid share_selection: value is passed' do
-      assert_raises(Dry::Types::ConstraintError) { TSS::Combiner.new(shares: @shares, select_by: 'foo').combine }
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: @shares, select_by: 'foo').combine }
     end
 
     describe 'when share_selection arg is unset' do

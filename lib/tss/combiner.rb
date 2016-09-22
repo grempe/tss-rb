@@ -2,21 +2,21 @@ module TSS
   # Combiner has responsibility for combining an Array of String shares back
   # into the original secret the shares were split from. It is also responsible
   # for doing extensive validation of user provided shares and ensuring
-  # that any recovered secret matches the hash of the original secret..
-  class Combiner  < Dry::Types::Struct
+  # that any recovered secret matches the hash of the original secret.
+  class Combiner
+    include Contracts::Core
     include Util
 
-    # dry-types
-    constructor_type(:schema)
+    C = Contracts
 
-    attribute :shares, Types::Strict::Array
-      .constrained(min_size: 1)
-      .constrained(max_size: 255)
-      .member(Types::Strict::String)
+    attr_reader :shares, :select_by
 
-    attribute :select_by, Types::Strict::String
-      .enum('first', 'sample', 'combinations')
-      .default('first')
+    Contract ({ :shares => C::ArrayOf[String], :select_by => C::Maybe[C::Enum['first', 'sample', 'combinations']] }) => C::Any
+    def initialize(opts = {})
+      @shares = opts.fetch(:shares)
+      raise TSS::ArgumentError, 'Invalid number of shares. Must be between 1 and 255' unless @shares.size.between?(1,255)
+      @select_by = opts.fetch(:select_by, 'first')
+    end
 
     # To reconstruct a secret from a set of shares, the following
     # procedure, or any equivalent method, is used:
@@ -124,6 +124,7 @@ module TSS
     # @return [Array<Integer>] returns the secret as an Array of Bytes if it was recovered from the shares and validated
     # @raise [TSS::NoSecretError] if the secret was not able to be recovered (with no hash)
     # @raise [TSS::InvalidSecretHashError] if the secret was able to be recovered but the hash test failed
+    Contract C::Int, C::ArrayOf[C::ArrayOf[C::Num]] => ({ :secret => C::ArrayOf[C::Num], :hash => C::Maybe[String], :hash_alg => C::Enum[:NONE, :SHA1, :SHA256] })
     def extract_secret_from_shares!(hash_id, shares_bytes)
       secret = []
 
@@ -168,8 +169,9 @@ module TSS
 
     # Strip off leading padding chars ("\u001F", decimal 31)
     #
-    # @param secret [String] the secret to be stripped
-    # @return [String] returns the secret, stripped of the leading padding char
+    # @param secret [Array<Integer>] the secret to be stripped
+    # @return [Array<Integer>,nil] returns the secret, stripped of the leading padding char
+    Contract C::ArrayOf[C::Num] => C::Maybe[Array]
     def strip_left_pad(secret)
       secret.shift while secret.first == 31
     end
@@ -178,6 +180,7 @@ module TSS
     #
     # @param shares [Array<String>] the shares to be evaluated
     # @return [true,false] returns true if all shares match the patterns, false if not
+    Contract C::ArrayOf[String] => C::Bool
     def all_shares_appear_human?(shares)
       shares.all? do |s|
         # test for starting with 'tss' since regex match against
@@ -191,6 +194,7 @@ module TSS
     # @param shares [Array<String>] the shares to be converted
     # @return [Array<String>] returns an Array of String shares in binary octet String format
     # @raise [TSS::ArgumentError] if shares appear invalid
+    Contract C::ArrayOf[String] => C::ArrayOf[String]
     def convert_shares_human_to_binary(shares)
       shares.map do |s|
         s_b64 = s.match(Util::HUMAN_SHARE_RE)
@@ -207,35 +211,12 @@ module TSS
       end
     end
 
-    # Does the header Hash have all expected keys?
-    #
-    # @param header [Hash] the header Hash to be evaluated
-    # @return [true, false] returns true if all expected keys exist, false if not
-    def header_has_valid_keys?(header)
-      header.is_a?(Hash) &&
-        header.key?(:identifier) &&
-        header.key?(:hash_id) &&
-        header.key?(:threshold) &&
-        header.key?(:share_len)
-    end
-
-    # Does the header Hash provided have all expected attribute types?
-    #
-    # @param header [Hash] the header Hash to be evaluated
-    # @return [true, false] returns true if all keys have expected value types, false if not
-    def header_has_valid_values?(header)
-      header.is_a?(Hash) &&
-        header[:identifier].is_a?(String) &&
-        header[:hash_id].is_a?(Integer) &&
-        header[:threshold].is_a?(Integer) &&
-        header[:share_len].is_a?(Integer)
-    end
-
     # Do all shares have a common Byte size? They are invalid if not.
     #
     # @param shares [Array<String>] the shares to be evaluated
     # @return [true] returns true if all shares have the same Byte size
     # @raise [TSS::ArgumentError] if shares appear invalid
+    Contract C::ArrayOf[String] => C::Bool
     def shares_have_same_bytesize!(shares)
       shares.each do |s|
         unless s.bytesize == shares.first.bytesize
@@ -250,10 +231,11 @@ module TSS
     # @param shares [Array<String>] the shares to be evaluated
     # @return [true] returns true if all shares have the same header
     # @raise [TSS::ArgumentError] if shares appear invalid
+    Contract C::ArrayOf[String] => C::Bool
     def shares_have_valid_headers!(shares)
       fh = Util.extract_share_header(shares.first)
 
-      unless header_has_valid_keys?(fh) && header_has_valid_values?(fh)
+      unless Contract.valid?(fh, ({ :identifier => String, :hash_id => C::Int, :threshold => C::Int, :share_len => C::Int }))
         raise TSS::ArgumentError, 'invalid shares, headers have invalid structure'
       end
 
@@ -271,6 +253,7 @@ module TSS
     # @param shares [Array<String>] the shares to be evaluated
     # @return [true] returns true if all shares have the same header
     # @raise [TSS::ArgumentError] if shares appear invalid
+    Contract C::ArrayOf[String] => C::Bool
     def shares_have_expected_length!(shares)
       shares.each do |s|
         unless s.bytesize > Splitter::SHARE_HEADER_STRUCT.size + 1
@@ -285,6 +268,7 @@ module TSS
     # @param shares [Array<String>] the shares to be evaluated
     # @return [true] returns true if there are enough shares
     # @raise [TSS::ArgumentError] if shares appear invalid
+    Contract C::ArrayOf[String] => C::Bool
     def shares_meet_threshold_min!(shares)
       fh = Util.extract_share_header(shares.first)
       unless shares.size >= fh[:threshold]
@@ -298,6 +282,7 @@ module TSS
     #
     # @param shares [Array<String>] the shares to be evaluated
     # @return [true] returns true if all tests pass
+    Contract C::ArrayOf[String] => C::Bool
     def validate_all_shares(shares)
       if shares_have_valid_headers!(shares) &&
           shares_have_same_bytesize!(shares) &&
@@ -314,6 +299,7 @@ module TSS
     # @param shares_bytes [Array<Array>] the shares as Byte Arrays to be evaluated
     # @return [true] returns true if there are enough shares
     # @raise [TSS::ArgumentError] if shares appear invalid
+    Contract C::ArrayOf[C::ArrayOf[C::Num]] => C::Bool
     def shares_bytes_have_valid_indexes!(shares_bytes)
       u = shares_bytes.map do |s|
         raise TSS::ArgumentError, 'invalid shares, no index' if s[0].blank?
@@ -334,6 +320,7 @@ module TSS
     # @param hash_id [Integer] the shares as Byte Arrays to be evaluated
     # @return [true] returns true if OK to use combinations mode
     # @raise [TSS::ArgumentError] if hash_id represents a non hashing type
+    Contract C::Int => C::Bool
     def share_combinations_mode_allowed!(hash_id)
       unless Hasher.codes_without_none.include?(hash_id)
         raise TSS::ArgumentError, 'invalid options, combinations mode can only be used with hashed shares.'
@@ -355,6 +342,7 @@ module TSS
     # @param max_combinations [Integer] the max (1_000_000) number of combinations allowed
     # @return [true] returns true if a reasonable number of combinations
     # @raise [TSS::ArgumentError] if the number of possible combinations is unreasonably high
+    Contract C::ArrayOf[String], C::Int, C::Int => C::Bool
     def share_combinations_out_of_bounds!(shares, threshold, max_combinations = 1_000_000)
       combinations = Util.calc_combinations(shares.size, threshold)
       if combinations > max_combinations
