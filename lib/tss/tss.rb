@@ -1,6 +1,6 @@
 require 'digest'
 require 'base64'
-require 'securerandom'
+require 'sysrandom/securerandom'
 require 'binary_struct'
 require 'contracts'
 require 'tss/blank'

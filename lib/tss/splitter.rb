@@ -107,7 +107,13 @@ module TSS
       #
       secret_bytes.each do |byte|
         # Unpack random Byte String into Byte Array of 8 bit unsigned Integers
-        r = SecureRandom.random_bytes(threshold - 1).unpack('C*')
+        # Using a conditional test for now due to bug in sysrandom
+        # https://github.com/cryptosphere/sysrandom/issues/13
+        r = if threshold == 1
+          []
+        else
+          SecureRandom.random_bytes(threshold - 1).unpack('C*')
+        end
 
         # Build each share one byte at a time for each byte of the secret.
         shares.map! { |s| s << Util.f(s[0], [byte] + r) }
