@@ -57,8 +57,8 @@ command line or Ruby, with the default `3 out of 5` secret sharing.
 ### Command Line Interface (CLI)
 
 ```sh
-$ echo 'secret unicode characters ½ ♥ 💩' | bundle exec bin/tss split -O /tmp/shares.txt
-$ bundle exec bin/tss combine -I /tmp/shares.txt
+$ echo 'secret unicode characters ½ ♥ 💩' | tss split -O /tmp/shares.txt
+$ tss combine -I /tmp/shares.txt
 
 RECOVERED SECRET METADATA
 *************************
@@ -253,7 +253,7 @@ cautioned that this method may leave command history which may contain your
 secret.
 
 ```text
-echo 'a secret' | bundle exec bin/tss split -O /tmp/shares.txt
+echo 'a secret' | tss split -O /tmp/shares.txt
 ```
 
 **Example : `--input-file`**
@@ -263,7 +263,7 @@ cautioned that storing the secret on a filesystem may expose you to certain
 attacks since it can be hard to fully erase files once written.
 
 ```text
-$ bundle exec bin/tss split -I /tmp/secret.txt
+$ tss split -I /tmp/secret.txt
 tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsBvAVAo1dH3QrsYl0S30j2VVTu6dZLRe9EEk6zLtPTwZNYk-t1e4SAA41D
 tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsCMfy6YlI-CQrd-l93Xtw8YqOWSP5ToolKTaZyO2fPYzceaaVmB30ycdVr
 tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsD4IDasmAapmVFkuYPMvuavCtXiJgPZsaBHglGm4FU_U2rGZzfapRk-ZNN
@@ -279,7 +279,7 @@ in the command shell history or in a file on a filesystem that is hard to
 erase securely. It does not protect you from simple keylogger attacks though.
 
 ```text
-$ bundle exec bin/tss split
+$ tss split
 Enter your secret, enter a dot (.) on a line by itself to finish :
 secret >  the vault password is:
 secret >  V0ulT!
@@ -306,7 +306,7 @@ Here are some simple examples of using each:
 **Example : `STDIN`**
 
 ```text
-$ echo 'a secret' | bundle exec bin/tss split | bundle exec bin/tss combine
+$ echo 'a secret' | tss split | tss combine
 
 RECOVERED SECRET METADATA
 *************************
@@ -322,8 +322,8 @@ a secret
 **Example : `--input-file`**
 
 ```text
-$ echo 'a secret' | bundle exec bin/tss split -O /tmp/shares.txt
-$ bundle exec bin/tss combine -I /tmp/shares.txt
+$ echo 'a secret' | tss split -O /tmp/shares.txt
+$ tss combine -I /tmp/shares.txt
 
 RECOVERED SECRET METADATA
 *************************
@@ -351,7 +351,7 @@ tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoDsnUaZf94pMArKZL7jmavzk9Qa6
 tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoETCWwSGLHcutzGCLb1yOkH7i6MF7j2b0wr0ZsUh6LuBmx6FkN2MbTkTc=
 tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoFazXEwgGBilMwY7k7DtDR9qqG7mgigMJLmIVB70eAULfQJ89xbXbONF4=
 
-$ bundle exec bin/tss combine
+$ tss combine
 Enter shares, one per line, and a dot (.) on a line by itself to finish :
 share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoBRjAH7wA0ncxJr3GliBqKxedf3bGaQH6AscuLqxtrKxxtxuC7A7a5Sqk=
 share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoClWVu75w-XHhoUgkbV5XaJ11stZCB5Z8HTArpv4QsIYDBpNO9DHQTbQ4=
