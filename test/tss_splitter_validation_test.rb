@@ -188,6 +188,37 @@ describe TSS::Splitter do
     end
   end
 
+  describe 'format' do
+    it 'must raise an error if a an invalid value is passed' do
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', format: 'alien').split }
+    end
+
+    it 'must default to human format output when no param is passed' do
+      s = TSS::Splitter.new(secret: 'a').split
+      s.first.must_match(/^tss~/)
+    end
+
+    it 'must default to human format output when nil is passed' do
+      s = TSS::Splitter.new(secret: 'a', format: nil).split
+      s.first.must_match(/^tss~/)
+    end
+
+    it 'must accept a human option' do
+      s = TSS::Splitter.new(secret: 'a', format: 'human').split
+      s.first.encoding.to_s.must_equal 'UTF-8'
+      s.first.must_match(/^tss~/)
+      secret = TSS::Combiner.new(shares: s).combine
+      secret[:secret].must_equal 'a'
+    end
+
+    it 'must accept a binary option' do
+      s = TSS::Splitter.new(secret: 'a', format: 'binary').split
+      s.first.encoding.to_s.must_equal 'ASCII-8BIT'
+      secret = TSS::Combiner.new(shares: s).combine
+      secret[:secret].must_equal 'a'
+    end
+  end
+
   describe 'pad_blocksize' do
     it 'must raise an error if a an invalid negative value is passed' do
       assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', pad_blocksize: -1).split }

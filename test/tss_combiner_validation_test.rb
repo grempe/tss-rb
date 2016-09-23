@@ -17,6 +17,15 @@ describe TSS::Combiner do
       assert_raises(ParamContractError) { TSS::Combiner.new(shares: 'foo').combine }
     end
 
+    it 'must raise an error if any nils are passed in the shares array' do
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: @shares << nil).combine }
+    end
+
+    it 'must raise an error if Array with members that are not Strings is passed' do
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: ['foo', :bar]).combine }
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: ['foo', 123]).combine }
+    end
+
     it 'must raise an error if an too small empty Array is passed' do
       assert_raises(TSS::ArgumentError) { TSS::Combiner.new(shares: []).combine }
     end
@@ -25,10 +34,6 @@ describe TSS::Combiner do
       arr = []
       256.times { arr << 'foo' }
       assert_raises(TSS::ArgumentError) { TSS::Combiner.new(shares: arr).combine }
-    end
-
-    it 'must raise an error if Array with members that are not Strings is passed' do
-      assert_raises(ParamContractError) { TSS::Combiner.new(shares: ['foo', :bar, 123]).combine }
     end
 
     it 'must raise an error if an invalid share is passed' do
