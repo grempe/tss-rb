@@ -13,7 +13,9 @@ module TSS
 
     Contract ({ :shares => C::ArrayOf[String], :select_by => C::Maybe[C::Enum['first', 'sample', 'combinations']] }) => C::Any
     def initialize(opts = {})
-      @shares = opts.fetch(:shares)
+      # clone the incoming shares so the object passed to this
+      # function doesn't get modified.
+      @shares = opts.fetch(:shares).clone
       raise TSS::ArgumentError, 'Invalid number of shares. Must be between 1 and 255' unless @shares.size.between?(1,255)
       @select_by = opts.fetch(:select_by, 'first')
     end
