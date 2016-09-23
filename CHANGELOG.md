@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.2.0 (9/23/2016)
+
+* clone the shares object passed to TSS.combine to prevent modification
+* test enhancements
+* use cryptosphere/sysrandom in place of native securerandom
+* integer args are no longer coercible from Strings
+* Remove dry-* in favor of contracts (http://egonschiele.github.io/contracts.ruby/)
+* readme fixes
+
 ## v0.1.1 (4/14/2016)
 
 * documentation enhancements
