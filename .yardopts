@@ -1,1 +1,1 @@
---no-private  lib/**/*.rb - README.md LICENSE.txt CODE_OF_CONDUCT.md
+--plugin contracts -e lib/tss/custom_contracts.rb --no-private  lib/**/*.rb - README.md LICENSE.txt CODE_OF_CONDUCT.md

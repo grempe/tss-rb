@@ -217,8 +217,8 @@ module TSS
 
     # Convert a UTF-8 String to an Array of Bytes
     #
-    # @param str [String] a UTF-8 String to convert
-    # @return [Array<Integer>] an Array of Integer Bytes
+    # @param str a UTF-8 String to convert
+    # @return an Array of Integer Bytes
     Contract String => C::ArrayOf[C::Int]
     def self.utf8_to_bytes(str)
       str.bytes.to_a
@@ -226,8 +226,8 @@ module TSS
 
     # Convert an Array of Bytes to a UTF-8 String
     #
-    # @param bytes [Array<Integer>] an Array of Bytes to convert
-    # @return [String] a UTF-8 String
+    # @param bytes an Array of Bytes to convert
+    # @return a UTF-8 String
     Contract C::ArrayOf[C::Int] => String
     def self.bytes_to_utf8(bytes)
       bytes.pack('C*').force_encoding('utf-8')
@@ -235,8 +235,8 @@ module TSS
 
     # Convert an Array of Bytes to a hex String
     #
-    # @param bytes [Array<Integer>] an Array of Bytes to convert
-    # @return [String] a hex String
+    # @param bytes an Array of Bytes to convert
+    # @return a hex String
     Contract C::ArrayOf[C::Int] => String
     def self.bytes_to_hex(bytes)
       hex = ''
@@ -246,8 +246,8 @@ module TSS
 
     # Convert a hex String to an Array of Bytes
     #
-    # @param str [String] a hex String to convert
-    # @return [Array<Integer>] an Array of Integer Bytes
+    # @param str a hex String to convert
+    # @return an Array of Integer Bytes
     Contract String => C::ArrayOf[C::Int]
     def self.hex_to_bytes(str)
       [str].pack('H*').unpack('C*')
@@ -255,8 +255,8 @@ module TSS
 
     # Convert a hex String to a UTF-8 String
     #
-    # @param hex [String] a hex String to convert
-    # @return [String] a UTF-8 String
+    # @param hex a hex String to convert
+    # @return a UTF-8 String
     Contract String => String
     def self.hex_to_utf8(hex)
       bytes_to_utf8(hex_to_bytes(hex))
@@ -264,8 +264,8 @@ module TSS
 
     # Convert a UTF-8 String to a hex String
     #
-    # @param str [String] a UTF-8 String to convert
-    # @return [String] a hex String
+    # @param str a UTF-8 String to convert
+    # @return a hex String
     Contract String => String
     def self.utf8_to_hex(str)
       bytes_to_hex(utf8_to_bytes(str))
@@ -273,10 +273,10 @@ module TSS
 
     # Left pad a String with pad_char in multiples of byte_multiple
     #
-    # @param byte_multiple [Integer] pad in blocks of this size
-    # @param input_string [String] the String to pad
-    # @param pad_char [String] the String to pad with
-    # @return [String] a padded String
+    # @param byte_multiple pad in blocks of this size
+    # @param input_string the String to pad
+    # @param pad_char the String to pad with
+    # @return a padded String
     Contract C::Int, String, String => String
     def self.left_pad(byte_multiple, input_string, pad_char = "\u001F")
       return input_string if byte_multiple == 0
@@ -295,9 +295,9 @@ module TSS
     #   via timing attacks. The user provided value should always be passed
     #   in as the second parameter so as not to leak info about the secret.
     #
-    # @param a [String] the private value
-    # @param b [String] the user provided value
-    # @return [true, false] whether the strings match or not
+    # @param a the private value
+    # @param b the user provided value
+    # @return whether the strings match or not
     Contract String, String => C::Bool
     def self.secure_compare(a, b)
       return false unless a.bytesize == b.bytesize
@@ -312,8 +312,8 @@ module TSS
     # Extract the header data from a binary share.
     # Extra "\x00" padding in the identifier will be removed.
     #
-    # @param share [String] a binary octet share
-    # @return [Hash] header attributes
+    # @param share a binary octet share
+    # @return header attributes
     Contract String => Hash
     def self.extract_share_header(share)
       h = Splitter::SHARE_HEADER_STRUCT.decode(share)
@@ -323,8 +323,8 @@ module TSS
 
     # Calculate the factorial for an Integer.
     #
-    # @param n [Integer] the Integer to calculate for
-    # @return [Integer] the factorial of n
+    # @param n the Integer to calculate for
+    # @return the factorial of n
     Contract C::Int => C::Int
     def self.factorial(n)
       (1..n).reduce(:*) || 1
@@ -340,9 +340,9 @@ module TSS
     # * http://chriscontinanza.com/2010/10/29/Array.html
     # * http://stackoverflow.com/questions/2434503/ruby-factorial-function
     #
-    # @param n [Integer] the total number of shares
-    # @param r [Integer] the threshold number of shares
-    # @return [Integer] the number of possible combinations
+    # @param n the total number of shares
+    # @param r the threshold number of shares
+    # @return the number of possible combinations
     Contract C::Int, C::Int => C::Int
     def self.calc_combinations(n, r)
       factorial(n) / (factorial(r) * factorial(n - r))
@@ -350,9 +350,9 @@ module TSS
 
     # Converts an Integer into a delimiter separated String.
     #
-    # @param n [Integer] an Integer to convert
-    # @param delimiter [String] the String to delimit n in three Integer groups
-    # @return [String] the object converted into a comma separated String.
+    # @param n an Integer to convert
+    # @param delimiter the String to delimit n in three Integer groups
+    # @return the object converted into a comma separated String.
     Contract C::Int, String => String
     def self.int_commas(n, delimiter = ',')
       n.to_s.reverse.gsub(%r{([0-9]{3}(?=([0-9])))}, "\\1#{delimiter}").reverse

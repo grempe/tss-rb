@@ -3,27 +3,27 @@ require 'test_helper'
 describe TSS::Hasher do
   describe 'HASHES' do
     it 'must return a correct result' do
-      TSS::Hasher::HASHES.must_equal({ NONE: { code: 0, bytesize: 0, hasher: nil },
-                          SHA1: { code: 1, bytesize: 20, hasher: Digest::SHA1 },
-                          SHA256: { code: 2, bytesize: 32, hasher: Digest::SHA256 } })
+      TSS::Hasher::HASHES.must_equal({ 'NONE' => { code: 0, bytesize: 0, hasher: nil },
+                                       'SHA1' => { code: 1, bytesize: 20, hasher: Digest::SHA1 },
+                                       'SHA256' => { code: 2, bytesize: 32, hasher: Digest::SHA256 } })
     end
   end
 
   describe 'key_from_code for 0' do
-    it 'must return :NONE' do
-      TSS::Hasher.key_from_code(0).must_equal :NONE
+    it 'must return NONE' do
+      TSS::Hasher.key_from_code(0).must_equal 'NONE'
     end
   end
 
   describe 'key_from_code for 1' do
-    it 'must return :SHA1' do
-      TSS::Hasher.key_from_code(1).must_equal :SHA1
+    it 'must return SHA1' do
+      TSS::Hasher.key_from_code(1).must_equal 'SHA1'
     end
   end
 
   describe 'key_from_code for 2' do
-    it 'must return :SHA256' do
-      TSS::Hasher.key_from_code(2).must_equal :SHA256
+    it 'must return SHA256' do
+      TSS::Hasher.key_from_code(2).must_equal 'SHA256'
     end
   end
 
@@ -33,21 +33,21 @@ describe TSS::Hasher do
     end
   end
 
-  describe 'code for :NONE' do
+  describe 'code for NONE' do
     it 'must return 0' do
-      TSS::Hasher.code(:NONE).must_equal 0
+      TSS::Hasher.code('NONE').must_equal 0
     end
   end
 
-  describe 'code for :SHA1' do
+  describe 'code for SHA1' do
     it 'must return 1' do
-      TSS::Hasher.code(:SHA1).must_equal 1
+      TSS::Hasher.code('SHA1').must_equal 1
     end
   end
 
-  describe 'code for :SHA256' do
+  describe 'code for SHA256' do
     it 'must return 2' do
-      TSS::Hasher.code(:SHA256).must_equal 2
+      TSS::Hasher.code('SHA256').must_equal 2
     end
   end
 

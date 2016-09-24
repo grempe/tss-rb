@@ -60,7 +60,7 @@ module TSS
   #   to `SHA256`. The use of `NONE` is discouraged as it does not allow those
   #   who are recombining the shares to verify if they have in fact recovered
   #   the correct secret.
-  # @option opts [String] :format ('binary') the format of the String share output, 'binary' or 'human'
+  # @option opts [String] :format ('BINARY') the format of the String share output, 'BINARY' or 'HUMAN'
   # @option opts [Integer] :pad_blocksize (0) An integer representing the nearest multiple of Bytes
   #   to left pad the secret to. Defaults to not adding any padding (0). Padding
   #   is done with the "\u001F" character (decimal 31 in a Byte Array).
@@ -75,9 +75,9 @@ module TSS
   #   place. You would also need to manually remove the padding you added after
   #   the share is recombined, or instruct recipients to ignore it.
   #
-  # @return [Array<String>] an Array of String shares
+  # @return an Array of formatted String shares
   # @raise [ParamContractError, TSS::ArgumentError] if the options Types or Values are invalid
-  Contract ({ :secret => TSS::SecretArg, :threshold => C::Maybe[TSS::ThresholdArg], :num_shares => C::Maybe[TSS::NumSharesArg], :identifier => C::Maybe[TSS::IdentifierArg], :hash_alg => C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], :format => C::Maybe[C::Enum['binary', 'human']], :pad_blocksize => C::Maybe[TSS::PadBlocksizeArg] }) => C::ArrayOf[String]
+  Contract ({ :secret => C::SecretArg, :threshold => C::Maybe[C::ThresholdArg], :num_shares => C::Maybe[C::NumSharesArg], :identifier => C::Maybe[C::IdentifierArg], :hash_alg => C::Maybe[C::HashAlgArg], :format => C::Maybe[C::FormatArg], :pad_blocksize => C::Maybe[C::PadBlocksizeArg] }) => C::ArrayOfShares
   def self.split(opts)
     TSS::Splitter.new(opts).split
   end
@@ -88,26 +88,26 @@ module TSS
   #
   # @param [Hash] opts the options to create a message with.
   # @option opts [Array<String>] :shares an Array of String shares to try to recombine into a secret
-  # @option opts [String] :select_by ('first') the method to use for selecting
+  # @option opts [String] :select_by ('FIRST') the method to use for selecting
   #   shares from the Array if more then threshold shares are provided. Can be
-  #   'first', 'sample', or 'combinations'.
+  #   upper case 'FIRST', 'SAMPLE', or 'COMBINATIONS'.
   #
   #   If the number of shares provided as input to the secret
   #   reconstruction operation is greater than the threshold M, then M
   #   of those shares are selected for use in the operation.  The method
   #   used to select the shares can be chosen using the following values:
   #
-  #   `first` : If X shares are required by the threshold and more than X
+  #   `FIRST` : If X shares are required by the threshold and more than X
   #   shares are provided, then the first X shares in the Array of shares provided
   #   will be used. All others will be discarded and the operation will fail if
   #   those selected shares cannot recreate the secret.
   #
-  #   `sample` : If X shares are required by the threshold and more than X
+  #   `SAMPLE` : If X shares are required by the threshold and more than X
   #   shares are provided, then X shares will be randomly selected from the Array
   #   of shares provided.  All others will be discarded and the operation will
   #   fail if those selected shares cannot recreate the secret.
   #
-  #   `combinations` : If X shares are required, and more than X shares are
+  #   `COMBINATIONS` : If X shares are required, and more than X shares are
   #   provided, then all possible combinations of the threshold number of shares
   #   will be tried to see if the secret can be recreated.
   #   This flexibility comes with a cost. All combinations of `threshold` shares
@@ -120,11 +120,11 @@ module TSS
   #   of combinations will be too large then the an Exception will be raised before
   #   processing has started.
   #
-  # @return [Hash] a Hash containing the ':secret' and other metadata
+  # @return a Hash containing the now combined secret and other metadata
   # @raise [TSS::NoSecretError] if the secret cannot be re-created from the shares provided
   # @raise [TSS::InvalidSecretHashError] if the embedded hash of the secret does not match the hash of the recreated secret
   # @raise [ParamContractError, TSS::ArgumentError] if the options Types or Values are invalid
-  Contract ({ :shares => C::ArrayOf[String], :select_by => C::Maybe[C::Enum['first', 'sample', 'combinations']] }) => ({ :hash => C::Maybe[String], :hash_alg => C::Enum['NONE', 'SHA1', 'SHA256'], :identifier => TSS::IdentifierArg, :process_time => C::Num, :secret => TSS::SecretArg, :threshold => TSS::ThresholdArg})
+  Contract ({ :shares => C::ArrayOfShares, :select_by => C::Maybe[C::SelectByArg] }) => ({ :hash => C::Maybe[String], :hash_alg => C::HashAlgArg, :identifier => C::IdentifierArg, :process_time => C::Num, :secret => C::SecretArg, :threshold => C::ThresholdArg})
   def self.combine(opts)
     TSS::Combiner.new(opts).combine
   end

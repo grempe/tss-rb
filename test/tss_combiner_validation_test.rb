@@ -27,13 +27,13 @@ describe TSS::Combiner do
     end
 
     it 'must raise an error if an too small empty Array is passed' do
-      assert_raises(TSS::ArgumentError) { TSS::Combiner.new(shares: []).combine }
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: []).combine }
     end
 
     it 'must raise an error if a too large Array is passed' do
       arr = []
       256.times { arr << 'foo' }
-      assert_raises(TSS::ArgumentError) { TSS::Combiner.new(shares: arr).combine }
+      assert_raises(ParamContractError) { TSS::Combiner.new(shares: arr).combine }
     end
 
     it 'must raise an error if an invalid share is passed' do
@@ -73,21 +73,21 @@ describe TSS::Combiner do
 
     describe 'when share_selection arg is set to first' do
       it 'must return a secret' do
-        secret = TSS::Combiner.new(shares: @shares, select_by: 'first').combine
+        secret = TSS::Combiner.new(shares: @shares, select_by: 'FIRST').combine
         secret[:secret].must_equal @secret
       end
     end
 
     describe 'when share_selection arg is set to sample' do
       it 'must return a secret' do
-        secret = TSS::Combiner.new(shares: @shares, select_by: 'sample').combine
+        secret = TSS::Combiner.new(shares: @shares, select_by: 'SAMPLE').combine
         secret[:secret].must_equal @secret
       end
     end
 
     describe 'when share_selection arg is set to combinations' do
       it 'must return a secret' do
-        secret = TSS::Combiner.new(shares: @shares, select_by: 'combinations').combine
+        secret = TSS::Combiner.new(shares: @shares, select_by: 'COMBINATIONS').combine
         secret[:secret].must_equal @secret
       end
     end

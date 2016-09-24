@@ -1,5 +1,8 @@
 module TSS
-  # Splitter has responsibility for splitting a secret into an Array of String shares.
+  # Warning, you probably don't want to use this directly. Instead
+  # see the TSS module.
+  #
+  # TSS::Splitter has responsibility for splitting a secret into an Array of String shares.
   class Splitter
     include Contracts::Core
     include Util
@@ -8,14 +11,14 @@ module TSS
 
     attr_reader :secret, :threshold, :num_shares, :identifier, :hash_alg, :format, :pad_blocksize
 
-    Contract ({ :secret => TSS::SecretArg, :threshold => C::Maybe[TSS::ThresholdArg], :num_shares => C::Maybe[TSS::NumSharesArg], :identifier => C::Maybe[TSS::IdentifierArg], :hash_alg => C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], :format => C::Maybe[C::Enum['binary', 'human']], :pad_blocksize => C::Maybe[TSS::PadBlocksizeArg] }) => C::Any
+    Contract ({ :secret => C::SecretArg, :threshold => C::Maybe[C::ThresholdArg], :num_shares => C::Maybe[C::NumSharesArg], :identifier => C::Maybe[C::IdentifierArg], :hash_alg => C::Maybe[C::HashAlgArg], :format => C::Maybe[C::FormatArg], :pad_blocksize => C::Maybe[C::PadBlocksizeArg] }) => C::Any
     def initialize(opts = {})
       @secret = opts.fetch(:secret)
       @threshold = opts.fetch(:threshold, 3)
       @num_shares = opts.fetch(:num_shares, 5)
       @identifier = opts.fetch(:identifier, SecureRandom.hex(8))
       @hash_alg = opts.fetch(:hash_alg, 'SHA256')
-      @format = opts.fetch(:format, 'human')
+      @format = opts.fetch(:format, 'HUMAN')
       @pad_blocksize = opts.fetch(:pad_blocksize, 0)
     end
 
@@ -26,6 +29,9 @@ module TSS
                      'n', :share_len
                     ])
 
+    # Warning, you probably don't want to use this directly. Instead
+    # see the TSS module.
+    #
     # To split a secret into a set of shares, the following
     # procedure, or any equivalent method, is used:
     #
@@ -49,7 +55,9 @@ module TSS
     #   If the operation can not be completed successfully, then an error
     #   code should be returned.
     #
-    Contract C::None => C::ArrayOf[String]
+    # @return an Array of formatted String shares
+    # @raise [ParamContractError, TSS::ArgumentError] if the options Types or Values are invalid
+    Contract C::None => C::ArrayOfShares
     def split
       num_shares_not_less_than_threshold!(threshold, num_shares)
 
@@ -115,7 +123,7 @@ module TSS
         binary = (header + s.pack('C*')).force_encoding('ASCII-8BIT')
         # join with URL safe '~'
         human = ['tss', 'v1', identifier, threshold, Base64.urlsafe_encode64(binary)].join('~')
-        format == 'binary' ? binary : human
+        format == 'BINARY' ? binary : human
       end
 
       return shares
@@ -125,11 +133,11 @@ module TSS
 
     # The num_shares must be greater than or equal to the threshold or it is invalid.
     #
-    # @param threshold [Integer] the threshold value
-    # @param num_shares [Integer] the num_shares value
-    # @return [true] returns true if num_shares is >= threshold
-    # @raise [TSS::ArgumentError] if invalid
-    Contract TSS::ThresholdArg, TSS::NumSharesArg => C::Bool
+    # @param threshold the threshold value
+    # @param num_shares the num_shares value
+    # @return returns true if num_shares is >= threshold
+    # @raise [ParamContractError, TSS::ArgumentError] if invalid
+    Contract C::ThresholdArg, C::NumSharesArg => C::Bool
     def num_shares_not_less_than_threshold!(threshold, num_shares)
       if num_shares < threshold
         raise TSS::ArgumentError, "invalid num_shares, must be >= threshold (#{threshold})"
@@ -141,9 +149,9 @@ module TSS
     # The total Byte size of the secret, including padding and hash, must be
     # less than the max allowed Byte size or it is invalid.
     #
-    # @param secret_bytes [Array<Integer>] the Byte Array containing the secret
-    # @return [true] returns true if num_shares is >= threshold
-    # @raise [TSS::ArgumentError] if invalid
+    # @param secret_bytes the Byte Array containing the secret
+    # @return returns true if num_shares is >= threshold
+    # @raise [ParamContractError, TSS::ArgumentError] if invalid
     Contract C::ArrayOf[C::Int] => C::Bool
     def secret_bytes_is_smaller_than_max_size!(secret_bytes)
       if secret_bytes.size >= 65_535
@@ -155,12 +163,13 @@ module TSS
 
     # Construct a binary share header from its constituent parts.
     #
-    # @param identifier [String] the unique identifier String
-    # @param hash_alg [String] the hash algorithm String
-    # @param threshold [Integer] the threshold value
-    # @param share_len [Integer] the length of the share in Bytes
-    # @return [String] returns an octet String of Bytes containing the binary header
-    Contract TSS::IdentifierArg, C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], TSS::ThresholdArg, C::Int => String
+    # @param identifier the unique identifier String
+    # @param hash_alg the hash algorithm String
+    # @param threshold the threshold value
+    # @param share_len the length of the share in Bytes
+    # @return returns an octet String of Bytes containing the binary header
+    # @raise [ParamContractError] if invalid
+    Contract C::IdentifierArg, C::HashAlgArg, C::ThresholdArg, C::Int => String
     def share_header(identifier, hash_alg, threshold, share_len)
       SHARE_HEADER_STRUCT.encode(identifier: identifier,
                                  hash_id: Hasher.code(hash_alg),

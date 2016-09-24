@@ -10,7 +10,7 @@ module TSS
     method_option :num_shares, :aliases => '-n', :banner => 'num_shares', :type => :numeric, :desc => '# of shares total that will be generated'
     method_option :identifier, :aliases => '-i', :banner => 'identifier', :type => :string, :desc => 'A unique identifier string, 0-16 Bytes, [a-zA-Z0-9.-_]'
     method_option :hash_alg, :aliases => '-h', :banner => 'hash_alg', :type => :string, :desc => 'A hash type for verification, NONE, SHA1, SHA256'
-    method_option :format, :aliases => '-f', :banner => 'format', :type => :string, :default => 'human', :desc => 'Share output format, binary or human'
+    method_option :format, :aliases => '-f', :banner => 'format', :type => :string, :default => 'HUMAN', :desc => 'Share output format, BINARY or HUMAN'
     method_option :pad_blocksize, :aliases => '-p', :banner => 'pad_blocksize', :type => :numeric, :desc => 'Block size # secrets will be left-padded to, 0-255'
     method_option :input_file, :aliases => '-I', :banner => 'input_file', :type => :string, :desc => 'A filename to read the secret from'
     method_option :output_file, :aliases => '-O', :banner => 'output_file', :type => :string, :desc => 'A filename to write the shares to'
@@ -57,7 +57,7 @@ module TSS
 
       Example w/ options:
 
-      $ tss split -t 3 -n 6 -i abc123 -h SHA256 -p 8 -f human
+      $ tss split -t 3 -n 6 -i abc123 -h SHA256 -p 8 -f HUMAN
 
       Enter your secret:
 

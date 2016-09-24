@@ -21,11 +21,11 @@ describe TSS do
   describe 'with common args' do
     it 'must split and combine the secret properly' do
       [0, 8, 16].each do |pb|
-        ['human', 'binary'].each do |f|
+        ['HUMAN', 'BINARY'].each do |f|
           ['NONE', 'SHA1', 'SHA256'].each do |h|
             ['a', 'unicode ½ ♥ 💩', SecureRandom.hex(32).force_encoding('US-ASCII')].each do |s|
               shares = TSS.split(secret: s, hash_alg: h, format: f, pad_blocksize: pb)
-              shares.first.encoding.name.must_equal f == 'human' ? 'UTF-8' : 'ASCII-8BIT'
+              shares.first.encoding.name.must_equal f == 'HUMAN' ? 'UTF-8' : 'ASCII-8BIT'
               sec = TSS.combine(shares: shares)
               sec[:hash].must_equal h == 'NONE' ? nil : TSS::Hasher.hex_string(h, s)
               sec[:hash_alg].must_equal h

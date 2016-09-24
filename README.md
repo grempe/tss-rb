@@ -296,7 +296,7 @@ tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8FqmJGRCiXokksUc3E1-gQNuNf2l
 You can use the CLI to enter shares in order to recover a secret. Of course
 you will need at least the number of shares necessary as determined
 by the threshold when your shares were created. The `threshold` is visible
-as the third field in every `human` formatted share.
+as the third field in every `HUMAN` formatted share.
 
 As with splitting a secret, there are also three methods of getting the shares
 into the CLI. `STDIN`, a path to a file containing shares, or interactively.
@@ -419,12 +419,12 @@ and then combined with it prior to secret splitting. This means that the hash
 is protected the same way as the secret. The algorithm used is
 `secret || hash(secret)`. You can use one of `NONE`, `SHA1`, or `SHA256`.
 
-The `format` arg takes a String Enum with either `'human'` (default) or
-`'binary'` values. This instructs the output of a split to either provide an
+The `format` arg takes an uppercase String Enum with either `'HUMAN'` (default) or
+`'BINARY'` values. This instructs the output of a split to either provide an
 array of binary octet strings (a standard RTSS format for interoperability), or
 a human friendly URL Safe Base 64 encoded version of that same binary output.
-The `human` format can be easily shared in a tweet, email, or even a URL. The
-`human` format is prefixed with `tss~VERSION~IDENTIFIER~THRESHOLD~` to make it
+The `HUMAN` format can be easily shared in a tweet, email, or even a URL. The
+`HUMAN` format is prefixed with `tss~VERSION~IDENTIFIER~THRESHOLD~` to make it
 easier to visually compare shares and see if they have matching identifiers and
 if you have enough shares to reach the threshold.
 
@@ -523,23 +523,23 @@ of those shares are selected for use in the operation.  The method
 used to select the shares can be chosen with the `select_by:` argument
 which takes the following values as options:
 
-`select_by: 'first'` : If X shares are required by the threshold and more than X
+`select_by: 'FIRST'` : If X shares are required by the threshold and more than X
 shares are provided, then the first X shares in the Array of shares provided
 will be used. All others will be discarded and the operation will fail if
 those selected shares cannot recreate the secret.
 
-`select_by: 'sample'` : If X shares are required by the threshold and more than X
+`select_by: 'SAMPLE'` : If X shares are required by the threshold and more than X
 shares are provided, then X shares will be randomly selected from the Array
 of shares provided.  All others will be discarded and the operation will
 fail if those selected shares cannot recreate the secret.
 
-`select_by: 'combinations'` : If X shares are required, and more than X shares are
+`select_by: 'COMBINATIONS'` : If X shares are required, and more than X shares are
 provided, then all possible combinations of the threshold number of shares
 will be tried to see if the secret can be recreated.
 
 **Warning**
 
-This `combinations` flexibility comes with a cost. All combinations of
+This `COMBINATIONS` flexibility comes with a cost. All combinations of
 `threshold` shares must be generated before processing. Due to the math
 associated with combinations it is possible that the system would try to
 generate a number of combinations that could never be generated or processed
