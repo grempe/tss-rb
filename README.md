@@ -402,14 +402,13 @@ between `1-255` inclusive. The `num_shares` value must be
 greater-than-or-equal-to the `threshold` value. If you don't pass in
 these options they will be set to `threshold = 3` and `num_shares = 5` by default.
 
-The `identifier` is a `0-16` Byte String that will be embedded in
+The `identifier` is a `1-16` Byte String that will be embedded in
 each output share and should uniquely identify a secret. All shares output
 from the same secret splitting operation will have the same `identifier`. This
 value can be retrieved easily from a share header and should be assumed to be
 known to shareholders. Nothing that leaks information about the secret should
 be used as an `identifier`. If an `identifier` is not set, it will default
-to the output of `SecureRandom.hex(8)` which is 8 random hex bytes and
-16 characters long.
+to the output of `SecureRandom.hex(8)` which is 8 random hex bytes (16 characters).
 
 The `hash_alg` is a String that represents which cryptographic one-way
 hash function should be embedded in shares. The hash is used to verify

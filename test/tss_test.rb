@@ -5,28 +5,15 @@ describe TSS do
   describe 'errors' do
     describe 'split' do
       it 'must raise an error if called without a Hash arg with secret key' do
-        assert_raises(TSS::ArgumentError) { TSS.split([]) }
-        assert_raises(TSS::ArgumentError) { TSS.split({}) }
-      end
-    end
-
-    describe 'split' do
-      it 'must raise an TSS::ArgumentError if a ParamContractError was raised by Splitter' do
-        assert_raises(TSS::ArgumentError) { TSS.split(secret: '') }
-        assert_raises(TSS::ArgumentError) { TSS.split(secret: 'foo', threshold: 0) }
+        assert_raises(ParamContractError) { TSS.split([]) }
+        assert_raises(ParamContractError) { TSS.split({}) }
       end
     end
 
     describe 'combine' do
       it 'must raise an error if called without a Hash arg with shares key' do
-        assert_raises(TSS::ArgumentError) { TSS.combine([]) }
-        assert_raises(TSS::ArgumentError) { TSS.combine({}) }
-      end
-    end
-
-    describe 'combine' do
-      it 'must raise an TSS::ArgumentError if a ParamContractError was raised by Combiner' do
-        assert_raises(TSS::ArgumentError) { TSS.combine(shares: '') }
+        assert_raises(ParamContractError) { TSS.combine([]) }
+        assert_raises(ParamContractError) { TSS.combine({}) }
       end
     end
   end

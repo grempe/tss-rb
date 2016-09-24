@@ -1,6 +1,9 @@
 module TSS
   # Common utility, math, and conversion functions.
   module Util
+    include Contracts::Core
+    C = Contracts
+
     # The regex to match against human style shares
     HUMAN_SHARE_RE = /^tss~v1~*[a-zA-Z0-9\.\-\_]{0,16}~[0-9]{1,3}~([a-zA-Z0-9\-\_]+\={0,2})$/
 
@@ -216,6 +219,7 @@ module TSS
     #
     # @param str [String] a UTF-8 String to convert
     # @return [Array<Integer>] an Array of Integer Bytes
+    Contract String => C::ArrayOf[C::Int]
     def self.utf8_to_bytes(str)
       str.bytes.to_a
     end
@@ -224,6 +228,7 @@ module TSS
     #
     # @param bytes [Array<Integer>] an Array of Bytes to convert
     # @return [String] a UTF-8 String
+    Contract C::ArrayOf[C::Int] => String
     def self.bytes_to_utf8(bytes)
       bytes.pack('C*').force_encoding('utf-8')
     end
@@ -232,6 +237,7 @@ module TSS
     #
     # @param bytes [Array<Integer>] an Array of Bytes to convert
     # @return [String] a hex String
+    Contract C::ArrayOf[C::Int] => String
     def self.bytes_to_hex(bytes)
       hex = ''
       bytes.each { |b| hex += sprintf('%02x', b) }
@@ -242,6 +248,7 @@ module TSS
     #
     # @param str [String] a hex String to convert
     # @return [Array<Integer>] an Array of Integer Bytes
+    Contract String => C::ArrayOf[C::Int]
     def self.hex_to_bytes(str)
       [str].pack('H*').unpack('C*')
     end
@@ -250,6 +257,7 @@ module TSS
     #
     # @param hex [String] a hex String to convert
     # @return [String] a UTF-8 String
+    Contract String => String
     def self.hex_to_utf8(hex)
       bytes_to_utf8(hex_to_bytes(hex))
     end
@@ -258,6 +266,7 @@ module TSS
     #
     # @param str [String] a UTF-8 String to convert
     # @return [String] a hex String
+    Contract String => String
     def self.utf8_to_hex(str)
       bytes_to_hex(utf8_to_bytes(str))
     end
@@ -268,6 +277,7 @@ module TSS
     # @param input_string [String] the String to pad
     # @param pad_char [String] the String to pad with
     # @return [String] a padded String
+    Contract C::Int, String, String => String
     def self.left_pad(byte_multiple, input_string, pad_char = "\u001F")
       return input_string if byte_multiple == 0
       pad_length = byte_multiple - (input_string.length % byte_multiple)
@@ -288,6 +298,7 @@ module TSS
     # @param a [String] the private value
     # @param b [String] the user provided value
     # @return [true, false] whether the strings match or not
+    Contract String, String => C::Bool
     def self.secure_compare(a, b)
       return false unless a.bytesize == b.bytesize
 
@@ -303,6 +314,7 @@ module TSS
     #
     # @param share [String] a binary octet share
     # @return [Hash] header attributes
+    Contract String => Hash
     def self.extract_share_header(share)
       h = Splitter::SHARE_HEADER_STRUCT.decode(share)
       h[:identifier] = h[:identifier].delete("\x00")
@@ -313,6 +325,7 @@ module TSS
     #
     # @param n [Integer] the Integer to calculate for
     # @return [Integer] the factorial of n
+    Contract C::Int => C::Int
     def self.factorial(n)
       (1..n).reduce(:*) || 1
     end
@@ -330,6 +343,7 @@ module TSS
     # @param n [Integer] the total number of shares
     # @param r [Integer] the threshold number of shares
     # @return [Integer] the number of possible combinations
+    Contract C::Int, C::Int => C::Int
     def self.calc_combinations(n, r)
       factorial(n) / (factorial(r) * factorial(n - r))
     end
@@ -339,6 +353,7 @@ module TSS
     # @param n [Integer] an Integer to convert
     # @param delimiter [String] the String to delimit n in three Integer groups
     # @return [String] the object converted into a comma separated String.
+    Contract C::Int, String => String
     def self.int_commas(n, delimiter = ',')
       n.to_s.reverse.gsub(%r{([0-9]{3}(?=([0-9])))}, "\\1#{delimiter}").reverse
     end

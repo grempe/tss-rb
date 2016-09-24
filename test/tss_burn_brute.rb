@@ -8,18 +8,9 @@ describe TSS do
           ['NONE', 'SHA1', 'SHA256'].each do |h|
             (1..10).each do |m|
               (m..10).each do |n|
-
-                # See Bug : https://github.com/cryptosphere/sysrandom/issues/13
-                id_rand_val = rand(8)
-                id = if id_rand_val == 0
-                  ""
-                else
-                  SecureRandom.hex(id_rand_val)
-                end
-
+                id = SecureRandom.hex(rand(1..8))
                 s = SecureRandom.hex(rand(1..8))
                 shares = TSS.split(secret: s, identifier: id, threshold: m, num_shares: n, hash_alg: h, format: f, pad_blocksize: pb)
-
                 shares.first.encoding.name.must_equal f == 'human' ? 'UTF-8' : 'ASCII-8BIT'
 
                 ['first', 'sample', 'combinations'].each do |sb|

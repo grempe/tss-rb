@@ -5,6 +5,7 @@ require 'binary_struct'
 require 'contracts'
 require 'tss/blank'
 require 'tss/version'
+require 'tss/custom_contracts'
 require 'tss/util'
 require 'tss/hasher'
 require 'tss/splitter'
@@ -14,6 +15,9 @@ require 'tss/combiner'
 #
 # @author Glenn Rempe <glenn@rempe.us>
 module TSS
+  include Contracts::Core
+  C = Contracts
+
   # An unexpected error has occurred.
   class Error < StandardError; end
 
@@ -35,17 +39,17 @@ module TSS
   #
   # @param [Hash] opts the options to create a message with.
   # @option opts [String] :secret takes a String (UTF-8 or US-ASCII encoding) with a length between 1..65_534
-  # @option opts [String] :threshold (3) The number of shares (M) that will be required to recombine the
+  # @option opts [Integer] :threshold (3) The number of shares (M) that will be required to recombine the
   #   secret. Must be a value between 1..255 inclusive. Defaults to a threshold of 3 shares.
-  # @option opts [String] :num_shares (5) The total number of shares (N) that will be created. Must be
+  # @option opts [Integer] :num_shares (5) The total number of shares (N) that will be created. Must be
   #   a value between the `threshold` value (M) and 255 inclusive.
   #   The upper limit is particular to the TSS algorithm used.
-  # @option opts [String] :identifier (SecureRandom.hex(8)) A 0-16 bytes String limited to the characters 0-9, a-z, A-Z,
+  # @option opts [String] :identifier (SecureRandom.hex(8)) A 1-16 byte String limited to the characters 0-9, a-z, A-Z,
   #   the dash (-), the underscore (_), and the period (.). The identifier will
   #   be embedded in each the binary header of each share and should not reveal
   #   anything about the secret.
   #
-  #   It defaults to the value of `SecureRandom.hex(8)`
+  #   If the arg is nil it defaults to the value of `SecureRandom.hex(8)`
   #   which returns a random 16 Byte string which represents a Base10 decimal
   #   between 1 and 18446744073709552000.
   # @option opts [String] :hash_alg ('SHA256') The one-way hash algorithm that will be used to verify the
@@ -57,7 +61,7 @@ module TSS
   #   who are recombining the shares to verify if they have in fact recovered
   #   the correct secret.
   # @option opts [String] :format ('binary') the format of the String share output, 'binary' or 'human'
-  # @option opts [String] :pad_blocksize (0) An integer representing the nearest multiple of Bytes
+  # @option opts [Integer] :pad_blocksize (0) An integer representing the nearest multiple of Bytes
   #   to left pad the secret to. Defaults to not adding any padding (0). Padding
   #   is done with the "\u001F" character (decimal 31 in a Byte Array).
   #
@@ -72,17 +76,10 @@ module TSS
   #   the share is recombined, or instruct recipients to ignore it.
   #
   # @return [Array<String>] an Array of String shares
-  # @raise [TSS::ArgumentError] if the options Types or Values are invalid
+  # @raise [ParamContractError, TSS::ArgumentError] if the options Types or Values are invalid
+  Contract ({ :secret => TSS::SecretArg, :threshold => C::Maybe[TSS::ThresholdArg], :num_shares => C::Maybe[TSS::NumSharesArg], :identifier => C::Maybe[TSS::IdentifierArg], :hash_alg => C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], :format => C::Maybe[C::Enum['binary', 'human']], :pad_blocksize => C::Maybe[TSS::PadBlocksizeArg] }) => C::ArrayOf[String]
   def self.split(opts)
-    unless opts.is_a?(Hash) && opts.key?(:secret)
-      raise TSS::ArgumentError, 'TSS.split takes a Hash of options with at least a :secret key'
-    end
-
-    begin
-      TSS::Splitter.new(opts).split
-    rescue ParamContractError => e
-      raise TSS::ArgumentError, e.message
-    end
+    TSS::Splitter.new(opts).split
   end
 
   # The reconstruction, or combining, operation reconstructs the secret from a
@@ -126,16 +123,9 @@ module TSS
   # @return [Hash] a Hash containing the ':secret' and other metadata
   # @raise [TSS::NoSecretError] if the secret cannot be re-created from the shares provided
   # @raise [TSS::InvalidSecretHashError] if the embedded hash of the secret does not match the hash of the recreated secret
-  # @raise [TSS::ArgumentError] if the options Types or Values are invalid
+  # @raise [ParamContractError, TSS::ArgumentError] if the options Types or Values are invalid
+  Contract ({ :shares => C::ArrayOf[String], :select_by => C::Maybe[C::Enum['first', 'sample', 'combinations']] }) => ({ :hash => C::Maybe[String], :hash_alg => C::Enum['NONE', 'SHA1', 'SHA256'], :identifier => TSS::IdentifierArg, :process_time => C::Num, :secret => TSS::SecretArg, :threshold => TSS::ThresholdArg})
   def self.combine(opts)
-    unless opts.is_a?(Hash) && opts.key?(:shares)
-      raise TSS::ArgumentError, 'TSS.combine takes a Hash of options with at least a :shares key'
-    end
-
-    begin
-      TSS::Combiner.new(opts).combine
-    rescue ParamContractError => e
-      raise TSS::ArgumentError, e.message
-    end
+    TSS::Combiner.new(opts).combine
   end
 end

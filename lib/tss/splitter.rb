@@ -8,26 +8,15 @@ module TSS
 
     attr_reader :secret, :threshold, :num_shares, :identifier, :hash_alg, :format, :pad_blocksize
 
-    Contract ({ :secret => String, :threshold => C::Maybe[C::Int], :num_shares => C::Maybe[C::Int], :identifier => C::Maybe[String], :hash_alg => C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], :format => C::Maybe[C::Enum['binary', 'human']], :pad_blocksize => C::Maybe[C::Int] }) => C::Any
+    Contract ({ :secret => TSS::SecretArg, :threshold => C::Maybe[TSS::ThresholdArg], :num_shares => C::Maybe[TSS::NumSharesArg], :identifier => C::Maybe[TSS::IdentifierArg], :hash_alg => C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], :format => C::Maybe[C::Enum['binary', 'human']], :pad_blocksize => C::Maybe[TSS::PadBlocksizeArg] }) => C::Any
     def initialize(opts = {})
       @secret = opts.fetch(:secret)
-      raise TSS::ArgumentError, 'Invalid secret length. Must be between 1 and 65502' unless @secret.size.between?(1,65502)
-
       @threshold = opts.fetch(:threshold, 3)
-      raise TSS::ArgumentError, 'Invalid threshold size. Must be between 1 and 255' unless @threshold.between?(1,255)
-
       @num_shares = opts.fetch(:num_shares, 5)
-      raise TSS::ArgumentError, 'Invalid num_shares size. Must be between 1 and 255' unless @num_shares.between?(1,255)
-
       @identifier = opts.fetch(:identifier, SecureRandom.hex(8))
-      raise TSS::ArgumentError, 'Invalid identifier characters' unless @identifier =~ /^[a-zA-Z0-9\-\_\.]*$/i
-      raise TSS::ArgumentError, 'Invalid identifier size. Must be between 0 and 16' unless @identifier.size.between?(0,16)
-
       @hash_alg = opts.fetch(:hash_alg, 'SHA256')
       @format = opts.fetch(:format, 'human')
-
       @pad_blocksize = opts.fetch(:pad_blocksize, 0)
-      raise TSS::ArgumentError, 'Invalid pad_blocksize size. Must be between 0 and 255' unless @pad_blocksize.between?(0,255)
     end
 
     SHARE_HEADER_STRUCT = BinaryStruct.new([
@@ -60,9 +49,8 @@ module TSS
     #   If the operation can not be completed successfully, then an error
     #   code should be returned.
     #
+    Contract C::None => C::ArrayOf[String]
     def split
-      secret_has_acceptable_encoding!(secret)
-      secret_does_not_begin_with_padding_char!(secret)
       num_shares_not_less_than_threshold!(threshold, num_shares)
 
       # RTSS : Combine the secret with a hash digest before splitting. On recombine
@@ -129,35 +117,11 @@ module TSS
         human = ['tss', 'v1', identifier, threshold, Base64.urlsafe_encode64(binary)].join('~')
         format == 'binary' ? binary : human
       end
+
+      return shares
     end
 
     private
-
-    # The secret must be encoded with UTF-8 of US-ASCII or it is invalid.
-    #
-    # @param secret [String] a secret String
-    # @return [true] returns true if acceptable encoding
-    # @raise [TSS::ArgumentError] if invalid
-    def secret_has_acceptable_encoding!(secret)
-      unless secret.encoding.name == 'UTF-8' || secret.encoding.name == 'US-ASCII'
-        raise TSS::ArgumentError, "invalid secret, must be a UTF-8 or US-ASCII encoded String not '#{secret.encoding.name}'"
-      else
-        return true
-      end
-    end
-
-    # The secret must not being with the padding character or it is invalid.
-    #
-    # @param secret [String] a secret String
-    # @return [true] returns true if String does not begin with padding character
-    # @raise [TSS::ArgumentError] if invalid
-    def secret_does_not_begin_with_padding_char!(secret)
-      if secret.slice(0) == "\u001F"
-        raise TSS::ArgumentError, 'invalid secret, first byte of secret is the reserved left-pad character (\u001F)'
-      else
-        return true
-      end
-    end
 
     # The num_shares must be greater than or equal to the threshold or it is invalid.
     #
@@ -165,6 +129,7 @@ module TSS
     # @param num_shares [Integer] the num_shares value
     # @return [true] returns true if num_shares is >= threshold
     # @raise [TSS::ArgumentError] if invalid
+    Contract TSS::ThresholdArg, TSS::NumSharesArg => C::Bool
     def num_shares_not_less_than_threshold!(threshold, num_shares)
       if num_shares < threshold
         raise TSS::ArgumentError, "invalid num_shares, must be >= threshold (#{threshold})"
@@ -179,6 +144,7 @@ module TSS
     # @param secret_bytes [Array<Integer>] the Byte Array containing the secret
     # @return [true] returns true if num_shares is >= threshold
     # @raise [TSS::ArgumentError] if invalid
+    Contract C::ArrayOf[C::Int] => C::Bool
     def secret_bytes_is_smaller_than_max_size!(secret_bytes)
       if secret_bytes.size >= 65_535
         raise TSS::ArgumentError, 'invalid secret, combined padded secret and hash are too large'
@@ -194,6 +160,7 @@ module TSS
     # @param threshold [Integer] the threshold value
     # @param share_len [Integer] the length of the share in Bytes
     # @return [String] returns an octet String of Bytes containing the binary header
+    Contract TSS::IdentifierArg, C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], TSS::ThresholdArg, C::Int => String
     def share_header(identifier, hash_alg, threshold, share_len)
       SHARE_HEADER_STRUCT.encode(identifier: identifier,
                                  hash_id: Hasher.code(hash_alg),

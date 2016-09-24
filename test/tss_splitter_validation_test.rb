@@ -15,19 +15,19 @@ describe TSS::Splitter do
     end
 
     it 'must raise an error if size < 1' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: '').split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: '').split }
     end
 
     it 'must raise an error if size > 65_534' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a' * ((65_534 - 32) + 1)).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a' * ((65_534 - 32) + 1)).split }
     end
 
     it 'must raise an error if first byte of secret is reserved padding char' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: "\u001F" + 'foo').split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: "\u001F" + 'foo').split }
     end
 
     it 'must raise an error if String encoding is not UTF-8' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a'.force_encoding('ISO-8859-1')).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a'.force_encoding('ISO-8859-1')).split }
     end
 
     it 'must return an Array of default shares with US-ASCII encoded secret' do
@@ -54,11 +54,11 @@ describe TSS::Splitter do
 
   describe 'threshold' do
     it 'must raise an error if size < 1' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', threshold: 0).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', threshold: 0).split }
     end
 
     it 'must raise an error if size > 255' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', threshold: 256).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', threshold: 256).split }
     end
 
     it 'must return an Array of default shares with a min size threshold' do
@@ -91,11 +91,11 @@ describe TSS::Splitter do
 
   describe 'num_shares' do
     it 'must raise an error if size < 1' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', num_shares: 0).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', num_shares: 0).split }
     end
 
     it 'must raise an error if size > 255' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', num_shares: 256).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', num_shares: 256).split }
     end
 
     it 'must raise an error if num_shares < threshold' do
@@ -132,17 +132,15 @@ describe TSS::Splitter do
 
   describe 'identifier' do
     it 'must raise an error if size > 16' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', identifier: 'a'*17).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', identifier: 'a'*17).split }
     end
 
     it 'must raise an error if non-whitelisted characters' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', identifier: '&').split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', identifier: '&').split }
     end
 
-    it 'must accept an empty String' do
-      s = TSS::Splitter.new(secret: 'a', identifier: '').split
-      secret = TSS::Combiner.new(shares: s).combine
-      secret[:identifier].must_equal ''
+    it 'must raise an error if passed an empty string' do
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', identifier: '').split }
     end
 
     it 'must accept a String with all whitelisted characters' do
@@ -221,11 +219,11 @@ describe TSS::Splitter do
 
   describe 'pad_blocksize' do
     it 'must raise an error if a an invalid negative value is passed' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', pad_blocksize: -1).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', pad_blocksize: -1).split }
     end
 
     it 'must raise an error if a an invalid too high value is passed' do
-      assert_raises(TSS::ArgumentError) { TSS::Splitter.new(secret: 'a', pad_blocksize: 256).split }
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', pad_blocksize: 256).split }
     end
 
     describe 'when padding arg is set' do

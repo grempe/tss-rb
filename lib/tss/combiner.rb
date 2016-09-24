@@ -53,6 +53,7 @@ module TSS
     #   The output string is returned (along with some metadata).
     #
     # rubocop:disable CyclomaticComplexity
+    Contract C::None => ({ :hash => C::Maybe[String], :hash_alg => C::Maybe[C::Enum['NONE', 'SHA1', 'SHA256']], :identifier => TSS::IdentifierArg, :process_time => C::Num, :secret => TSS::SecretArg, :threshold => TSS::ThresholdArg})
     def combine
       # unwrap 'human' shares into binary shares
       if all_shares_appear_human?(shares)
@@ -287,9 +288,9 @@ module TSS
     Contract C::ArrayOf[String] => C::Bool
     def validate_all_shares(shares)
       if shares_have_valid_headers!(shares) &&
-          shares_have_same_bytesize!(shares) &&
-          shares_have_expected_length!(shares) &&
-          shares_meet_threshold_min!(shares)
+         shares_have_same_bytesize!(shares) &&
+         shares_have_expected_length!(shares) &&
+         shares_meet_threshold_min!(shares)
         return true
       else
         return false
