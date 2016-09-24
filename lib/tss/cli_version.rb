@@ -1,7 +1,5 @@
 require 'thor'
 
-# Command Line Interface (CLI)
-# See also, `bin/tss` executable.
 module TSS
   class CLI < Thor
     desc 'version', 'tss version'
