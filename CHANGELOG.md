@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.0 (9/24/2016)
+
+* Breaking change, identifier cannot be an empty string
+* Much greater coverage of functions with Contracts
+* Related documentation updates
+
 ## v0.2.0 (9/23/2016)
 
 * clone the shares object passed to TSS.combine to prevent modification
