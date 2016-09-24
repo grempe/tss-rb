@@ -475,7 +475,7 @@ threshold  = 3
 num_shares = 5
 identifier = SecureRandom.hex(8)
 hash_alg   = 'SHA256'
-format     = 'human'
+format     = 'HUMAN'
 
 s = TSS.split(secret: secret, threshold: threshold, num_shares: num_shares, identifier: identifier, hash_alg: 'SHA256', pad_blocksize: 16, format: format)
 
@@ -583,7 +583,7 @@ All Exceptions should include hints as to what went wrong in the
 ### RTSS Binary
 
 TSS provides shares in a binary data format with the following fields, and
-by default this binary data is wrapped in a `'human'` text format:
+by default this binary data is wrapped in a `'HUMAN'` text format:
 
 `Identifier`. This field contains 16 octets. It identifies the secret
 with which a share is associated.  All of the shares associated
@@ -641,7 +641,7 @@ text wrapper around the RTSS binary data format is provided.
 
 Shares formatted this way can easily be shared via most any communication channel.
 
-The `human` data format is simply the same RTSS binary data, URL Safe Base64
+The `HUMAN` data format is simply the same RTSS binary data, URL Safe Base64
 encoded, and prefixed with a String thet contains tilde `~` separated elements.
 The `~` is used as it is compatible with the URL Safe data and the allowed
 characters in the rest of the human format string.
