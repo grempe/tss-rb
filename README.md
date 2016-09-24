@@ -161,7 +161,7 @@ It may work on others as well.
 Add this line to your application's `Gemfile`:
 
 ```ruby
-gem 'tss', '~> 0.1'
+gem 'tss', '~> 0.3'
 ```
 
 And then execute:
@@ -565,9 +565,9 @@ A great short read on this is
 
 ### Exception Handling
 
-Initial validation of options is done when the `TSS.split` or `TSS.combine`
-methods are called. If the arguments passed are of the wrong Type or value
-a `TSS::ArgumentError` Exception will be raised.
+Almost all methods in the program have strict contracts associated with them
+that enforce argument presence, types, and value boundaries. This contract checking
+is provided by the excellent Ruby [Contracts](https://egonschiele.github.io/contracts.ruby/) gem. If a contract violation occurs a `ParamContractError` Exception will be raised.
 
 The splitting and combining operations may also raise the following
 exception types:
@@ -672,6 +672,16 @@ A reasonable set of values seems to be what I'll call the 'rule of 64'. If you
 keep the `secret <= 64 Bytes`, the `threshold <= 64`, and the `num_shares <= 64`
 you can do a round-trip split and combine operation in `~250ms` on a modern
 laptop. These should be very reasonable and secure max values for most use cases.
+
+For comparison, splitting a larger text file of 64 Kb into 64 shares takes more than one minute and is certainly something you want to do offline or in a background thread.
+
+```
+$ ls -la /tmp/sec.txt
+-rw-r--r-- 1 glenn 64002 Sep 24 10:40 /tmp/sec.txt
+
+$ time tss split -t 64 -n 64 -I /tmp/sec.txt -O /tmp/shares.txt
+tss split -t 64 -n 64 -I /tmp/sec.txt -O /tmp/shares.txt  75.58s user 0.74s system 99% cpu 1:16.38 total
+```
 
 There are some simple benchmark tests to exercise things with `rake bench`.
 
