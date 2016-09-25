@@ -360,7 +360,7 @@ module TSS
     def share_combinations_out_of_bounds!(shares, threshold, max_combinations = 1_000_000)
       combinations = Util.calc_combinations(shares.size, threshold)
       if combinations > max_combinations
-        raise TSS::ArgumentError, "invalid options, too many combinations (#{Util.int_commas(combinations)})"
+        raise TSS::ArgumentError, "invalid options, too many combinations (#{combinations})"
       else
         return true
       end

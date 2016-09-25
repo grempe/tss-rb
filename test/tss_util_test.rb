@@ -207,12 +207,6 @@ describe TSS::Util do
     end
   end
 
-  describe 'int_commas' do
-    it 'must add commas as expected for human reading to large Integers' do
-      TSS::Util.int_commas(1234567890000000).must_equal '1,234,567,890,000,000'
-    end
-  end
-
   describe 'secure_compare' do
     it 'must return true for same strings' do
       TSS::Util.secure_compare('a', 'a').must_equal true

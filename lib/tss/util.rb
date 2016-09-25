@@ -350,15 +350,5 @@ module TSS
     def self.calc_combinations(n, r)
       factorial(n) / (factorial(r) * factorial(n - r))
     end
-
-    # Converts an Integer into a delimiter separated String.
-    #
-    # @param n an Integer to convert
-    # @param delimiter the String to delimit n in three Integer groups
-    # @return the object converted into a comma separated String.
-    Contract C::Int, String => String
-    def self.int_commas(n, delimiter = ',')
-      n.to_s.reverse.gsub(%r{([0-9]{3}(?=([0-9])))}, "\\1#{delimiter}").reverse
-    end
   end
 end
