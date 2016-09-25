@@ -290,10 +290,12 @@ module TSS
     #   https://github.com/rack/rack/blob/master/lib/rack/utils.rb
     #
     #   NOTE: the values compared should be of fixed length, such as strings
-    #   that have already been processed by HMAC. This should not be used
+    #   that have already been hashed. This should not be used
     #   on variable length plaintext strings because it could leak length info
-    #   via timing attacks. The user provided value should always be passed
-    #   in as the second parameter so as not to leak info about the secret.
+    #   via timing attacks.
+    #
+    #   The user provided value should always be passed in as the second
+    #   parameter so as not to leak info about the secret.
     #
     # @param a the private value
     # @param b the user provided value
@@ -301,11 +303,12 @@ module TSS
     Contract String, String => C::Bool
     def self.secure_compare(a, b)
       return false unless a.bytesize == b.bytesize
+      ah = Digest::SHA256.hexdigest(a)
+      bh = Digest::SHA256.hexdigest(b)
 
-      l = a.unpack('C*')
-
+      l = ah.unpack('C*')
       r, i = 0, -1
-      b.each_byte { |v| r |= v ^ l[i+=1] }
+      bh.each_byte { |v| r |= v ^ l[i+=1] }
       r == 0
     end
 
