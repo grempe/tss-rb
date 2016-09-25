@@ -666,22 +666,16 @@ and Combining involves at least `num_shares**secret_bytes` operations so
 larger values can quickly result in huge processing time. If you need to
 split large secrets into a large number of shares you should consider
 running those operations in a background worker process or thread for
-best performance.
+best performance. For example a 64kb file split into 255 shares,
+with a threshold of 255 (the max for all three settings), can take
+20 minutes to split and another 20 minutes to combine using a modern CPU.
 
 A reasonable set of values seems to be what I'll call the 'rule of 64'. If you
 keep the `secret <= 64 Bytes`, the `threshold <= 64`, and the `num_shares <= 64`
-you can do a round-trip split and combine operation in `~250ms` on a modern
-laptop. These should be very reasonable and secure max values for most use cases.
-
-For comparison, splitting a larger text file of 64 Kb into 64 shares takes more than one minute and is certainly something you want to do offline or in a background thread.
-
-```
-$ ls -la /tmp/sec.txt
--rw-r--r-- 1 glenn 64002 Sep 24 10:40 /tmp/sec.txt
-
-$ time tss split -t 64 -n 64 -I /tmp/sec.txt -O /tmp/shares.txt
-tss split -t 64 -n 64 -I /tmp/sec.txt -O /tmp/shares.txt  75.58s user 0.74s system 99% cpu 1:16.38 total
-```
+you can do a round-trip split and combine operation in `~250ms`. These should
+be very reasonable and secure max values for most use cases, even as part of a
+web request response cycle. Remember, its recommended to split encryption keys,
+not plaintext.
 
 There are some simple benchmark tests to exercise things with `rake bench`.
 
