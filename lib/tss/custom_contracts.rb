@@ -5,7 +5,6 @@ module Contracts
 
   class ArrayOfShares
     def self.valid? val
-      val.present? &&
       val.is_a?(Array) &&
       val.length.between?(1,255) &&
       Contracts::ArrayOf[String].valid?(val)
@@ -18,7 +17,6 @@ module Contracts
 
   class SecretArg
     def self.valid? val
-      val.present? &&
       val.is_a?(String) &&
       val.length.between?(1,65502) &&
       ['UTF-8', 'US-ASCII'].include?(val.encoding.name) &&
@@ -32,7 +30,6 @@ module Contracts
 
   class ThresholdArg
     def self.valid? val
-      val.present? &&
       val.is_a?(Integer) &&
       val.between?(1,255)
     end
@@ -44,7 +41,6 @@ module Contracts
 
   class NumSharesArg
     def self.valid? val
-      val.present? &&
       val.is_a?(Integer) &&
       val.between?(1,255)
     end
@@ -56,7 +52,6 @@ module Contracts
 
   class IdentifierArg
     def self.valid? val
-      val.present? &&
       val.is_a?(String) &&
       val.length.between?(1,16) &&
       val =~ /^[a-zA-Z0-9\-\_\.]*$/i
@@ -99,7 +94,6 @@ module Contracts
 
   class PadBlocksizeArg
     def self.valid? val
-      val.present? &&
       val.is_a?(Integer) &&
       val.between?(0,255)
     end
