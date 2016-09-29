@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.1 (9/28/2016)
+
+* Use activesupport for blank support. Remove the extraction.
+* Update sysrandom and remove the workaround needed for earlier version
+
 ## v0.4.0 (9/24/2016)
 
 * Breaking change to force upcasing of some addition string args
@@ -8,7 +13,7 @@
 * Remove int_commas utility method
 * Hash w/ sha256 a,b strings in secure_compare
 * Deeper Contracts integration
- 
+
 ## v0.3.0 (9/24/2016)
 
 * Breaking change, identifier cannot be an empty string
