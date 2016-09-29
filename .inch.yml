@@ -4,6 +4,4 @@ files:
   #   - plugins/**/*.rb
   # define files excluded from the analysis (defaults to [])
   excluded:
-    - lib/tss/blank.rb
-    - lib/tss/types.rb
     - lib/tss/cli.rb
