@@ -148,7 +148,9 @@ auto-generated docs at [http://www.rubydoc.info/gems/tss](http://www.rubydoc.inf
 
 TSS is continuously integration tested on the following Ruby VMs:
 
-* MRI 2.1, 2.2, 2.3
+* MRI 2.2.5
+* MRI 2.3.1
+* jruby-9.0.5.0
 
 It may work on others as well.
 
@@ -157,7 +159,7 @@ It may work on others as well.
 Add this line to your application's `Gemfile`:
 
 ```ruby
-gem 'tss', '~> 0.3'
+gem 'tss', '~> 0.4'
 ```
 
 And then execute:
