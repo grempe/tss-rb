@@ -20,7 +20,6 @@ Check for regressions in automated tests:
 * [https://travis-ci.org/grempe/tss-rb](https://travis-ci.org/grempe/tss-rb)
 * [https://coveralls.io/github/grempe/tss-rb?branch=master](https://coveralls.io/github/grempe/tss-rb?branch=master)
 * [https://codeclimate.com/github/grempe/tss-rb](https://codeclimate.com/github/grempe/tss-rb)
-* [http://inch-ci.org/github/grempe/tss-rb](http://inch-ci.org/github/grempe/tss-rb)
 
 ## Bump Version Number and edit CHANGELOG.md
 

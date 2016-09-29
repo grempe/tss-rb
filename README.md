@@ -5,7 +5,6 @@
 [![Build Status](https://travis-ci.org/grempe/tss-rb.svg?branch=master)](https://travis-ci.org/grempe/tss-rb)
 [![Coverage Status](https://coveralls.io/repos/github/grempe/tss-rb/badge.svg?branch=master)](https://coveralls.io/github/grempe/tss-rb?branch=master)
 [![Code Climate](https://codeclimate.com/github/grempe/tss-rb/badges/gpa.svg)](https://codeclimate.com/github/grempe/tss-rb)
-[![Inline docs](http://inch-ci.org/github/grempe/tss-rb.svg?branch=master)](http://inch-ci.org/github/grempe/tss-rb)
 
 Ruby Docs : [http://www.rubydoc.info/gems/tss](http://www.rubydoc.info/gems/tss)
 
@@ -144,9 +143,6 @@ sense to give individuals more than one share.
 
 There is pretty extensive inline documentation. You can view the latest
 auto-generated docs at [http://www.rubydoc.info/gems/tss](http://www.rubydoc.info/gems/tss)
-
-You can check my documentation quality score at
-[http://inch-ci.org/github/grempe/tss-rb](http://inch-ci.org/github/grempe/tss-rb?branch=master)
 
 ## Supported Platforms
 
