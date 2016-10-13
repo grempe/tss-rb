@@ -11,10 +11,10 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 2.2.2'
 
-  cert = File.expand_path('~/.gem-certs/gem-private_key_grempe.pem')
+  cert = File.expand_path('~/.gem-certs/gem-private_key_grempe_2026.pem')
   if cert && File.exist?(cert)
     spec.signing_key = cert
-    spec.cert_chain = ['certs/gem-public_cert_grempe.pem']
+    spec.cert_chain = ['certs/gem-public_cert_grempe_2026.pem']
   end
 
   spec.summary = <<-EOF

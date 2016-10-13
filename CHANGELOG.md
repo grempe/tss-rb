@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.2 (10/12/2016)
+
+* Sign the gem with a new cert that expires in 10 years.
+    Both old and new public certs are in the certs dir.
+
 ## v0.4.1 (9/28/2016)
 
 * Use activesupport for blank support. Remove the extraction.
