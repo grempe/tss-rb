@@ -74,22 +74,22 @@ secret unicode characters ½ ♥ 💩
 
 ```ruby
 $ bundle exec bin/console
-[1] pry(main)> require 'tss'
+> require 'tss'
 => false
-[2] pry(main)> shares = TSS.split(secret: 'my deep dark secret')
+> shares = TSS.split(secret: 'my deep dark secret')
 => ["tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQBVLUhLlOvz_VWjEge2gH7PtqTsnSCpbfmMSFX98XUp0BmQAeeOTGDL0GVeGATWjbBZvOm",
  "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQCmlZ_CZSBPk6m2-0WMEmcdzCsB8lH1oDalELd9VhlFPqby08kjm9tZBtONqXucgcnuFlQ",
  "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQDo5p-Q6JLgZuUNtdjyjsCKphawUx8bNhW0FYjdk7V_4RRnZpzsCzi00hLb4igNYYraY5Z",
  "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQEuqHxd94BQK1V-db70VLZxdIULyVIOGDrE7w7K3SVnk0UaEMf9xJFaYpKrXical7nR9PT",
  "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQFg23wPejL_3hnFOyOKyBHmHri6aBzgjhnV6jFqGIldTPePpZIyVHK3tlP9FXSLd_rlgTa"]
-[3] pry(main)> secret = TSS.combine(shares: shares)
+> secret = TSS.combine(shares: shares)
 => {:hash=>"f1b91fef6a7535a974d3644c3eac16d2c907720c981290214d5d1db7cdb724af",
  :hash_alg=>"SHA256",
  :identifier=>"72e84cd688bf24fc",
  :process_time=>0.58,
  :secret=>"my deep dark secret",
  :threshold=>3}
-[4] pry(main)> puts secret[:secret]
+> puts secret[:secret]
 my deep dark secret
 => nil
 ```
