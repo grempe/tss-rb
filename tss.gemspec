@@ -49,7 +49,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'activesupport', '>= 4.0.0'
-  spec.add_dependency 'sysrandom', '>= 1.0.3', '~> 1.0.3'
+  spec.add_dependency 'sysrandom', '>= 1.0.3', '~> 1.0.4'
   spec.add_dependency 'contracts', '~> 0.14'
   spec.add_dependency 'binary_struct', '~> 2.1'
   spec.add_dependency 'thor', '~> 0.19'
