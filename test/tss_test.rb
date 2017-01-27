@@ -27,7 +27,11 @@ describe TSS do
               shares = TSS.split(secret: s, hash_alg: h, format: f, pad_blocksize: pb)
               shares.first.encoding.name.must_equal f == 'HUMAN' ? 'UTF-8' : 'ASCII-8BIT'
               sec = TSS.combine(shares: shares)
-              sec[:hash].must_equal h == 'NONE' ? nil : TSS::Hasher.hex_string(h, s)
+              if h == 'NONE'
+                sec[:hash].must_be_nil
+              else
+                sec[:hash].must_equal TSS::Hasher.hex_string(h, s)
+              end
               sec[:hash_alg].must_equal h
               sec[:identifier].length.must_equal 16
               unless sec[:process_time] == 0.0

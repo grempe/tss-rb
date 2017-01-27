@@ -29,7 +29,7 @@ describe TSS::Hasher do
 
   describe 'key_from_code for unknown code' do
     it 'must return nil' do
-      TSS::Hasher.key_from_code(99).must_equal nil
+      TSS::Hasher.key_from_code(99).must_be_nil
     end
   end
 
