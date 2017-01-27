@@ -697,7 +697,7 @@ contributors are expected to adhere to the
 
 ### Copyright
 
-(c) 2016 Glenn Rempe <[glenn@rempe.us](mailto:glenn@rempe.us)> ([https://www.rempe.us/](https://www.rempe.us/))
+(c) 2016-2017 Glenn Rempe <[glenn@rempe.us](mailto:glenn@rempe.us)> ([https://www.rempe.us/](https://www.rempe.us/))
 
 ### License
 
