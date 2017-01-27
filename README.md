@@ -144,15 +144,10 @@ sense to give individuals more than one share.
 There is pretty extensive inline documentation. You can view the latest
 auto-generated docs at [http://www.rubydoc.info/gems/tss](http://www.rubydoc.info/gems/tss)
 
-## Supported Platforms
+## Supported Ruby Versions
 
-TSS is continuously integration tested on the following Ruby VMs:
-
-* MRI 2.2.5
-* MRI 2.3.1
-* jruby-9.0.5.0
-
-It may work on others as well.
+TSS is continuously integration tested on a number of Ruby versions. See the file
+`.travis.yml` in the root of this repository for the currently tested versions.
 
 ## Installation
 
