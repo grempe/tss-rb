@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.5.0 (1/28/2017)
+
+* Breaking refactor to use automatic PKCS#7 padding on secrets w/ 16 byte block size.
+* Update Copyright year
+* Ruby 2.4.0 testing
+* Update version of sysrandom gem
+* Fixed minitest spec warning
+
 ## v0.4.2 (10/12/2016)
 
 * Sign the gem with a new cert that expires in 10 years.
