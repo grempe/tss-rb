@@ -40,7 +40,7 @@ Build:
 ```sh
 $ rake build
 Enter PEM pass phrase:
-tss 0.1.1 built to pkg/tss-0.1.1.gem.
+tss 0.5.0 built to pkg/tss-0.5.0.gem.
 ```
 
 Install locally w/ Cert:
@@ -48,24 +48,22 @@ Install locally w/ Cert:
 ```sh
 $ gem uninstall tss
 $ rbenv rehash
-$ gem install pkg/tss-0.1.1.gem -P MediumSecurity
-Successfully installed tss-0.1.1
+$ gem install pkg/tss-0.5.0.gem -P MediumSecurity
+Successfully installed tss-0.5.0
 1 gem installed
 ```
 
 ## Git Commit Version and CHANGELOG Changes, Tag and push to Github
 
 ```sh
-$ git add lib/tss/version.rb
-$ git add CHANGELOG.md
-$ git commit -m 'Bump version v0.1.1'
-$ git tag -s v0.1.1 -m "v0.1.1" SHA1_OF_COMMIT
+$ git commit -m 'Bump version v0.5.0'
+$ git tag -s v0.5.0 -m "v0.5.0" SHA1_OF_COMMIT
 ```
 
 Verify last commit and last tag are GPG signed:
 
 ```
-$ git tag -v v0.1.0
+$ git tag -v v0.5.0
 ...
 gpg: Good signature from "Glenn Rempe (Code Signing Key) <glenn@rempe.us>" [ultimate]
 ...
