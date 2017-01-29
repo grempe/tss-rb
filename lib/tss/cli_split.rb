@@ -9,7 +9,7 @@ module TSS
     method_option :identifier, :aliases => '-i', :banner => 'identifier', :type => :string, :desc => 'A unique identifier string, 0-16 Bytes, [a-zA-Z0-9.-_]'
     method_option :hash_alg, :aliases => '-h', :banner => 'hash_alg', :type => :string, :desc => 'A hash type for verification, NONE, SHA1, SHA256'
     method_option :format, :aliases => '-f', :banner => 'format', :type => :string, :default => 'HUMAN', :desc => 'Share output format, BINARY or HUMAN'
-    method_option :pad_blocksize, :aliases => '-p', :banner => 'pad_blocksize', :type => :numeric, :desc => 'Block size # secrets will be left-padded to, 0-255'
+    method_option :padding, :type => :boolean, :default => true, :desc => 'Whether to apply PKCS#7 padding to the secret'
     method_option :input_file, :aliases => '-I', :banner => 'input_file', :type => :string, :desc => 'A filename to read the secret from'
     method_option :output_file, :aliases => '-O', :banner => 'output_file', :type => :string, :desc => 'A filename to write the shares to'
 
@@ -20,8 +20,8 @@ module TSS
       a SECRET provided. A secret to be split can be provided using one of three
       different input methods; STDIN, a path to a file, or when prompted
       for it interactively. In all cases the secret should be UTF-8 or
-      US-ASCII encoded text and be no larger than 65,535 Bytes (including header
-      and hash verification bytes).
+      US-ASCII encoded text and be no larger than #{TSS::MAX_UNPADDED_SECRET_SIZE}
+      bytes.
 
       Optional Params:
 
@@ -41,8 +41,8 @@ module TSS
       hash_alg :
       One of NONE, SHA1, SHA256. The algorithm to use for a one-way hash of the secret that will be split along with the secret.
 
-      pad_blocksize :
-      An Integer, 0-255, that represents a multiple to which the secret will be padded. For example if pad_blocksize is set to 8, the secret 'abc' would be left-padded to '00000abc' (the padding char is not zero, that is just for illustration).
+      padding/no-padding :
+      Whether to apply PKCS#7 padding to secret. By default padding is applied. Turning this off may be helpful if you need to interoperate with a third party library.
 
       format :
       Whether to output the shares as a binary octet string (RTSS), or as more human friendly URL safe Base 64 encoded text with some metadata.
@@ -55,18 +55,19 @@ module TSS
 
       Example w/ options:
 
-      $ tss split -t 3 -n 6 -i abc123 -h SHA256 -p 8 -f HUMAN
+      $ tss split -t 3 -n 6 -i abc123 -h SHA256 -f HUMAN
 
       Enter your secret:
 
       secret >  my secret
 
-      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEBQ-AQG3PuU4oT4qHOh2oJmu-vQwGE6O5hsGRBNtdAYauTIi7VoIdi5imWSrswDdRy
-      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADECM0OK5TSamH3nubH3FJ2EGZ4Yux4eQC-mvcYY85oOe6ae3kpvVXjuRUDU1m6sX20X
-      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEDb7yF4Vhr1JqNe2Nc8IXo98hmKAxsqC3c_Mn3r3t60NxQMC22ate51StDOM-BImch
-      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEEIXU0FajldnRtEQMLK-ZYMO2MRa0NmkBFfNAOx7olbgXLkVbP9txXMDsdokblVwke
-      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEFfYo7EcQUOpMH09Ggz_403rvy1r9_ckI_Pd_hm1tRxX8FfzEWyXMAoFCKTOfIKgMo
-      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEGDSmh74Ng8WTziMGZXAm5XcpFLqDl2oP4MH24XhYf33IIg1WsPIyMAznI0DJUeLpN
+      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEB113xpF37jGHm5QGhXKD8mgK2897MIQkSWri6ksNnAODn0efXznuBsSUnhlDIqQFU
+      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEC4tZegQrC3z6-02er3FZaWMadtlvxPb1EI_FNjG0dFrcdEDj4V7Cmcw___SesJHHP
+      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEDWPKPVjJaITosPGAMhvCgxCBB9uptl2h5UPngnw71V7Z9T-pnxiLKIfgUbRqyBrv-
+      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEExY3ti8ckAIQC02OKCrpEVVnUmyg3NXO9oG3PNw3PlgbbKdFRi9gBCNN_tjkhT3An
+      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEFf6k8XP-8_oCQPGQtUBy-yb8I25mrn6aA02ViJG4n1we7dgPOGkptWiSUJgQ_bboW
+      tss~v1~abc123~3~YWJjMTIzAAAAAAAAAAAAAAIDADEGSiKTeaiFrd_ICgIn0OoYC3sjnhyWgxLWqiyVOsBdwVBBt9zhg4FKmA5MXXNb4MqN
+
     LONGDESC
 
     # rubocop:disable CyclomaticComplexity
@@ -124,8 +125,8 @@ module TSS
       args[:num_shares]    = options[:num_shares]    if options[:num_shares]
       args[:identifier]    = options[:identifier]    if options[:identifier]
       args[:hash_alg]      = options[:hash_alg]      if options[:hash_alg]
-      args[:pad_blocksize] = options[:pad_blocksize] if options[:pad_blocksize]
       args[:format]        = options[:format]        if options[:format]
+      args[:padding]       = options[:padding]
 
       begin
         log("Calling : TSS.split(#{args.inspect})")

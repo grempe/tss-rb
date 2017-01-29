@@ -77,16 +77,16 @@ $ bundle exec bin/console
 > require 'tss'
 => false
 > shares = TSS.split(secret: 'my deep dark secret')
-=> ["tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQBVLUhLlOvz_VWjEge2gH7PtqTsnSCpbfmMSFX98XUp0BmQAeeOTGDL0GVeGATWjbBZvOm",
- "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQCmlZ_CZSBPk6m2-0WMEmcdzCsB8lH1oDalELd9VhlFPqby08kjm9tZBtONqXucgcnuFlQ",
- "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQDo5p-Q6JLgZuUNtdjyjsCKphawUx8bNhW0FYjdk7V_4RRnZpzsCzi00hLb4igNYYraY5Z",
- "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQEuqHxd94BQK1V-db70VLZxdIULyVIOGDrE7w7K3SVnk0UaEMf9xJFaYpKrXical7nR9PT",
- "tss~v1~72e84cd688bf24fc~3~NzJlODRjZDY4OGJmMjRmYwIDADQFg23wPejL_3hnFOyOKyBHmHri6aBzgjhnV6jFqGIldTPePpZIyVHK3tlP9FXSLd_rlgTa"]
+=> ["tss~v1~506168fade769236~3~NTA2MTY4ZmFkZTc2OTIzNgIDAEEBIM39jPGXFz4zKCObWgp2zQmCuUx92-VUf48FWQFqnLF3bw6VtVjYK7JRfESZIREdzhWcQuTQVuGKazxWRK27Tg==",
+ "tss~v1~506168fade769236~3~NTA2MTY4ZmFkZTc2OTIzNgIDAEEC1E8YyDhp5NeZvF6vHeUT6HoiU0AgoF69jyjNRbtcIi1YoymJTau1rJP-3nQXOofaB2LgnAhJpbB8vrID9WTKgQ==",
+ "tss~v1~506168fade769236~3~NTA2MTY4ZmFkZTc2OTIzNgIDAEEDmfvFIKybg8nO9Q9fZ5wARgHFngFQdrbk_arFEbc7s5HedTjzkoZYLlV8xnywt4AVAHAO0nSLY3C7iJPifH5VYA==",
+ "tss~v1~506168fade769236~3~NTA2MTY4ZmFkZTc2OTIzNgIDAEEEiBoCoHycMNTS5yQEU8_Sc7eVlIZOJP1-ka_7MPTlC1p2DyNdGvQxy3pBFZyH8WXAY9ICBxiZRDCJisFrebviAg==",
+ "tss~v1~506168fade769236~3~NTA2MTY4ZmFkZTc2OTIzNgIDAEEFxa7fSOhuV8qFrnX0KbbB3cxyWcc-8hUn4y3zZPiCmubw2TInxdncSbzDDZQgfGIPZMDsSWRbgvBOvOCK8KF94w=="]
 > secret = TSS.combine(shares: shares)
 => {:hash=>"f1b91fef6a7535a974d3644c3eac16d2c907720c981290214d5d1db7cdb724af",
  :hash_alg=>"SHA256",
- :identifier=>"72e84cd688bf24fc",
- :process_time=>0.58,
+ :identifier=>"506168fade769236",
+ :process_time=>0.94,
  :secret=>"my deep dark secret",
  :threshold=>3}
 > puts secret[:secret]
@@ -96,7 +96,7 @@ my deep dark secret
 
 ## Is it any good?
 
-While this implementation has not had a formal security review, the cryptographic
+While this implementation has not yet had a formal security review, the cryptographic
 underpinnings were carefully specified in an IETF draft document authored by a
 noted cryptographer. I have reached out to individuals respected in the field
 for their work in implementing cryptographic solutions to help review this code.
@@ -128,13 +128,14 @@ nothing to slow down an attacker if they have access to enough shares.
 
 * If you send keys by email, or some other insecure channel, then your email
 provider, or any entity with access to their data, now also has the keys to
-your data. They just need to collect enough keys to meet the threshold.
+your data. They just need to collect enough keys to meet the threshold. Sending
+enough shares to recreate a secret through any single provider offers no
+more security than sending the key itself.
 
 * Use public key cryptography to encrypt secret shares with the public key of
 each individual recipient. This can protect the share data from unwanted use while
-in transit or at rest. Excellent choices might be
-[RbNaCl](https://github.com/cryptosphere/rbnacl)
-or [TweetNaCl.js](https://github.com/dchest/tweetnacl-js).
+in transit or at rest. OpenPGP would be one such tool for encrypting shares to
+send safely.
 
 * Put careful thought into how you want to distribute shares. It often makes
 sense to give individuals more than one share.
@@ -256,12 +257,14 @@ cautioned that storing the secret on a filesystem may expose you to certain
 attacks since it can be hard to fully erase files once written.
 
 ```text
+$ cat /tmp/secret.txt
+my secret
 $ tss split -I /tmp/secret.txt
-tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsBvAVAo1dH3QrsYl0S30j2VVTu6dZLRe9EEk6zLtPTwZNYk-t1e4SAA41D
-tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsCMfy6YlI-CQrd-l93Xtw8YqOWSP5ToolKTaZyO2fPYzceaaVmB30ycdVr
-tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsD4IDasmAapmVFkuYPMvuavCtXiJgPZsaBHglGm4FU_U2rGZzfapRk-ZNN
-tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsEbId8z1yNfEkDcezJpstkYenGLhJCMRglx2c0arPDS-YuXyiiNQQ-jYlq
-tss~v1~3f784d9d04dff796~3~M2Y3ODRkOWQwNGRmZjc5NgIDACsFvfscH26p0yabGVWxyuzCv2EH7nQe9VfulMgAylVY1ZybLxEbWO1oBc9M
+tss~v1~8b66eb89ee25a46c~3~OGI2NmViODllZTI1YTQ2YwIDACsBqgQvwFhKboLMAmYwF5_CvaUwM8pmqUipbMRzakdbP53WJa-E6tf2nl2M
+tss~v1~8b66eb89ee25a46c~3~OGI2NmViODllZTI1YTQ2YwIDACsCk1EU-HwvC6pjvQ5wDas221Qs4A7TtJNpi-Su8hxOqrsCSQ8t11aiQUpm
+tss~v1~8b66eb89ee25a46c~3~OGI2NmViODllZTI1YTQ2YwIDACsDVCwbS0EGF03btYwqqVuk7S0z-nSinHtPpsFaFm5dys85j3JlK-yCVNyP
+tss~v1~8b66eb89ee25a46c~3~OGI2NmViODllZTI1YTQ2YwIDACsEPUzgi8CDn4ix1dLQTQDj2yTdeeQcZAvGuMyQ_H7EepN6WO_KB1DuqTxm
+tss~v1~8b66eb89ee25a46c~3~OGI2NmViODllZTI1YTQ2YwIDACsF-jHvOP2qg28J3VCK6fBx7V3CY55tTOPglelkGAzXGudBnpKC--rOvKqP
 ```
 
 **Example : `interactive`**
@@ -277,11 +280,11 @@ Enter your secret, enter a dot (.) on a line by itself to finish :
 secret >  the vault password is:
 secret >  V0ulT!
 secret >  .
-tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8BK-9qlyxRFFQypFLwzM_tLWOv-NRziwnc6blqFP8eh8wLro4qiQwBKfI0KuuvM0u1C6th1vxsyW8vyolXQ-4=
-tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8CEjeK01kAwE1wb7-wvLLlHoe6FGzhl7Hg9TCz_Npw7u0b31OpijFIKdxELfbnhvius7vGqn6KqQKqq69s4Co=
-tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8DTbCFZAMwoXU2650hAw5_XJZxzNHhJrJqLPy1vARk8APzWkgP7K79AtbVn1C49HpBSP2OL-BLumaZZWbU7YI=
-tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8E9eVJ83Knw3Fq1e9VaFSKdPKUAugyBqXzCsqov6etQIfEYe8Vt-ZVu3Ax7L1MWBNt-AQLN7YtczAG4QZ_7wI=
-tss~v1~546604c0b5e9138b~3~NTQ2NjA0YzBiNWU5MTM4YgIDAD8FqmJGRCiXokksUc3E1-gQNuNf2lUyt6Z50wau_3m5Xmks5PSz0XngkHqgXhsTKpGCA0JDsijsYFQ1L8_H4qo=
+tss~v1~1f8532a9d185efc4~3~MWY4NTMyYTlkMTg1ZWZjNAIDAD8BJkMvkHUGPQk1HQr_jVj9JkhavJVkdeFDEtRAf8O6vjksCjMMjiyuUL0bOD7vDnmdrzHK8QVymXU5vnjAREs=
+tss~v1~1f8532a9d185efc4~3~MWY4NTMyYTlkMTg1ZWZjNAIDAD8CJpiKCEtSfmugr_gbvEIBs2M2sZfHxuZsBuPpB35OGeyWmGZCyJCNu0W2z3abkV1Q8uTPvT75YYRpw6BcdvQ=
+tss~v1~1f8532a9d185efc4~3~MWY4NTMyYTlkMTg1ZWZjNAIDAD8DdLPAuEg1Ng7hkoKFQmmL-lkILWvQiQ15JELFLJz-PvdZucDCqS-X6QAIbwWE3u2XrTgsH1kmIvpMeZhzfPk=
+tss~v1~1f8532a9d185efc4~3~MWY4NTMyYTlkMTg1ZWZjNAIDAD8EJT1XJ-DeOXuE3JD6VpZk79945_peSk1ij1Mk5ql-l2jkv85yGBbyH0VIBmJp2WsEMmESZqTsQ9kKB-0Ljq8=
+tss~v1~1f8532a9d185efc4~3~MWY4NTMyYTlkMTg1ZWZjNAIDAD8FdxYdl-O5cR7F4epkqL3upuVGewZJBaZ3rfIIzUvOsHMrnmjyeanoTQD2phF2ltvDbb3xxMMzAKcvvdUkhKI=
 ```
 
 ### CLI Share Combining
@@ -334,29 +337,29 @@ a secret
 ```text
 $ cat /tmp/shares.txt
 # THRESHOLD SECRET SHARING SHARES
-# 2016-04-19T23:57:17Z
+# 2017-01-29T02:01:00Z
 # https://github.com/grempe/tss-rb
 
 
-tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoBRjAH7wA0ncxJr3GliBqKxedf3bGaQH6AscuLqxtrKxxtxuC7A7a5Sqk=
-tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoClWVu75w-XHhoUgkbV5XaJ11stZCB5Z8HTArpv4QsIYDBpNO9DHQTbQ4=
-tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoDsnUaZf94pMArKZL7jmavzk9Qa6ZAvOB8e8nEAt0nyS6ga0XBucQOyGc=
-tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoETCWwSGLHcutzGCLb1yOkH7i6MF7j2b0wr0ZsUh6LuBmx6FkN2MbTkTc=
-tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoFazXEwgGBilMwY7k7DtDR9qqG7mgigMJLmIVB70eAULfQJ89xbXbONF4=
+tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoBbga2N__A9QOleLhC5R5b7stJ26iMPNpQ95YpmK-tWIrd-CYcrXGmcys=
+tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoCGXsZkLOG7uDOVN1Zn46pqftX4noA8LfXugg14KBfSggYP9fw4Ce10YA=
+tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoDFl3cwi80fpdh-I9eK3kNa8V9OlXX1Wx8y5a6bk2S0TDJzocr-1C3TWs=
+tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoEEspmyzmbnrSr7v41FFlHVTqQ6dx4aho8q5T1CBHQbNimdCv3gVXS50I=
+tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoFHeyjmaUpDsMEQqwyoK7jlwS6MfOvT8GX2gp6hvwd9-B3hXssmiLQe6k=
 
 $ tss combine
 Enter shares, one per line, and a dot (.) on a line by itself to finish :
-share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoBRjAH7wA0ncxJr3GliBqKxedf3bGaQH6AscuLqxtrKxxtxuC7A7a5Sqk=
-share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoClWVu75w-XHhoUgkbV5XaJ11stZCB5Z8HTArpv4QsIYDBpNO9DHQTbQ4=
-share>  tss~v1~ae2983e30e0471fe~3~YWUyOTgzZTMwZTA0NzFmZQIDACoDsnUaZf94pMArKZL7jmavzk9Qa6ZAvOB8e8nEAt0nyS6ga0XBucQOyGc=
+share>  tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoBbga2N__A9QOleLhC5R5b7stJ26iMPNpQ95YpmK-tWIrd-CYcrXGmcys=
+share>  tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoCGXsZkLOG7uDOVN1Zn46pqftX4noA8LfXugg14KBfSggYP9fw4Ce10YA=
+share>  tss~v1~b9f7f87bc83fd89b~3~YjlmN2Y4N2JjODNmZDg5YgIDACoDFl3cwi80fpdh-I9eK3kNa8V9OlXX1Wx8y5a6bk2S0TDJzocr-1C3TWs=
 share>  .
 
 RECOVERED SECRET METADATA
 *************************
 hash : d4ea4551e9ff2cf56303875b1901fb8608a6164260c3b20c0976c7b606a4efc0
 hash_alg : SHA256
-identifier : ae2983e30e0471fe
-process_time : 0.7ms
+identifier : b9f7f87bc83fd89b
+process_time : 1.22ms
 threshold : 3
 secret :
 a secret
@@ -368,11 +371,11 @@ The basic usage is as follows using the arguments described below.
 
 ```ruby
 shares = TSS.split(secret: secret,
-              threshold: threshold,
-              num_shares: num_shares,
-              identifier: identifier,
-              hash_alg: hash_alg,
-              pad_blocksize: pad_blocksize)
+                   threshold: threshold,
+                   num_shares: num_shares,
+                   identifier: identifier,
+                   hash_alg: hash_alg,
+                   padding: true)
 ```
 
 ### Arguments
@@ -380,7 +383,7 @@ shares = TSS.split(secret: secret,
 All arguments are passed as keys in a single Hash.
 
 The `secret` (required) value must be provided as a String with either
-a `UTF-8` or `US-ASCII` encoding. The Byte length must be `<= 65,534`. You can
+a `UTF-8` or `US-ASCII` encoding. The Byte length must be `<= 65,486`. You can
 test this beforehand with `'my string secret'.bytes.to_a.length`. Keep in mind
 that this length also includes padding and the verification hash so your
 secret may need to be shorter depending on the settings you choose.
@@ -421,44 +424,17 @@ The `HUMAN` format can be easily shared in a tweet, email, or even a URL. The
 easier to visually compare shares and see if they have matching identifiers and
 if you have enough shares to reach the threshold.
 
-The `pad_blocksize` arg takes an Integer between 0..255 inclusive. Your secret
-**MUST NOT** *begin* with this character (which was chosen to make less likely).
-The padding character used is `"\u001F"` `Unit Separator, decimal 31`.
-
-Padding is applied to the nearest multiple of the number of bytes specified.
-`pad_blocksize` defaults to no padding (0). For example:
-
-```ruby
-padding_blocksize: 8
-(padded with zeros for illustration purposes)
-
-# a single char, padded up to 8
-'a'         -> "0000000a"
-
-# 8 chars, no padding needed to get to 8
-'aaaaaaaa'  -> "aaaaaaaa"
-
-# 9 chars, bumps blocksize up to 16 and pads
-'aaaaaaaaa' -> "0000000aaaaaaaaa"
-```
+The `padding` arg accepts a Boolean to indicate whether to apply PKCS#7
+padding to the secret string. This is applied and removed automatically
+by default and padding defaults to a block size of 16 bytes. You probably
+never need to use this option to turn it off unless you are trying to
+trade shares with the Python implementation.
 
 Since TSS share data is essentially the same size as the original secret
-(with a known size header), padding smaller secrets may help mask the size
-of the secret itself from an attacker. Padding is not part of the RTSS spec
-so other TSS clients won't strip off the padding and may fail when recombining
-shares. If you need this level of interoperability you should probably skip
-the `pad_blocksize` padding and just pad the secret yourself prior to splitting
-it. You need to pad using a character other than `"\u001F"`.
-
-If you want to do padding this way, there is a utility method you can use
-to do that. This is the same method used internally.
-
-```ruby
-# Util.left_pad(byte_multiple, input_string, pad_char = "\u001F")
-
-> Util.left_pad(16, 'abc', "0")
-=> "0000000000000abc"
-```
+(with a known size header), the padding applied to smaller secrets may help
+mask the exact size of the secret itself from an attacker. Padding is not part of
+the RTSS spec so other TSS clients won't strip off the padding and may fail
+when recombining shares.
 
 ### Example Usage
 
@@ -470,20 +446,20 @@ identifier = SecureRandom.hex(8)
 hash_alg   = 'SHA256'
 format     = 'HUMAN'
 
-s = TSS.split(secret: secret, threshold: threshold, num_shares: num_shares, identifier: identifier, hash_alg: 'SHA256', pad_blocksize: 16, format: format)
+s = TSS.split(secret: secret, threshold: threshold, num_shares: num_shares, identifier: identifier, hash_alg: 'SHA256', format: format)
 
-=> ["tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEBe1METAFZDbpq7yHIFRvxr1PjBOLRnHzDyzDGrnDvYp90jMKPLWwo3eiWiuafRaYJ",
- "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADECOeQaLXYx99N2SDKutj0_smSonMdMMzeJc_CWPRT8nppHkdsUc7hW6cSw_RDcaKMF",
- "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEDXagBfmgOlQY8xXIUg0SvZ-yYgORZzeWiyjRBmsDMLwG7bLmmswSAOllamqGZ-_fb",
- "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEExmXZHYJsLzipmqYryl5SDlhJzdZxLh_2y5bM_tOOmdm9rpws3izJqHrzmCHQi5mn",
- "tss~v1~9fdfe2516240737e~3~OWZkZmUyNTE2MjQwNzM3ZQIDADEFoinCTpxTTe3jF-aR_yfC29B50fVk0M3dclIbWQe-KEJBU_6eHpAfe-cZ_5CVGM15"]
+=> ["tss~v1~79923b087dab7fa2~3~Nzk5MjNiMDg3ZGFiN2ZhMgIDADEB2qA6IYq8yOGlPAl0B4MgRsVazZMWGLwRNgGMPKutOYbB0gjkVHNqbNYl-0l1f98W",
+ "tss~v1~79923b087dab7fa2~3~Nzk5MjNiMDg3ZGFiN2ZhMgIDADECvjwdUHc8MzqvIllR2Rj9TnnlN_2eRUzH6MUsd8ncua4jpXQ3FgM1hUmLHmrgHq0u",
+ "tss~v1~79923b087dab7fa2~3~Nzk5MjNiMDg3ZGFiN2ZhMgIDADEDAvNIUZ_hiftofyog257YDWds4q9MP14-rDCxQsauUyxqBtzur6Ch5-rSCHRPt4Dv",
+ "tss~v1~79923b087dab7fa2~3~Nzk5MjNiMDg3ZGFiN2ZhMgIDADEEF7zGEx0GSC6YLgVD6xcQispDCO_JTUSDFbsbpalopakh0FmTfmO-JJKGQSlJb1il",
+ "tss~v1~79923b087dab7fa2~3~Nzk5MjNiMDg3ZGFiN2ZhMgIDADEFq3OTEvXb8u9fc3Yy6ZE1ydTK3b0bN1Z6UU6GkKYaTytoc_FKx8AqRjHfVzfmxnVk"]
 
- secret = TSS.combine(shares: s)
+secret = TSS.combine(shares: s)
 
- => {:hash=>"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7",
+=> {:hash=>"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7",
  :hash_alg=>"SHA256",
- :identifier=>"9fdfe2516240737e",
- :process_time=>0.77,
+ :identifier=>"79923b087dab7fa2",
+ :process_time=>0.92,
  :secret=>"foo bar baz",
  :threshold=>3}
  ```
@@ -553,7 +529,7 @@ many combinations (`2.88 * 10^75`) as there are Atoms in the Universe (`10^80`).
 If the combine operation does not result in a secret being successfully
 extracted, then a `TSS::Error` exception will be raised.
 
-A great short read on this is
+A great short read on big numbers is
 [On the (Small) Number of Atoms in the Universe](http://norvig.com/atoms.html)
 
 ### Exception Handling

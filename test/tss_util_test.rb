@@ -170,40 +170,65 @@ describe TSS::Util do
     end
   end
 
-  describe 'left_pad' do
-    it 'must increase length of a short string the same size as the byte_multiple' do
-      mult = 8
-      res = TSS::Util.left_pad(mult, 'a'*1)
-      res.must_equal "\u001F\u001F\u001F\u001F\u001F\u001F\u001Fa"
-      res.length.must_equal 8
+  describe 'pad' do
+    it 'must raise an error if called with an Integer < 0' do
+      assert_raises(ParamContractError) { TSS::Util.pad('a', -1) }
     end
 
-    it 'must maintain the length of a string the same size as the byte_multiple' do
-      mult = 8
-      res = TSS::Util.left_pad(mult, 'a'*8)
-      res.must_equal 'aaaaaaaa'
-      res.length.must_equal 8
+    it 'must raise an error if called with an Integer > 255' do
+      assert_raises(ParamContractError) { TSS::Util.pad('a', 256) }
     end
 
-    it 'must increase length of a string to the next multiple when string is larger than the byte_multiple' do
-      mult = 8
-      res = TSS::Util.left_pad(mult, 'a'*9)
-      res.must_equal "\u001F\u001F\u001F\u001F\u001F\u001F\u001Faaaaaaaaa"
+    it 'must pad a string to 16 bytes by default' do
+      res = TSS::Util.pad('a')
+      res.must_equal "a\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F\u000F"
+      res[-1].must_equal "\u000F" # 15
       res.length.must_equal 16
     end
 
-    it 'must not change the string if the byte_multiple is 0 (no padding)' do
-      mult = 0
-      res = TSS::Util.left_pad(mult, 'a'*9)
-      res.must_equal 'aaaaaaaaa'
-      res.length.must_equal 9
+    it 'must pad an exact block length string with an extra full padding 16 byte block' do
+      res = TSS::Util.pad('0123456789012345')
+      res.must_equal "0123456789012345\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010\u0010"
+      res[-1].must_equal "\u0010" # 16
+      res.length.must_equal 32
     end
 
-    it 'must pad with the specified padding character' do
-      mult = 8
-      res = TSS::Util.left_pad(mult, 'a', '0')
-      res.must_equal '0000000a'
+    it 'must pad a string with zero bytes' do
+      res = TSS::Util.pad('foo', 0)
+      res.must_equal 'foo'
+    end
+
+    it 'must pad a string to 0 < N < 255 bytes' do
+      res = TSS::Util.pad('foo', 8)
+      res.must_equal "foo\u0005\u0005\u0005\u0005\u0005"
+      res[-1].must_equal "\u0005" # 5
       res.length.must_equal 8
+    end
+
+    it 'must pad a string to 255 bytes' do
+      res = TSS::Util.pad('foo', 255)
+      res.must_equal "foo\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC"
+      res.length.must_equal 255
+    end
+  end
+
+  describe 'unpad' do
+    it 'must raise an error if called with an Integer < 0' do
+      assert_raises(ParamContractError) { TSS::Util.unpad('a', -1) }
+    end
+
+    it 'must raise an error if called with an Integer > 255' do
+      assert_raises(ParamContractError) { TSS::Util.unpad('a', 256) }
+    end
+
+    it 'must unpad a known padded string' do
+      padded_str = "foo\u0005\u0005\u0005\u0005\u0005"
+      TSS::Util.unpad(padded_str).must_equal 'foo'
+    end
+
+    it 'must unpad a complex padded string' do
+      str = 'unicode ½ ♥ 💩'
+      TSS::Util.unpad(TSS::Util.pad(str)).must_equal str
     end
   end
 

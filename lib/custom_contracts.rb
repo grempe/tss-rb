@@ -18,13 +18,12 @@ module Contracts
   class SecretArg
     def self.valid? val
       val.is_a?(String) &&
-      val.length.between?(1,65502) &&
-      ['UTF-8', 'US-ASCII'].include?(val.encoding.name) &&
-      val.slice(0) != "\u001F"
+      val.length.between?(1,TSS::MAX_UNPADDED_SECRET_SIZE) &&
+      ['UTF-8', 'US-ASCII'].include?(val.encoding.name)
     end
 
     def self.to_s
-      'must be a UTF-8 or US-ASCII String between 1 and 65,502 characters in length and must not begin with the padding char \u001F'
+      "must be a UTF-8 or US-ASCII String between 1 and #{TSS::MAX_UNPADDED_SECRET_SIZE} characters in length"
     end
   end
 

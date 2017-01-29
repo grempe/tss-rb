@@ -271,18 +271,40 @@ module TSS
       bytes_to_hex(utf8_to_bytes(str))
     end
 
-    # Left pad a String with pad_char in multiples of byte_multiple
+    # Pad a String with PKCS#7 (RFC5652)
+    # See : https://tools.ietf.org/html/rfc5652#section-6.3
     #
-    # @param byte_multiple pad in blocks of this size
-    # @param input_string the String to pad
-    # @param pad_char the String to pad with
-    # @return a padded String
-    Contract C::Int, String, String => String
-    def self.left_pad(byte_multiple, input_string, pad_char = "\u001F")
-      return input_string if byte_multiple == 0
-      pad_length = byte_multiple - (input_string.length % byte_multiple)
-      return input_string if pad_length == byte_multiple
-      (pad_char * pad_length) + input_string
+    # @param str the String or Array of bytes to pad
+    # @param k pad blocksize (0-255), default 16
+    # @return a PKCS#7 padded String or Array of bytes
+    Contract C::Or[Array, String], C::PadBlocksizeArg => C::Or[Array, String]
+    def self.pad(str, k = TSS::PADDING_BLOCK_SIZE_BYTES)
+      return str if k.zero?
+      str_bytes = str.is_a?(Array) ? str : TSS::Util.utf8_to_bytes(str)
+      l = str_bytes.length
+      val = k - (l % k)
+      pad_bytes = [val] * val
+      padded_str_bytes = str_bytes + pad_bytes
+      str.is_a?(Array) ? padded_str_bytes : TSS::Util.bytes_to_utf8(padded_str_bytes)
+    end
+
+    # Remove padding from a String previously padded with PKCS#7 (RFC5652)
+    #
+    # @param str the String to remove padding from
+    # @param k pad blocksize (0-255)
+    # @return an unpadded String or Array of bytes
+    Contract C::Or[Array, String], C::PadBlocksizeArg => C::Or[Array, String]
+    def self.unpad(str, k = TSS::PADDING_BLOCK_SIZE_BYTES)
+      return str if k.zero?
+      str_bytes = str.is_a?(Array) ? str : TSS::Util.utf8_to_bytes(str)
+      val = str_bytes.last
+      raise 'Input is not padded or padding is corrupt' if val > k
+      # Verify that the proper number of PKCS#7 padding bytes are present
+      # and match the last byte value in both value and number of bytes present.
+      raise 'Padding bytes are invalid' unless str_bytes.last(val).all? {|b| b == val}
+      l = str_bytes.length - val
+      unpadded_str_bytes = str_bytes.take(l)
+      str.is_a?(Array) ? unpadded_str_bytes : TSS::Util.bytes_to_utf8(unpadded_str_bytes)
     end
 
     # Constant time string comparison.

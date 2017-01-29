@@ -9,9 +9,9 @@ module TSS
 
     C = Contracts
 
-    attr_reader :secret, :threshold, :num_shares, :identifier, :hash_alg, :format, :pad_blocksize
+    attr_reader :secret, :threshold, :num_shares, :identifier, :hash_alg, :format, :padding
 
-    Contract ({ :secret => C::SecretArg, :threshold => C::Maybe[C::ThresholdArg], :num_shares => C::Maybe[C::NumSharesArg], :identifier => C::Maybe[C::IdentifierArg], :hash_alg => C::Maybe[C::HashAlgArg], :format => C::Maybe[C::FormatArg], :pad_blocksize => C::Maybe[C::PadBlocksizeArg] }) => C::Any
+    Contract ({ :secret => C::SecretArg, :threshold => C::Maybe[C::ThresholdArg], :num_shares => C::Maybe[C::NumSharesArg], :identifier => C::Maybe[C::IdentifierArg], :hash_alg => C::Maybe[C::HashAlgArg], :format => C::Maybe[C::FormatArg], :padding => C::Maybe[C::Bool] }) => C::Any
     def initialize(opts = {})
       @secret = opts.fetch(:secret)
       @threshold = opts.fetch(:threshold, 3)
@@ -19,7 +19,7 @@ module TSS
       @identifier = opts.fetch(:identifier, SecureRandom.hex(8))
       @hash_alg = opts.fetch(:hash_alg, 'SHA256')
       @format = opts.fetch(:format, 'HUMAN')
-      @pad_blocksize = opts.fetch(:pad_blocksize, 0)
+      @padding = opts.fetch(:padding, true)
     end
 
     SHARE_HEADER_STRUCT = BinaryStruct.new([
@@ -61,15 +61,19 @@ module TSS
     def split
       num_shares_not_less_than_threshold!(threshold, num_shares)
 
-      # RTSS : Combine the secret with a hash digest before splitting. On recombine
-      # the two will be separated again and the hash used to validate the
-      # correct secret was returned. secret || hash(secret). You can also
-      # optionally pad the secret first.
-      padded_secret = Util.left_pad(pad_blocksize, secret)
-      hashed_secret = Hasher.byte_array(hash_alg, secret)
-      secret_bytes = Util.utf8_to_bytes(padded_secret) + hashed_secret
+      # Append needed PKCS#7 padding to the string
+      secret_padded = padding ? Util.pad(secret) : secret
 
-      secret_bytes_is_smaller_than_max_size!(secret_bytes)
+      # Calculate the cryptographic hash of the secret string
+      secret_hash = Hasher.byte_array(hash_alg, secret)
+
+      # RTSS : Combine the secret with a hash digest before splitting. When
+      # recombine the two will be separated again and the hash will be used
+      # to validate the correct secret was returned.
+      # secret || padding || hash(secret)
+      secret_pad_hash_bytes = Util.utf8_to_bytes(secret_padded) + secret_hash
+
+      secret_bytes_is_smaller_than_max_size!(secret_pad_hash_bytes)
 
       # For each share, a distinct Share Index is generated. Each Share
       # Index is an octet other than the all-zero octet. All of the Share
@@ -101,7 +105,7 @@ module TSS
       # of M octets; A[0] is equal to the first octet of the secret, B[0] is
       # equal to the second octet of the secret, and so on.
       #
-      secret_bytes.each do |byte|
+      secret_pad_hash_bytes.each do |byte|
         # Unpack random Byte String into Byte Array of 8 bit unsigned Integers
         r = SecureRandom.random_bytes(threshold - 1).unpack('C*')
 
@@ -148,8 +152,8 @@ module TSS
     # @raise [ParamContractError, TSS::ArgumentError] if invalid
     Contract C::ArrayOf[C::Int] => C::Bool
     def secret_bytes_is_smaller_than_max_size!(secret_bytes)
-      if secret_bytes.size >= 65_535
-        raise TSS::ArgumentError, 'invalid secret, combined padded secret and hash are too large'
+      if secret_bytes.size > TSS::MAX_SECRET_SIZE
+        raise TSS::ArgumentError, 'invalid secret, combined padded and hashed secret is too large'
       else
         return true
       end

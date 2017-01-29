@@ -16,6 +16,16 @@ module TSS
   include Contracts::Core
   C = Contracts
 
+  # Defined in TSS spec, two less than 2^16
+  MAX_SECRET_SIZE = 64_534
+
+  # Max size minus up to 16 bytes PKCS#7 padding
+  # and 32 bytes of cryptographic hash
+  MAX_UNPADDED_SECRET_SIZE = MAX_SECRET_SIZE - 48
+
+  # When applying PKCS#7 padding, what block size in bytes should be used
+  PADDING_BLOCK_SIZE_BYTES = 16
+
   # An unexpected error has occurred.
   class Error < StandardError; end
 
@@ -59,23 +69,11 @@ module TSS
   #   who are recombining the shares to verify if they have in fact recovered
   #   the correct secret.
   # @option opts [String] :format ('BINARY') the format of the String share output, 'BINARY' or 'HUMAN'
-  # @option opts [Integer] :pad_blocksize (0) An integer representing the nearest multiple of Bytes
-  #   to left pad the secret to. Defaults to not adding any padding (0). Padding
-  #   is done with the "\u001F" character (decimal 31 in a Byte Array).
-  #
-  #   Since TSS share data (minus the header) is essentially the same size as the
-  #   original secret, padding smaller secrets may help mask the size of the
-  #   contents from an attacker. Padding is not part of the RTSS spec so other
-  #   TSS clients won't strip off the padding and may not validate correctly.
-  #
-  #   If you need this interoperability you should probably pad the secret
-  #   yourself prior to splitting it and leave the default zero-length pad in
-  #   place. You would also need to manually remove the padding you added after
-  #   the share is recombined, or instruct recipients to ignore it.
+  # @option opts [Boolean] :padding Whether to apply PKCS#7 padding to secret
   #
   # @return an Array of formatted String shares
   # @raise [ParamContractError, TSS::ArgumentError] if the options Types or Values are invalid
-  Contract ({ :secret => C::SecretArg, :threshold => C::Maybe[C::ThresholdArg], :num_shares => C::Maybe[C::NumSharesArg], :identifier => C::Maybe[C::IdentifierArg], :hash_alg => C::Maybe[C::HashAlgArg], :format => C::Maybe[C::FormatArg], :pad_blocksize => C::Maybe[C::PadBlocksizeArg] }) => C::ArrayOfShares
+  Contract ({ :secret => C::SecretArg, :threshold => C::Maybe[C::ThresholdArg], :num_shares => C::Maybe[C::NumSharesArg], :identifier => C::Maybe[C::IdentifierArg], :hash_alg => C::Maybe[C::HashAlgArg], :format => C::Maybe[C::FormatArg], :padding => C::Maybe[C::Bool] }) => C::ArrayOfShares
   def self.split(opts)
     TSS::Splitter.new(opts).split
   end
@@ -86,6 +84,7 @@ module TSS
   #
   # @param [Hash] opts the options to create a message with.
   # @option opts [Array<String>] :shares an Array of String shares to try to recombine into a secret
+  # @option opts [Boolean] :padding Whether PKCS#7 padding is expected in the secret and should be removed
   # @option opts [String] :select_by ('FIRST') the method to use for selecting
   #   shares from the Array if more then threshold shares are provided. Can be
   #   upper case 'FIRST', 'SAMPLE', or 'COMBINATIONS'.
@@ -122,7 +121,7 @@ module TSS
   # @raise [TSS::NoSecretError] if the secret cannot be re-created from the shares provided
   # @raise [TSS::InvalidSecretHashError] if the embedded hash of the secret does not match the hash of the recreated secret
   # @raise [ParamContractError, TSS::ArgumentError] if the options Types or Values are invalid
-  Contract ({ :shares => C::ArrayOfShares, :select_by => C::Maybe[C::SelectByArg] }) => ({ :hash => C::Maybe[String], :hash_alg => C::HashAlgArg, :identifier => C::IdentifierArg, :process_time => C::Num, :secret => C::SecretArg, :threshold => C::ThresholdArg})
+  Contract ({ :shares => C::ArrayOfShares, :padding => C::Maybe[C::Bool], :select_by => C::Maybe[C::SelectByArg] }) => ({ :hash => C::Maybe[String], :hash_alg => C::HashAlgArg, :identifier => C::IdentifierArg, :process_time => C::Num, :secret => C::SecretArg, :threshold => C::ThresholdArg })
   def self.combine(opts)
     TSS::Combiner.new(opts).combine
   end

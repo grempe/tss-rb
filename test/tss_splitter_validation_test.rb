@@ -18,12 +18,8 @@ describe TSS::Splitter do
       assert_raises(ParamContractError) { TSS::Splitter.new(secret: '').split }
     end
 
-    it 'must raise an error if size > 65_534' do
-      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a' * ((65_534 - 32) + 1)).split }
-    end
-
-    it 'must raise an error if first byte of secret is reserved padding char' do
-      assert_raises(ParamContractError) { TSS::Splitter.new(secret: "\u001F" + 'foo').split }
+    it 'must raise an error if size > TSS::MAX_UNPADDED_SECRET_SIZE' do
+      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a' * (TSS::MAX_UNPADDED_SECRET_SIZE + 1)).split }
     end
 
     it 'must raise an error if String encoding is not UTF-8' do
@@ -45,7 +41,7 @@ describe TSS::Splitter do
     end
 
     it 'must return an Array of default shares with a max size secret' do
-      s = TSS::Splitter.new(secret: 'a' * (65_534 - 32)).split
+      s = TSS::Splitter.new(secret: 'a' * TSS::MAX_UNPADDED_SECRET_SIZE).split
       assert_kind_of Array, s
       assert s.size.must_equal 5
       assert_kind_of String, s.first
@@ -214,29 +210,6 @@ describe TSS::Splitter do
       s.first.encoding.to_s.must_equal 'ASCII-8BIT'
       secret = TSS::Combiner.new(shares: s).combine
       secret[:secret].must_equal 'a'
-    end
-  end
-
-  describe 'pad_blocksize' do
-    it 'must raise an error if a an invalid negative value is passed' do
-      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', pad_blocksize: -1).split }
-    end
-
-    it 'must raise an error if a an invalid too high value is passed' do
-      assert_raises(ParamContractError) { TSS::Splitter.new(secret: 'a', pad_blocksize: 256).split }
-    end
-
-    describe 'when padding arg is set' do
-      it 'must return a correctly sized share' do
-        share_0 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 0, format: 'BINARY').split
-        share_0.first.length.must_equal 22
-
-        share_8 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 8, format: 'BINARY').split
-        share_8.first.length.must_equal 29
-
-        share_16 = TSS::Splitter.new(secret: 'a', hash_alg: 'NONE', pad_blocksize: 16, format: 'BINARY').split
-        share_16.first.length.must_equal 37
-      end
     end
   end
 end

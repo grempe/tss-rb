@@ -12,14 +12,15 @@ module TSS
 
     C = Contracts
 
-    attr_reader :shares, :select_by
+    attr_reader :shares, :select_by, :padding
 
-    Contract ({ :shares => C::ArrayOfShares, :select_by => C::Maybe[C::SelectByArg] }) => C::Any
+    Contract ({ :shares => C::ArrayOfShares, :select_by => C::Maybe[C::SelectByArg], :padding => C::Maybe[C::Bool] }) => C::Any
     def initialize(opts = {})
       # clone the incoming shares so the object passed to this
       # function doesn't get modified.
       @shares = opts.fetch(:shares).clone
       @select_by = opts.fetch(:select_by, 'FIRST')
+      @padding = opts.fetch(:padding, true)
     end
 
     # Warning, you probably don't want to use this directly. Instead
@@ -150,8 +151,6 @@ module TSS
         secret << Util.lagrange_interpolation(u, v)
       end
 
-      strip_left_pad(secret)
-
       hash_alg = Hasher.key_from_code(hash_id)
 
       # Run the hash digest checks if the shares were created with a digest
@@ -161,6 +160,10 @@ module TSS
         orig_hash_bytes = secret.pop(Hasher.bytesize(hash_alg))
         orig_hash_hex = Util.bytes_to_hex(orig_hash_bytes)
 
+        # Remove PKCS#7 padding from the secret now that the hash
+        # has been extracted from the data
+        secret = Util.unpad(secret) if padding
+
         # RTSS : verify that the recombined secret computes the same hash
         # digest now as when it was originally created.
         new_hash_bytes = Hasher.byte_array(hash_alg, Util.bytes_to_utf8(secret))
@@ -169,6 +172,8 @@ module TSS
         unless Util.secure_compare(orig_hash_hex, new_hash_hex)
           raise TSS::InvalidSecretHashError, 'invalid shares, hash of secret does not equal embedded hash'
         end
+      else
+        secret = Util.unpad(secret) if padding
       end
 
       if secret.present?
@@ -176,16 +181,6 @@ module TSS
       else
         raise TSS::NoSecretError, 'invalid shares, unable to recombine into a verifiable secret'
       end
-    end
-
-    # Strip off leading padding chars ("\u001F", decimal 31)
-    #
-    # @param secret the secret to be stripped
-    # @return returns the secret, stripped of the leading padding char
-    # @raise [ParamContractError] if secret appears invalid
-    Contract C::ArrayOf[C::Num] => C::Maybe[Array]
-    def strip_left_pad(secret)
-      secret.shift while secret.first == 31
     end
 
     # Do all of the shares match the pattern expected of human style shares?

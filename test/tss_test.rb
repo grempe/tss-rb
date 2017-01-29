@@ -20,27 +20,25 @@ describe TSS do
 
   describe 'with common args' do
     it 'must split and combine the secret properly' do
-      [0, 8, 16].each do |pb|
-        ['HUMAN', 'BINARY'].each do |f|
-          ['NONE', 'SHA1', 'SHA256'].each do |h|
-            ['a', 'unicode ½ ♥ 💩', SecureRandom.hex(32).force_encoding('US-ASCII')].each do |s|
-              shares = TSS.split(secret: s, hash_alg: h, format: f, pad_blocksize: pb)
-              shares.first.encoding.name.must_equal f == 'HUMAN' ? 'UTF-8' : 'ASCII-8BIT'
-              sec = TSS.combine(shares: shares)
-              if h == 'NONE'
-                sec[:hash].must_be_nil
-              else
-                sec[:hash].must_equal TSS::Hasher.hex_string(h, s)
-              end
-              sec[:hash_alg].must_equal h
-              sec[:identifier].length.must_equal 16
-              unless sec[:process_time] == 0.0
-                sec[:process_time].must_be :>, 0.01
-              end
-              sec[:secret].must_equal s
-              sec[:secret].encoding.name.must_equal 'UTF-8'
-              sec[:threshold].must_equal 3
+      ['HUMAN', 'BINARY'].each do |f|
+        ['NONE', 'SHA1', 'SHA256'].each do |h|
+          ['a', 'unicode ½ ♥ 💩', SecureRandom.hex(32).force_encoding('US-ASCII')].each do |s|
+            shares = TSS.split(secret: s, hash_alg: h, format: f)
+            shares.first.encoding.name.must_equal f == 'HUMAN' ? 'UTF-8' : 'ASCII-8BIT'
+            sec = TSS.combine(shares: shares)
+            if h == 'NONE'
+              sec[:hash].must_be_nil
+            else
+              sec[:hash].must_equal TSS::Hasher.hex_string(h, s)
             end
+            sec[:hash_alg].must_equal h
+            sec[:identifier].length.must_equal 16
+            unless sec[:process_time] == 0.0
+              sec[:process_time].must_be :>, 0.01
+            end
+            sec[:secret].must_equal s
+            sec[:secret].encoding.name.must_equal 'UTF-8'
+            sec[:threshold].must_equal 3
           end
         end
       end

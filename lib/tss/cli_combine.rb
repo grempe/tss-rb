@@ -6,6 +6,7 @@ module TSS
 
     method_option :input_file, :aliases => '-I', :banner => 'input_file', :type => :string, :desc => 'A filename to read shares from'
     method_option :output_file, :aliases => '-O', :banner => 'output_file', :type => :string, :desc => 'A filename to write the recovered secret to'
+    method_option :padding, :type => :boolean, :default => true, :desc => 'Whether PKCS#7 padding is expected in the secret and should be removed'
 
     desc 'combine', 'Enter shares to recover a split secret'
 
@@ -34,6 +35,12 @@ module TSS
       of the secret, will be written to STDOUT. Running `sha1sum` or `sha256sum`
       on the output file should provide a digest matching that of the secret
       when it was originally split.
+
+      padding/no-padding :
+      Whether or not PKCS#7 padding should be removed from secret data. By
+      default padding is applied to shared secrets when created. Turning this
+      off may be helpful if you need to combine shares created with a third-party
+      library.
 
       Example w/ options:
 
@@ -104,7 +111,7 @@ module TSS
       end
 
       begin
-        sec = TSS.combine(shares: shares)
+        sec = TSS.combine(shares: shares, padding: options[:padding])
 
         say('')
         say('RECOVERED SECRET METADATA')
