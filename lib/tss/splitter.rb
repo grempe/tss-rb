@@ -119,8 +119,17 @@ module TSS
       # create each binary or human share and return it.
       shares.map! do |s|
         binary = (header + s.pack('C*')).force_encoding('ASCII-8BIT')
+
+        # Prefer unpadded Base64 output. The 'padding' option was
+        # only added to Ruby later and Ruby <= 2.2.x barfs on it still.
+        binary_b64 = begin
+          Base64.urlsafe_encode64(binary, padding: false)
+        rescue
+          Base64.urlsafe_encode64(binary)
+        end
+
         # join with URL safe '~'
-        human = ['tss', 'v1', identifier, threshold, Base64.urlsafe_encode64(binary)].join('~')
+        human = ['tss', 'v1', identifier, threshold, binary_b64].join('~')
         format == 'BINARY' ? binary : human
       end
 
