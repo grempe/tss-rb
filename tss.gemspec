@@ -52,7 +52,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'sysrandom', '>= 1.0.3', '~> 1.0.4'
   spec.add_dependency 'contracts', '~> 0.14'
   spec.add_dependency 'binary_struct', '~> 2.1'
-  spec.add_dependency 'thor', '~> 0.19'
+  spec.add_dependency 'thor', '>= 0.19', '< 2.0'
 
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'rake', '~> 11.1'
